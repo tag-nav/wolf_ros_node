@@ -8,9 +8,9 @@
 WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName()) {
     // string file = "params_demo_quim.yaml";
     string file, plugin, subscriber;
-    nh_.param<std::string>("yaml_file_path", file, ros::package::getPath("wolf_demo")+"/yaml/params_demo.yaml");
+    nh_.param<std::string>("yaml_file_path", file, ros::package::getPath("wolf_ros_node")+"/yaml/params_demo.yaml");
     nh_.param<std::string>("plugins_path", plugin, "/usr/local/lib/iri-algorithms/");
-    nh_.param<std::string>("subscribers_path", subscriber, ros::package::getPath("wolf_demo") + "/../../devel/lib/");
+    nh_.param<std::string>("subscribers_path", subscriber, ros::package::getPath("wolf_ros_node") + "/../../devel/lib/");
 
     // WOLF_INFO("PATH ", file);
     // ParserYAML parser = ParserYAML(file, "/home/jvallve/code/iri_ws/src/wolf_demo/yaml");
