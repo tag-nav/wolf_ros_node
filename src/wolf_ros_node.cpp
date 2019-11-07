@@ -35,8 +35,9 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName()) {
         subscribers_.back()->initSubscriber(nh_, topic);
     }
 
-    wolf_viz_.initialize(nh_);
-    wolf_scan_viz_.initialize(nh_);
+    // TODO: factory for wolf_viz
+    wolf_viz_ = std::make_shared<WolfRosVisualizer>();
+    wolf_viz_->initialize(nh_);
 
     nh_.param<std::string>(  "map_frame_id",   map_frame_id_,  "map");
     nh_.param<std::string>(  "odom_frame_id",  odom_frame_id_, "odom");
@@ -55,7 +56,7 @@ void WolfRosNode::solve()
 void WolfRosNode::visualize()
 {
     ROS_INFO("================ visualize ==================");
-    wolf_viz_.visualize(problem_ptr_);
+    wolf_viz_->visualize(problem_ptr_);
 }
 
 void WolfRosNode::updateTf()
@@ -109,10 +110,6 @@ void WolfRosNode::broadcastTf()
     auto current_map2odom = tf::StampedTransform(this->T_map2odom, ros::Time::now(), map_frame_id_, odom_frame_id_);
     tfb_.sendTransform(current_map2odom);
 }
-void WolfRosNode::publishPointCloud()
-{
-    wolf_scan_viz_.publishPointCloud(problem_ptr_);
-}
 
 int main(int argc, char **argv) {
     std::cout << "\n=========== WOLF ROS WRAPPER MAIN ===========\n\n";
@@ -162,7 +159,6 @@ int main(int argc, char **argv) {
         if (t.toSec() >= visualize_interval) {
             last_time = ros::Time::now();
             wolf_node.visualize();
-            wolf_node.publishPointCloud();
             // iteration = 1;
         }
     // execute pending callbacks

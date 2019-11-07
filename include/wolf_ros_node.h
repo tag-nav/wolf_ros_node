@@ -41,7 +41,7 @@
 #include "subscriber_factory.h"
 #include "wolf_ros_subscriber.h"
 #include "wolf_ros_visualizer.h"
-#include "wolf_ros_scan_visualizer.h"
+//#include "wolf_ros_scan_visualizer.h"
 
 using namespace wolf;
 using namespace std;
@@ -61,10 +61,7 @@ class WolfRosNode
         CeresManagerPtr ceres_manager_ptr_;
 
         // visualizer
-        WolfRosVisualizer wolf_viz_;
-
-        //Scan visualizer
-        WolfRosScanVisualizer wolf_scan_viz_;
+        std::shared_ptr<WolfRosVisualizer> wolf_viz_;
 
         // subscribers
         std::vector<WolfSubscriberWrapperPtr> subscribers_;
@@ -87,6 +84,4 @@ class WolfRosNode
         void visualize();
 
         void updateTf();
-
-        void publishPointCloud();
 };
