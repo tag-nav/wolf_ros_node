@@ -14,6 +14,8 @@
 
 using namespace wolf;
 
+namespace wolf
+{
 class WolfRosVisualizer
 {
     public:
@@ -21,11 +23,11 @@ class WolfRosVisualizer
 
         WolfRosVisualizer();
 
-        void initialize(ros::NodeHandle& nh);
+        virtual void initialize(ros::NodeHandle& nh);
 
         virtual ~WolfRosVisualizer(){};
 
-        void visualize(const ProblemPtr problem);
+        virtual void visualize(const ProblemPtr problem);
 
     private:
 
@@ -68,3 +70,4 @@ class WolfRosVisualizer
         double viz_period_;
         ros::Time last_markers_publish_;
 };
+}

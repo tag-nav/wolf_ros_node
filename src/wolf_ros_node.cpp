@@ -36,8 +36,13 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName()) {
     }
 
     // TODO: factory for wolf_viz
-    wolf_viz_ = std::make_shared<WolfRosVisualizer>();
-    wolf_viz_->initialize(nh_);
+    // wolf_viz_ = std::make_shared<WolfRosVisualizer>();
+    std::vector<std::string> visualizers;
+    visualizers.push_back("WolfRosScanVisualizer");
+    for(auto const& visualizer: visualizers){
+        wolf_viz_ = VisualizerFactory::get().create(visualizer);
+        wolf_viz_->initialize(nh_);
+    }
 
     nh_.param<std::string>(  "map_frame_id",   map_frame_id_,  "map");
     nh_.param<std::string>(  "odom_frame_id",  odom_frame_id_, "odom");

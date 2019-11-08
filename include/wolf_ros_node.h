@@ -39,6 +39,7 @@
 #include <memory>
 
 #include "subscriber_factory.h"
+#include "visualizer_factory.h"
 #include "wolf_ros_subscriber.h"
 #include "wolf_ros_visualizer.h"
 //#include "wolf_ros_scan_visualizer.h"
