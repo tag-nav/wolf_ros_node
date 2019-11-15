@@ -10,25 +10,24 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName()) {
     string file, plugin, subscriber;
     nh_.param<std::string>("yaml_file_path", file, ros::package::getPath("wolf_ros_node")+"/yaml/params_demo.yaml");
     nh_.param<std::string>("plugins_path", plugin, "/usr/local/lib/iri-algorithms/");
-    nh_.param<std::string>("subscribers_path", subscriber, ros::package::getPath("wolf_ros_node") + "/../../devel/lib/");
+    nh_.param<std::string>("packages_path", subscriber, ros::package::getPath("wolf_ros_node") + "/../../devel/lib/");
 
     // WOLF_INFO("PATH ", file);
     // ParserYAML parser = ParserYAML(file, "/home/jvallve/code/iri_ws/src/wolf_demo/yaml");
     // ParserYAML parser = ParserYAML(file, "/home/jcasals/catkin_ws/src/wolf_demo/yaml");
     ParserYAML parser = ParserYAML(file);
-    parser.parse();
-    ParamsServer server = ParamsServer(parser.getParams(), parser.sensorsSerialization(), parser.processorsSerialization());
+    ParamsServer server = ParamsServer(parser.getParams());
     server.print();
     server.addParam("plugins_path", plugin);
-    server.addParam("subscribers_path", subscriber);
+    server.addParam("packages_path", subscriber);
     problem_ptr_ = Problem::autoSetup(server);
     ceres::Solver::Options ceres_options;
     ceres_manager_ptr_ = std::make_shared<CeresManager>(problem_ptr_, ceres_options);
 
-    for (auto it : parser.getCallbacks()) {
-        string subscriber = it[0];
-        string topic = it[1];
-        string sensor = it[2];
+    for (auto it : server.getParam<std::vector<std::map<std::string, std::string>>>("callbacks")) {
+        string subscriber = it["subscriber"];
+        string topic = it["topic"];
+        string sensor = it["sensor_name"];
         WOLF_TRACE("From sensor {" + sensor + "} subscribing {" + subscriber + "} to {" + topic + "} topic")
         auto wrapper = SubscriberFactory::get().create(subscriber, topic, server, problem_ptr_->getSensor(sensor));
         subscribers_.push_back(wrapper);
@@ -54,7 +53,7 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName()) {
 void WolfRosNode::solve()
 {
     ROS_INFO("================ solve ==================");
-    std::string report = ceres_manager_ptr_->solve(SolverManager::ReportVerbosity::FULL);
+    std::string report = ceres_manager_ptr_->solve(SolverManager::ReportVerbosity::BRIEF);
     std::cout << report << std::endl;
 }
 
