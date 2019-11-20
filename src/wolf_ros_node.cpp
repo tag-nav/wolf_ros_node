@@ -164,8 +164,8 @@ int main(int argc, char **argv) {
         // broadcast tf
         wolf_node.broadcastTf();
         // visualize
-        auto t = ros::Time::now() - last_time;
-        if (t.toSec() >= visualize_interval) {
+        auto Dt = ros::Time::now() - last_time;
+        if (Dt.toSec() >= visualize_interval) {
             last_time = ros::Time::now();
             wolf_node.visualize();
             // iteration = 1;
