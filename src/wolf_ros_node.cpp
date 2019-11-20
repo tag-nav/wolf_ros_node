@@ -5,37 +5,42 @@
 #include <iostream>
 #include <string>
 
-WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName()) {
+WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
+{
     // string file = "params_demo_quim.yaml";
-    string file, plugin, subscriber;
-    nh_.param<std::string>("yaml_file_path", file, ros::package::getPath("wolf_ros_node")+"/yaml/params_demo.yaml");
+    string yaml_file, plugins_path, subscribers_path;
+    nh_.param<std::string>("yaml_file_path", yaml_file, ros::package::getPath("wolf_ros_node")+"/yaml/params_demo.yaml");
     nh_.param<std::string>("plugins_path", plugin, "/usr/local/lib/iri-algorithms/");
-    nh_.param<std::string>("packages_path", subscriber, ros::package::getPath("wolf_ros_node") + "/../../devel/lib/");
+    nh_.param<std::string>("packages_path", subscribers_path, ros::package::getPath("wolf_ros_node") + "/../../devel/lib/");
 
     // WOLF_INFO("PATH ", file);
     // ParserYAML parser = ParserYAML(file, "/home/jvallve/code/iri_ws/src/wolf_demo/yaml");
     // ParserYAML parser = ParserYAML(file, "/home/jcasals/catkin_ws/src/wolf_demo/yaml");
-    ParserYAML parser = ParserYAML(file);
+    ParserYAML parser = ParserYAML(yaml_file);
     ParamsServer server = ParamsServer(parser.getParams());
     server.print();
-    server.addParam("plugins_path", plugin);
-    server.addParam("packages_path", subscriber);
+    server.addParam("plugins_path", plugins_path);
+    server.addParam("packages_path", subscribers_path);
+
     problem_ptr_ = Problem::autoSetup(server);
+
     ceres::Solver::Options ceres_options;
     ceres_manager_ptr_ = std::make_shared<CeresManager>(problem_ptr_, ceres_options);
 
-    for (auto it : server.getParam<std::vector<std::map<std::string, std::string>>>("callbacks")) {
-        string subscriber = it["subscriber"];
-        string topic = it["topic"];
-        string sensor = it["sensor_name"];
-        WOLF_TRACE("From sensor {" + sensor + "} subscribing {" + subscriber + "} to {" + topic + "} topic")
-        auto wrapper = SubscriberFactory::get().create(subscriber, topic, server, problem_ptr_->getSensor(sensor));
-        subscribers_.push_back(wrapper);
+    for (auto callback : server.getParam<std::vector<std::map<std::string, std::string>>>("callbacks")) {
+        string subscriber  = callback["subscriber"];
+        string topic       = callback["topic"];
+        string sensor_name = callback["sensor_name"];
+        WOLF_TRACE("From sensor {" + sensor_name + "} subscribing {" + subscriber + "} to {" + topic + "} topic")
+        auto subscriber_wrapper = SubscriberFactory::get().create(subscriber,
+                                                                  topic,
+                                                                  server,
+                                                                  problem_ptr_->getSensor(sensor_name));
+        subscribers_.push_back(subscriber_wrapper);
         subscribers_.back()->initSubscriber(nh_, topic);
     }
 
     // TODO: factory for wolf_viz
-    // wolf_viz_ = std::make_shared<WolfRosVisualizer>();
     std::vector<std::string> visualizers;
     visualizers.push_back("WolfRosScanVisualizer");
     for(auto const& visualizer: visualizers){
