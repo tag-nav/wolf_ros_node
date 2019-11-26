@@ -156,8 +156,8 @@ namespace wolf
  *
  * You can also check the code in the example file ````src/examples/test_wolf_factories.cpp````.
  */
-    class WolfSubscriberWrapper;
-    typedef Factory<WolfSubscriberWrapper,
+    class SubscriberWrapper;
+    typedef Factory<SubscriberWrapper,
                     const std::string&,
                     const ParamsServer&,
                     const SensorBasePtr> SubscriberFactory;

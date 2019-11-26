@@ -146,7 +146,6 @@ include_directories(
 
 add_executable(${PROJECT_NAME} src/wolf_ros_node.cpp)
 add_library(wolf_subscriber_odom2D src/wolf_ros_subscriber_odom2D.cpp)
-add_library(wolf_subscriber_other src/wolf_ros_subscriber_other.cpp)
 add_library(wolf_ros_visualizer src/wolf_ros_visualizer.cpp)
 
 ## Rename C++ executable without prefix

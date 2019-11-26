@@ -65,7 +65,7 @@ class WolfRosNode
         std::shared_ptr<WolfRosVisualizer> wolf_viz_;
 
         // subscribers
-        std::vector<WolfSubscriberWrapperPtr> subscribers_;
+        std::vector<SubscriberWrapperPtr> subscribers_;
 
         // transforms
         tf::TransformBroadcaster tfb_;

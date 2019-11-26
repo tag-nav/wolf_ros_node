@@ -13,9 +13,9 @@
 #include <nav_msgs/Odometry.h>
 
 namespace wolf {
-WOLF_PTR_TYPEDEFS(WolfSubscriberWrapper);
+WOLF_PTR_TYPEDEFS(SubscriberWrapper);
 
-class WolfSubscriberWrapper
+class SubscriberWrapper
 {
     protected:
         //wolf
@@ -25,11 +25,11 @@ class WolfSubscriberWrapper
         ros::Subscriber sub_;
 
     public:
-        WolfSubscriberWrapper(const SensorBasePtr& sensor_ptr) :
+        SubscriberWrapper(const SensorBasePtr& sensor_ptr) :
             sensor_ptr_(sensor_ptr)
         {
         }
-        virtual ~WolfSubscriberWrapper(){};
+        virtual ~SubscriberWrapper(){};
 
         virtual void initSubscriber(ros::NodeHandle& nh, const std::string& topic) = 0;
 };
