@@ -4,6 +4,8 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <thread>
+#include <chrono>
 
 WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
 {
@@ -11,7 +13,7 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
     nh_.param<std::string>("yaml_file_path", yaml_file, ros::package::getPath("wolf_ros_node")+"/yaml/params_demo.yaml");
     nh_.param<std::string>("plugins_path", plugins_path, "/usr/local/lib/iri-algorithms/");
     nh_.param<std::string>("packages_path", subscribers_path, ros::package::getPath("wolf_ros_node") + "/../../devel/lib/");
-
+    nh_.param<double>("solve_interval", solve_interval, 5);
     ParserYAML parser = ParserYAML(yaml_file);
     ParamsServer server = ParamsServer(parser.getParams());
     server.print();
@@ -52,6 +54,8 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
 void WolfRosNode::solve()
 {
     ROS_INFO("================ solve ==================");
+    auto        time   = (std::to_string(ros::Time::now().toSec()));
+    ROS_INFO(time.c_str());
     std::string report = ceres_manager_ptr_->solve(SolverManager::ReportVerbosity::BRIEF);
     std::cout << report << std::endl;
 }
@@ -132,7 +136,24 @@ int main(int argc, char **argv) {
     int last_id = -1;
     std::ofstream file;
     // file.open("/home/jcasals/wolf_debug.out");
-
+    std::thread t([&]() {
+                       while (true)
+                           {
+                               auto start = std::chrono::high_resolution_clock::now();
+                               wolf_node.solve();
+                               auto finish = std::chrono::high_resolution_clock::now();
+                               std::chrono::duration<double> elapsed = finish - start;
+                               double                        delta   = wolf_node.solve_interval - elapsed.count();
+                               std::string time_report = "Solve took " + std::to_string(elapsed.count()) + "s. Will sleep for " + std::to_string(delta);
+                               ROS_INFO(time_report.c_str());
+                               std::string aux = "In total spent " + std::to_string(elapsed.count() + delta) +
+                                   "s";
+                               ROS_INFO(aux.c_str());
+                               if(delta > 0) sleep(delta);
+                               // for (int i = 0; i < 10; i++)
+                               //   std::cout << i << std::endl;
+                           }
+                   });
     while (ros::ok()) {
         // solve every n iterations
         // if (iteration++ >= n_iterations_solve)
@@ -145,7 +166,7 @@ int main(int argc, char **argv) {
                 // file.close();
 
                 // solve
-                wolf_node.solve();
+                // wolf_node.solve();
 
                 // file.open("/home/jcasals/random/debug/wolf_debug" + std::to_string(current) + "-" + std::to_string(last_id) + "-after.out");
                 // file << "ROSTIME " << ros::Time::now();

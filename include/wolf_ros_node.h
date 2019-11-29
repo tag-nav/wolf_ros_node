@@ -55,9 +55,9 @@ class WolfRosNode
 
         // ROS node handle
         ros::NodeHandle nh_;
+        double          solve_interval;
 
-
-    protected:
+      protected:
         // solver
         CeresManagerPtr ceres_manager_ptr_;
 
