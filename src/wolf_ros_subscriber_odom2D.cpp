@@ -43,13 +43,13 @@ void SubscriberWrapperOdom2D::callback(const nav_msgs::Odometry::ConstPtr& msg)
 
     if (last_odom_stamp_ != ros::Time(0))
     {
-        Scalar           dt          = (msg->header.stamp - last_odom_stamp_).toSec();
+        double           dt          = (msg->header.stamp - last_odom_stamp_).toSec();
         CaptureOdom2DPtr new_capture = std::make_shared<CaptureOdom2D>(
             TimeStamp(msg->header.stamp.sec, msg->header.stamp.nsec),
             sensor_ptr_,
             Eigen::Vector2s(msg->twist.twist.linear.x * dt, msg->twist.twist.angular.z * dt),
-            Eigen::DiagonalMatrix<Scalar, 2>(msg->twist.twist.linear.x * dt * (Scalar)odometry_translational_cov_factor_,
-                                             msg->twist.twist.angular.z * dt * (Scalar)odometry_rotational_cov_factor_));
+            Eigen::DiagonalMatrix<double, 2>(msg->twist.twist.linear.x * dt * (double)odometry_translational_cov_factor_,
+                                             msg->twist.twist.angular.z * dt * (double)odometry_rotational_cov_factor_));
         sensor_ptr_->process(new_capture);
     }
     last_odom_stamp_ = msg->header.stamp;
