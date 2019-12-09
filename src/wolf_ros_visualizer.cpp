@@ -317,10 +317,10 @@ void WolfRosVisualizer::fillLandmarkMarkers(LandmarkBaseConstPtr lmk,
         // 3D
         if (lmk->getO()->getSize() > 1)
         {
-            lmk_marker.pose.orientation.w = lmk->getO()->getState()(0);
-            lmk_marker.pose.orientation.x = lmk->getO()->getState()(1);
-            lmk_marker.pose.orientation.y = lmk->getO()->getState()(2);
-            lmk_marker.pose.orientation.z = lmk->getO()->getState()(3);
+            lmk_marker.pose.orientation.x = lmk->getO()->getState()(0);
+            lmk_marker.pose.orientation.y = lmk->getO()->getState()(1);
+            lmk_marker.pose.orientation.z = lmk->getO()->getState()(2);
+            lmk_marker.pose.orientation.w = lmk->getO()->getState()(3);
         }
         // 2D
         else
@@ -447,10 +447,10 @@ void WolfRosVisualizer::fillFrameMarker(FrameBaseConstPtr frm,
   if (frm->getO() != nullptr) {
     // 3D
     if (frm->getO()->getSize() > 1) {
-      frm_marker.pose.orientation.w = frm->getO()->getState()(0);
-      frm_marker.pose.orientation.x = frm->getO()->getState()(1);
-      frm_marker.pose.orientation.y = frm->getO()->getState()(2);
-      frm_marker.pose.orientation.z = frm->getO()->getState()(3);
+      frm_marker.pose.orientation.x = frm->getO()->getState()(0);
+      frm_marker.pose.orientation.y = frm->getO()->getState()(1);
+      frm_marker.pose.orientation.z = frm->getO()->getState()(2);
+      frm_marker.pose.orientation.w = frm->getO()->getState()(3);
     }
     // 2D
     else

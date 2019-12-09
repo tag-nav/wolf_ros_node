@@ -14,7 +14,11 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
     nh_.param<std::string>("plugins_path", plugins_path, "/usr/local/lib/iri-algorithms/");
     nh_.param<std::string>("packages_path", subscribers_path, ros::package::getPath("wolf_ros_node") + "/../../devel/lib/");
     nh_.param<double>("solve_interval", solve_interval, 5);
-    ParserYAML parser = ParserYAML(yaml_file);
+
+    int found = yaml_file.find_last_of("\\/");
+    std::cout << yaml_file.substr(0,found) << " " << yaml_file.substr(found+1);
+    std::string yaml_dir = yaml_file.substr(0, found);
+    ParserYAML parser = ParserYAML(yaml_file, yaml_dir);
     ParamsServer server = ParamsServer(parser.getParams());
     server.print();
     server.addParam("plugins_path", plugins_path);
@@ -36,7 +40,7 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
             subscribers_.back()->initSubscriber(nh_, topic);
         }
 
-    // TODO: factory for wolf_viz
+    // TODO: integrate visualizers into YAML config. (We need to figure out how to have general visualizers first)
     std::vector<std::string> visualizers;
     visualizers.push_back("WolfRosScanVisualizer");
     for(auto const& visualizer: visualizers){
@@ -120,6 +124,7 @@ void WolfRosNode::broadcastTf()
 
 int main(int argc, char **argv) {
     std::cout << "\n=========== WOLF ROS WRAPPER MAIN ===========\n\n";
+
 
     // Init ROS
     ros::init(argc, argv, ros::this_node::getName());
