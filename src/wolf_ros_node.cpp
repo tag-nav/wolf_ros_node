@@ -37,7 +37,7 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
             subscribers_.back()->initSubscriber(nh_, topic);
         }
 
-    // TODO: factory for wolf_viz
+    // TODO: integrate visualizers into YAML config. (We need to figure out how to have general visualizers first)
     std::vector<std::string> visualizers;
     visualizers.push_back("WolfRosScanVisualizer");
     for(auto const& visualizer: visualizers){
@@ -119,6 +119,7 @@ void WolfRosNode::broadcastTf()
 
 int main(int argc, char **argv) {
     std::cout << "\n=========== WOLF ROS WRAPPER MAIN ===========\n\n";
+
 
     // Init ROS
     ros::init(argc, argv, ros::this_node::getName());
