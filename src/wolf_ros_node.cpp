@@ -12,7 +12,10 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
     nh_.param<std::string>("plugins_path", plugins_path, "/usr/local/lib/iri-algorithms/");
     nh_.param<std::string>("packages_path", subscribers_path, ros::package::getPath("wolf_ros_node") + "/../../devel/lib/");
 
-    ParserYAML parser = ParserYAML(yaml_file);
+    int found = yaml_file.find_last_of("\\/");
+    std::cout << yaml_file.substr(0,found) << " " << yaml_file.substr(found+1);
+    std::string yaml_dir = yaml_file.substr(0, found);
+    ParserYAML parser = ParserYAML(yaml_file, yaml_dir);
     ParamsServer server = ParamsServer(parser.getParams());
     server.print();
     server.addParam("plugins_path", plugins_path);
