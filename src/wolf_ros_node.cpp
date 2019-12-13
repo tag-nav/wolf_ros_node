@@ -80,9 +80,9 @@ void WolfRosNode::updateTf()
     Eigen::VectorXd current_pose;
     problem_ptr_->getCurrentStateAndStamp(current_pose, loc_ts);
 
-//    loc_stamp.nsec = loc_ts.getNanoSeconds();
-//    loc_stamp.sec = loc_ts.getSeconds();
-    loc_stamp = ros::Time::now();
+    loc_stamp.nsec = loc_ts.getNanoSeconds();
+    loc_stamp.sec = loc_ts.getSeconds();
+    // loc_stamp = ros::Time::now();
 
     //Get map2base from Wolf result, and builds base2map pose
     tf::Transform T_map2base(tf::createQuaternionFromYaw((double) current_pose(2)),
@@ -110,7 +110,7 @@ void WolfRosNode::updateTf()
 
     // Broadcast transform ---------------------------------------------------------------------------
     // tf::StampedTransform T_map2odom(T_map2base * T_base2odom, loc_stamp, map_frame_id_, odom_frame_id_);
-    this->T_map2odom = tf::StampedTransform(T_map2base * T_base2odom, loc_stamp, map_frame_id_, odom_frame_id_);
+    // this->T_map2odom = tf::StampedTransform(T_map2base * T_base2odom, loc_stamp, map_frame_id_, odom_frame_id_);
     this->T_map2odom = tf::Transform(T_map2base * T_base2odom);
     std::cout << "T_map2odom: " << T_map2odom.getOrigin().getX() << " " << T_map2odom.getOrigin().getY() << " " << T_map2odom.getRotation().getAngle() << std::endl;
     //T_map2odom.setData(T_map2base * T_base2odom);
@@ -171,24 +171,24 @@ int main(int argc, char **argv) {
                 // file.close();
 
                 // solve
-                // wolf_node.solve();
-
-                // file.open("/home/jcasals/random/debug/wolf_debug" + std::to_string(current) + "-" + std::to_string(last_id) + "-after.out");
-                // file << "ROSTIME " << ros::Time::now();
-                // file << wolf_node.problem_ptr_->printToString();
-                // file.close();
-                // update tf
+                wolf_node.solve();
                 wolf_node.updateTf();
+
+                // file.open("/home/jcasals/random/debug/wolf_debug" + std::to_string(current) + "-" +
+                // std::to_string(last_id) + "-after.out"); file << "ROSTIME " << ros::Time::now(); file <<
+                // wolf_node.problem_ptr_->printToString(); file.close(); update tf
                 last_id = current;
             }
         // broadcast tf
-        wolf_node.broadcastTf();
-        // visualize
-        auto Dt = ros::Time::now() - last_time;
-        if (Dt.toSec() >= visualize_interval) {
-            last_time = ros::Time::now();
-            wolf_node.visualize();
-            // iteration = 1;
+            // wolf_node.updateTf();
+            wolf_node.broadcastTf();
+            // visualize
+            auto Dt = ros::Time::now() - last_time;
+            if (Dt.toSec() >= visualize_interval)
+            {
+                last_time = ros::Time::now();
+                wolf_node.visualize();
+                // iteration = 1;
         }
     // execute pending callbacks
     ros::spinOnce();
