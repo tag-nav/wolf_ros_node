@@ -1,6 +1,8 @@
 #include "wolf_ros_node.h"
+#include "ros/init.h"
 #include "ros/time.h"
 #include "tf/transform_datatypes.h"
+#include <exception>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -146,6 +148,7 @@ int main(int argc, char **argv) {
                            {
                                auto start = std::chrono::high_resolution_clock::now();
                                wolf_node.solve();
+                               wolf_node.updateTf();
                                auto finish = std::chrono::high_resolution_clock::now();
                                std::chrono::duration<double> elapsed = finish - start;
                                double                        delta   = wolf_node.solve_interval - elapsed.count();
@@ -163,24 +166,6 @@ int main(int argc, char **argv) {
         // solve every n iterations
         // if (iteration++ >= n_iterations_solve)
         int current = wolf_node.problem_ptr_->getLastKeyFrame()->id();
-        if (current != last_id)
-            {
-                // file.open("/home/jcasals/random/debug/wolf_debug" + std::to_string(current) + "-" + std::to_string(last_id) + "-before.out");
-                // file << "ROSTIME " << ros::Time::now();
-                // file << wolf_node.problem_ptr_->printToString();
-                // file.close();
-
-                // solve
-                wolf_node.solve();
-                wolf_node.updateTf();
-
-                // file.open("/home/jcasals/random/debug/wolf_debug" + std::to_string(current) + "-" +
-                // std::to_string(last_id) + "-after.out"); file << "ROSTIME " << ros::Time::now(); file <<
-                // wolf_node.problem_ptr_->printToString(); file.close(); update tf
-                last_id = current;
-            }
-        // broadcast tf
-            // wolf_node.updateTf();
             wolf_node.broadcastTf();
             // visualize
             auto Dt = ros::Time::now() - last_time;
@@ -193,9 +178,15 @@ int main(int argc, char **argv) {
     // execute pending callbacks
     ros::spinOnce();
 
+    if(ros::isShuttingDown()) {
+        WOLF_INFO("Node is shutting down inside loop...");
+        std::terminate();
+    }
     // relax to fit output rate
     loopRate.sleep();
     }
+    WOLF_INFO("Node is shutting down outside loop...");
+    std::terminate();
     // file.close();
     return 0;
 }
