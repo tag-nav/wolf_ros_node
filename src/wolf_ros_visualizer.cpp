@@ -405,6 +405,25 @@ void WolfRosVisualizer::fillFactorMarker(FactorBaseConstPtr fac,
   // colors ------------------------------------------------------
   auto color =
       (fac->getStatus() == FAC_ACTIVE ? color_active_ : color_inactive_);
+  if(fac->getTopology() == "ABS") {
+    //Kind of pink
+      color.r = 0.92;
+      color.g = 0.19;
+      color.b = 0.6;
+  } else if(fac->getTopology() == "MOTION") {
+      color.r = 1;
+      color.g = 1;
+      color.b = 0;
+  } else if(fac->getTopology() == "LOOP") {
+      color.r = 1;
+      color.g = 0;
+      color.b = 0;
+  } else if(fac->getTopology() == "LMK") {
+      color.r = 0;
+      color.g = 0;
+      color.b = 1;
+  }
+
   fac_marker.colors.push_back(color);
   fac_marker.colors.push_back(color);
 

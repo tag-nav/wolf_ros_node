@@ -13,11 +13,10 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
     nh_.param<std::string>("packages_path", subscribers_path, ros::package::getPath("wolf_ros_node") + "/../../devel/lib/");
 
     int found = yaml_file.find_last_of("\\/");
-    std::cout << yaml_file.substr(0,found) << " " << yaml_file.substr(found+1);
     std::string yaml_dir = yaml_file.substr(0, found);
     ParserYAML parser = ParserYAML(yaml_file, yaml_dir);
     ParamsServer server = ParamsServer(parser.getParams());
-    server.print();
+
     server.addParam("plugins_path", plugins_path);
     server.addParam("packages_path", subscribers_path);
 
@@ -36,7 +35,6 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
             subscribers_.push_back(subscriber_wrapper);
             subscribers_.back()->initSubscriber(nh_, topic);
         }
-
     // TODO: integrate visualizers into YAML config. (We need to figure out how to have general visualizers first)
     std::vector<std::string> visualizers;
     visualizers.push_back("WolfRosScanVisualizer");
