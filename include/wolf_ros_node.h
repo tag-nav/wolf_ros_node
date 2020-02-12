@@ -84,5 +84,5 @@ class WolfRosNode
 
         void visualize();
 
-        void updateTf();
+        bool updateTf();
 };
