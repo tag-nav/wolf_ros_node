@@ -1,4 +1,5 @@
 #include "wolf_ros_node.h"
+#include "core/solver/solver_factory.h"
 #include "ros/time.h"
 #include "tf/transform_datatypes.h"
 #include <fstream>
@@ -22,8 +23,10 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
 
     problem_ptr_ = Problem::autoSetup(server);
 
-    ceres::Solver::Options ceres_options;
-    ceres_manager_ptr_ = std::make_shared<CeresManager>(problem_ptr_, ceres_options);
+    // ceres::Solver::Options ceres_options;
+    // ceres_manager_ptr_ = std::make_shared<CeresManager>(problem_ptr_, ceres_options);
+
+    ceres_manager_ptr_ = std::static_pointer_cast<CeresManager>(SolverFactory::get().create("CERES", problem_ptr_, server));
 
     for (auto it : server.getParam<std::vector<std::map<std::string, std::string>>>("ROS subscriber managers"))
         {
@@ -47,6 +50,7 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
     nh_.param<std::string>(  "odom_frame_id",  odom_frame_id_, "odom");
     nh_.param<std::string>(  "base_frame_id",  base_frame_id_, "base_footprint");
 
+    updateTf();
     broadcastTf();
 }
 
@@ -63,7 +67,7 @@ void WolfRosNode::visualize()
     wolf_viz_->visualize(problem_ptr_);
 }
 
-void WolfRosNode::updateTf()
+bool WolfRosNode::updateTf()
 {
     ROS_INFO("================updateTf==================");
 
@@ -71,6 +75,7 @@ void WolfRosNode::updateTf()
     ros::Time loc_stamp;
     TimeStamp loc_ts;
     Eigen::VectorXd current_pose;
+    bool result = true;
     problem_ptr_->getCurrentStateAndStamp(current_pose, loc_ts);
 
     loc_stamp.nsec = loc_ts.getNanoSeconds();
@@ -83,7 +88,7 @@ void WolfRosNode::updateTf()
     //T_map2base.setOrigin( tf::Vector3((double) current_pose(0), (double) current_pose(1), 0) );
     //T_map2base.setRotation( tf::createQuaternionFromYaw((double) current_pose(2)) );
 
-    std::cout << "Current pose: " << current_pose.transpose() << std::endl;
+    // std::cout << "Current pose: " << current_pose.transpose() << std::endl;
 
     //gets T_map2odom_ (odom wrt map), by using tf listener, and assuming an odometry node is broadcasting odom2base
     tf::StampedTransform T_base2odom;
@@ -94,11 +99,12 @@ void WolfRosNode::updateTf()
     }
     else
     {
-        ROS_WARN("No odom to base frame received");
+        ROS_WARN("No %s to %s frame received", base_frame_id_.c_str(), odom_frame_id_.c_str());
         T_base2odom.setIdentity();
         T_base2odom.frame_id_ = base_frame_id_;
         T_base2odom.child_frame_id_ = odom_frame_id_;
         T_base2odom.stamp_ = loc_stamp;
+        result = false;
     }
 
     // Broadcast transform ---------------------------------------------------------------------------
@@ -106,6 +112,7 @@ void WolfRosNode::updateTf()
     // this->T_map2odom = tf::StampedTransform(T_map2base * T_base2odom, loc_stamp, map_frame_id_, odom_frame_id_);
     this->T_map2odom = tf::Transform(T_map2base * T_base2odom);
     std::cout << "T_map2odom: " << T_map2odom.getOrigin().getX() << " " << T_map2odom.getOrigin().getY() << " " << T_map2odom.getRotation().getAngle() << std::endl;
+    return result;
     //T_map2odom.setData(T_map2base * T_base2odom);
     //T_map2odom.stamp_ = loc_stamp;
 }
@@ -141,7 +148,8 @@ int main(int argc, char **argv) {
         int current = wolf_node.problem_ptr_->getLastKeyFrame()->id();
         if (current != last_id)
             {
-                // file.open("/home/jcasals/random/debug/wolf_debug" + std::to_string(current) + "-" + std::to_string(last_id) + "-before.out");
+                std::cout << "Last ID " << last_id << " Current " << current << std::endl;
+                //  file.open("/home/jcasals/random/debug/wolf_debug" + std::to_string(current) + "-" + std::to_string(last_id) + "-before.out");
                 // file << "ROSTIME " << ros::Time::now();
                 // file << wolf_node.problem_ptr_->printToString();
                 // file.close();
