@@ -2,6 +2,7 @@
 #include "core/solver/solver_factory.h"
 #include "ros/time.h"
 #include "tf/transform_datatypes.h"
+#include "visualizer_factory.h"
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -33,18 +34,22 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
             std::string subscriber = it["type"];
             std::string topic      = it["topic"];
             std::string sensor     = it["sensor_name"];
-            WOLF_TRACE("From sensor {" + sensor + "} subscribing {" + subscriber + "} to {" + topic + "} topic")
-                auto subscriber_wrapper = SubscriberFactory::get().create(subscriber, topic, server, problem_ptr_->getSensor(sensor));
+            WOLF_TRACE("From sensor {" + sensor + "} subscribing {" + subscriber + "} to {" + topic + "} topic");
+            auto subscriber_wrapper = SubscriberFactory::get().create(subscriber, topic, server, problem_ptr_->getSensor(sensor));
             subscribers_.push_back(subscriber_wrapper);
             subscribers_.back()->initSubscriber(nh_, topic);
         }
     // TODO: integrate visualizers into YAML config. (We need to figure out how to have general visualizers first)
-    std::vector<std::string> visualizers;
-    visualizers.push_back("WolfRosScanVisualizer");
-    for(auto const& visualizer: visualizers){
-        wolf_viz_ = VisualizerFactory::get().create(visualizer);
-        wolf_viz_->initialize(nh_);
-    }
+    // std::vector<std::string> visualizers;
+    // visualizers.push_back("WolfRosScanVisualizer");
+    // for(auto const& visualizer: visualizers){
+    //     wolf_viz_ = VisualizerFactory::get().create(visualizer);
+    //     wolf_viz_->initialize(nh_);
+    // }
+
+    auto visualizer = server.getParam<std::string>("visualizer");
+    wolf_viz_ = VisualizerFactory::get().create(visualizer);
+    wolf_viz_->initialize(nh_);
 
     nh_.param<std::string>(  "map_frame_id",   map_frame_id_,  "map");
     nh_.param<std::string>(  "odom_frame_id",  odom_frame_id_, "odom");
@@ -57,14 +62,18 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
 void WolfRosNode::solve()
 {
     ROS_INFO("================ solve ==================");
-    std::string report = ceres_manager_ptr_->solve(SolverManager::ReportVerbosity::BRIEF);
+    std::string report = ceres_manager_ptr_->solve(SolverManager::ReportVerbosity::FULL);
     std::cout << report << std::endl;
 }
 
 void WolfRosNode::visualize()
 {
     ROS_INFO("================ visualize ==================");
+    auto start = std::chrono::high_resolution_clock::now();
     wolf_viz_->visualize(problem_ptr_);
+    auto stop     = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << "Visualize took " << duration.count() << " microseconds" << std::endl;
 }
 
 bool WolfRosNode::updateTf()
@@ -92,10 +101,11 @@ bool WolfRosNode::updateTf()
 
     //gets T_map2odom_ (odom wrt map), by using tf listener, and assuming an odometry node is broadcasting odom2base
     tf::StampedTransform T_base2odom;
-    if ( tfl_.waitForTransform(base_frame_id_, odom_frame_id_, loc_stamp, ros::Duration(0.2)) )
+    if ( tfl_.waitForTransform(base_frame_id_, odom_frame_id_, ros::Time(0), ros::Duration(0.2)) )
     {
-        tfl_.lookupTransform(base_frame_id_, odom_frame_id_, loc_stamp, T_base2odom);
-        std::cout << "Odometry: " << T_base2odom.inverse().getOrigin().getX() << " " << T_base2odom.inverse().getOrigin().getY() << " " << T_base2odom.inverse().getRotation().getAngle() << std::endl;
+        // tfl_.lookupTransform(base_frame_id_, odom_frame_id_, loc_stamp, T_base2odom);
+        tfl_.lookupTransform(base_frame_id_, odom_frame_id_, ros::Time(0), T_base2odom);
+        std::cout << ros::Time::now().sec << " Odometry: " << T_base2odom.inverse().getOrigin().getX() << " " << T_base2odom.inverse().getOrigin().getY() << " " << T_base2odom.inverse().getRotation().getAngle() << std::endl;
     }
     else
     {
@@ -147,23 +157,29 @@ int main(int argc, char **argv) {
         // if (iteration++ >= n_iterations_solve)
         int current = wolf_node.problem_ptr_->getLastKeyFrame()->id();
         if (current != last_id)
-            {
-                std::cout << "Last ID " << last_id << " Current " << current << std::endl;
-                //  file.open("/home/jcasals/random/debug/wolf_debug" + std::to_string(current) + "-" + std::to_string(last_id) + "-before.out");
-                // file << "ROSTIME " << ros::Time::now();
-                // file << wolf_node.problem_ptr_->printToString();
-                // file.close();
+        {
+            std::cout << "Last ID " << last_id << " Current " << current << " Current time " << ros::Time::now().sec << std::endl;
+            //  file.open("/home/jcasals/random/debug/wolf_debug" + std::to_string(current) + "-" +
+            //  std::to_string(last_id) + "-before.out");
+            // file << "ROSTIME " << ros::Time::now();
+            // file << wolf_node.problem_ptr_->printToString();
+            // file.close();
 
-                // solve
-                wolf_node.solve();
-                wolf_node.updateTf();
+            // solve
+            wolf_node.solve();
+            wolf_node.updateTf();
 
-                // file.open("/home/jcasals/random/debug/wolf_debug" + std::to_string(current) + "-" +
-                // std::to_string(last_id) + "-after.out"); file << "ROSTIME " << ros::Time::now(); file <<
-                // wolf_node.problem_ptr_->printToString(); file.close(); update tf
-                last_id = current;
-            }
-        // broadcast tf
+            // file.open("/home/jcasals/random/debug/wolf_debug" + std::to_string(current) + "-" +
+            // std::to_string(last_id) + "-after.out"); file << "ROSTIME " << ros::Time::now(); file <<
+            // wolf_node.problem_ptr_->printToString(); file.close(); update tf
+            last_id = current;
+        }
+        // if (ros::Time::now().sec > 1490285401)
+        // {
+        //     wolf_node.solve();
+        //     wolf_node.updateTf();
+        // }
+            // broadcast tf
             // wolf_node.updateTf();
             wolf_node.broadcastTf();
             // visualize

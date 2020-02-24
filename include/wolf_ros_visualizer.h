@@ -11,6 +11,7 @@
  **************************/
 #include "core/common/wolf.h"
 #include "core/problem/problem.h"
+#include "visualizer_factory.h"
 
 using namespace wolf;
 
@@ -28,6 +29,8 @@ class WolfRosVisualizer
     virtual ~WolfRosVisualizer(){};
 
     virtual void visualize(const ProblemPtr problem);
+
+    static std::shared_ptr<WolfRosVisualizer> create();
 
   protected:
     void publishLandmarks(const ProblemPtr problem);

@@ -482,3 +482,10 @@ void WolfRosVisualizer::fillFrameMarker(FrameBaseConstPtr frm,
   frm_text_marker.pose.position.y = frm_marker.pose.position.y;
   frm_text_marker.pose.position.z = frm_marker.pose.position.z + landmark_text_z_offset_;
 }
+
+std::shared_ptr<WolfRosVisualizer> WolfRosVisualizer::create()
+{
+    return std::make_shared<WolfRosVisualizer>();
+}
+
+WOLF_REGISTER_VISUALIZER(WolfRosVisualizer)
