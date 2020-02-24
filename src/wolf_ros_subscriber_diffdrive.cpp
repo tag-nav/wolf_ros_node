@@ -34,7 +34,7 @@ void SubscriberWrapperDiffdrive::callback(const sensor_msgs::JointState::ConstPt
   Eigen::Vector2d angles_inc (pi2pi(msg_angles(0) - last_angles_(0)), pi2pi(msg_angles(1) - last_angles_(1)));
   angles_inc *= ticks_per_revolution/(2*M_PI);
 
-  Eigen::MatrixXd cov        = Eigen::Matrix2d::Identity()*angles_inc.norm()/10;  // TODO check this
+  Eigen::MatrixXd cov        = Eigen::Matrix2d::Identity()*(angles_inc.norm() + 1)/10;  // TODO check this
 
   if (last_odom_seq_ != -1)
   {
@@ -46,7 +46,7 @@ void SubscriberWrapperDiffdrive::callback(const sensor_msgs::JointState::ConstPt
 
       if(last_kf != current_kf)
       {
-      sensor_ptr_->getProblem()->print(4,0,1,1);
+      // sensor_ptr_->getProblem()->print(4,0,1,1);
 
 //       std::cout << "\n===========================================" << std::endl;
 //       auto const capture_origin = std::static_pointer_cast<CaptureMotion>(sensor_ptr_->getProblem()->getProcessorMotion()->getOrigin());
