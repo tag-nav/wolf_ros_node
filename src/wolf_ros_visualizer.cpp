@@ -58,9 +58,9 @@ void WolfRosVisualizer::initialize(ros::NodeHandle& nh)
     factor_text_marker_.color.g = 1;
     factor_text_marker_.color.b = 1;
     factor_text_marker_.color.a = 0.5;
-    factor_text_marker_.scale.x = 1;
-    factor_text_marker_.scale.y = 1;
-    factor_text_marker_.scale.z = 1;
+    factor_text_marker_.scale.x = 0.3;
+    factor_text_marker_.scale.y = 0.3;
+    factor_text_marker_.scale.z = 0.3;
 
     // frame markers
     frame_marker_.type = visualization_msgs::Marker::ARROW;
@@ -77,9 +77,9 @@ void WolfRosVisualizer::initialize(ros::NodeHandle& nh)
     frame_text_marker_.color.g = 1;
     frame_text_marker_.color.b = 1;
     frame_text_marker_.color.a = 0.5;
-    frame_text_marker_.scale.x = 1;
-    frame_text_marker_.scale.y = 1;
-    frame_text_marker_.scale.z = 1;
+    frame_text_marker_.scale.x = 0.3;
+    frame_text_marker_.scale.y = 0.3;
+    frame_text_marker_.scale.z = 0.3;
 
     // landmark markers
     landmark_marker_.type = visualization_msgs::Marker::ARROW;
