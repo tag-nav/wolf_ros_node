@@ -22,6 +22,9 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
     server.addParam("plugins_path", plugins_path);
     server.addParam("packages_path", subscribers_path);
 
+    while(not ros::Time::isValid()) sleep(1);
+    server.addParam("problem/prior/timestamp", std::to_string(ros::Time::now().sec) + "." + std::to_string(ros::Time::now().nsec));
+
     problem_ptr_ = Problem::autoSetup(server);
 
     // ceres::Solver::Options ceres_options;
