@@ -3,7 +3,8 @@
  **************************/
 #include <core/capture/capture_diff_drive.h>
 //#include <core/processor/processor_diff_drive.h>
-#include <core/processor/processor_motion.h>
+//#include <core/processor/processor_motion.h>
+#include <core/sensor/sensor_diff_drive.h>
 
 // #include "Eigen/src/Core/Matrix.h"
 #include "core/math/rotations.h"
@@ -17,7 +18,7 @@ SubscriberWrapperDiffdrive::SubscriberWrapperDiffdrive(const SensorBasePtr& sens
   , last_odom_seq_(-1)
 {
   last_angles_ = Eigen::Vector2d();
-  ticks_cov_factor_ = static_pointer_cast<SensorDiffDrive>(sensor_ptr)->getParams().ticks_cov_factor;
+  ticks_cov_factor_ = std::static_pointer_cast<SensorDiffDrive>(sensor_ptr)->getParams()->ticks_cov_factor;
 }
 
 void SubscriberWrapperDiffdrive::initSubscriber(ros::NodeHandle& nh, const std::string& topic)

@@ -2,7 +2,9 @@
 #include "core/solver/solver_factory.h"
 #include "ros/time.h"
 #include "tf/transform_datatypes.h"
+#include "subscriber_factory.h"
 #include "visualizer_factory.h"
+#include "publisher_factory.h"
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -28,6 +30,7 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
 
     while(not ros::Time::isValid()) sleep(1);
     server.addParam("problem/prior/timestamp", std::to_string(ros::Time::now().sec) + "." + std::to_string(ros::Time::now().nsec));
+    // std::cout << "Prior timestamp " << server.getParam<std::string>("problem/prior/timestamp") << "\n";
 
     // PROBLEM
     problem_ptr_ = Problem::autoSetup(server);
@@ -41,15 +44,15 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
 
     // ROS SUBSCRIBERS
     for (auto it : server.getParam<std::vector<std::map<std::string, std::string>>>("ROS subscriber managers"))
-        {
-            std::string subscriber = it["type"];
-            std::string topic      = it["topic"];
-            std::string sensor     = it["sensor_name"];
-            WOLF_TRACE("From sensor {" + sensor + "} subscribing {" + subscriber + "} to {" + topic + "} topic");
-            auto subscriber_wrapper = SubscriberFactory::get().create(subscriber, topic, server, problem_ptr_->getSensor(sensor));
-            subscribers_.push_back(subscriber_wrapper);
-            subscribers_.back()->initSubscriber(nh_, topic);
-        }
+    {
+        std::string subscriber = it["type"];
+        std::string topic      = it["topic"];
+        std::string sensor     = it["sensor_name"];
+        WOLF_TRACE("From sensor {" + sensor + "} subscribing {" + subscriber + "} to {" + topic + "} topic");
+        auto subscriber_wrapper = SubscriberFactory::get().create(subscriber, topic, server, problem_ptr_->getSensor(sensor));
+        subscribers_.push_back(subscriber_wrapper);
+        subscribers_.back()->initSubscriber(nh_, topic);
+    }
     // TODO: integrate visualizers into YAML config. (We need to figure out how to have general visualizers first)
     // std::vector<std::string> visualizers;
     // visualizers.push_back("WolfRosScanVisualizer");
@@ -58,11 +61,30 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
     //     viz_->initialize(nh_);
     // }
 
-    // VISUALIZER
+    // ROS VISUALIZER
     auto visualizer = server.getParam<std::string>("visualizer/type");
     viz_ = VisualizerFactory::get().create(visualizer);
     viz_->initialize(nh_);
     viz_period_ = server.getParam<int>("visualizer/period");
+
+    // ROS PUBLISHERS
+    //try
+    //{
+        for (auto it : server.getParam<std::vector<std::map<std::string, std::string>>>("ROS publishers"))
+        {
+            std::string pub = it["type"];
+            WOLF_INFO("Pub: ", pub);
+            auto publisher = PublisherFactory::get().create(pub);
+            publisher->period_ = converter<double>::convert(it["period"]);
+            publishers_.push_back(publisher);
+            publishers_.back()->initialize(nh_,it["topic"]);
+        }
+//    }
+//    catch (MissingValueException& e)
+//    {
+//        WOLF_WARN(e.what());
+//        WOLF_WARN("No publishers found...");
+//    }
 
     // TF INIT
     updateTf();
@@ -154,39 +176,15 @@ int main(int argc, char **argv)
     ros::Rate loopRate(20);
     ros::Time last_viz_time = ros::Time(0);
     ros::Time last_solve_time = ros::Time(0);
-    //int last_id = -1;
-    //std::ofstream file;
-    // file.open("/home/jcasals/wolf_debug.out");
 
     while (ros::ok())
     {
         // solve periodically
         if ((ros::Time::now() - last_solve_time).toSec() >= wolf_node.solver_period_)
-        //int current = wolf_node.problem_ptr_->getLastKeyFrame()->id();
-        //if (current != last_id)
         {
-            //std::cout << "Last ID " << last_id << " Current " << current << " Current time " << ros::Time::now().sec << std::endl;
-            //  file.open("/home/jcasals/random/debug/wolf_debug" + std::to_string(current) + "-" +
-            //  std::to_string(last_id) + "-before.out");
-            // file << "ROSTIME " << ros::Time::now();
-            // file << wolf_node.problem_ptr_->printToString();
-            // file.close();
-
-            // solve
             wolf_node.solve();
-
-            // file.open("/home/jcasals/random/debug/wolf_debug" + std::to_string(current) + "-" +
-            // std::to_string(last_id) + "-after.out"); file << "ROSTIME " << ros::Time::now(); file <<
-            // wolf_node.problem_ptr_->printToString(); file.close(); update tf
-
             last_solve_time = ros::Time::now();
-            //last_id = current;
         }
-        // if (ros::Time::now().sec > 1490285401)
-        // {
-        //     wolf_node.solve();
-        //     wolf_node.updateTf();
-        // }
 
         // broadcast tf
         wolf_node.updateTf();
@@ -198,6 +196,14 @@ int main(int argc, char **argv)
             wolf_node.visualize();
             last_viz_time = ros::Time::now();
         }
+
+        // publish periodically
+        for(auto pub : wolf_node.publishers_)
+            if ((ros::Time::now() - pub->last_publish_time_).toSec() >= pub->period_)
+            {
+                pub->publish(wolf_node.problem_ptr_);
+                pub->last_publish_time_ = ros::Time::now();
+            }
 
         // execute pending callbacks
         ros::spinOnce();

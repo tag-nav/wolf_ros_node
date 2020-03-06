@@ -39,10 +39,9 @@
 #include <queue>
 #include <memory>
 
-#include "subscriber_factory.h"
-#include "visualizer_factory.h"
 #include "wolf_ros_subscriber.h"
 #include "wolf_ros_visualizer.h"
+#include "wolf_ros_publisher.h"
 //#include "wolf_ros_scan_visualizer.h"
 
 using namespace wolf;
@@ -59,17 +58,20 @@ class WolfRosNode
 
         double solver_period_;
         double viz_period_;
-
-    protected:
-        // solver
-        SolverManagerPtr solver_manager_ptr_;
-        SolverManager::ReportVerbosity solver_verbose_;
+        double publisher_period_;
 
         // visualizer
         std::shared_ptr<WolfRosVisualizer> viz_;
 
         // subscribers
         std::vector<SubscriberWrapperPtr> subscribers_;
+        // publishers
+        std::vector<WolfRosPublisherPtr> publishers_;
+
+    protected:
+        // solver
+        SolverManagerPtr solver_manager_ptr_;
+        SolverManager::ReportVerbosity solver_verbose_;
 
         // transforms
         tf::TransformBroadcaster tfb_;
