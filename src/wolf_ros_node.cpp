@@ -2,7 +2,9 @@
 #include "core/solver/solver_factory.h"
 #include "ros/time.h"
 #include "tf/transform_datatypes.h"
+#include "subscriber_factory.h"
 #include "visualizer_factory.h"
+#include "publisher_factory.h"
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -24,6 +26,7 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
 
     while(not ros::Time::isValid()) sleep(1);
     server.addParam("problem/prior/timestamp", std::to_string(ros::Time::now().sec) + "." + std::to_string(ros::Time::now().nsec));
+    // std::cout << "Prior timestamp " << server.getParam<std::string>("problem/prior/timestamp") << "\n";
 
     problem_ptr_ = Problem::autoSetup(server);
 
@@ -51,9 +54,25 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
     // }
 
     auto visualizer = server.getParam<std::string>("visualizer");
-    wolf_viz_ = VisualizerFactory::get().create(visualizer);
+    wolf_viz_       = VisualizerFactory::get().create(visualizer);
     wolf_viz_->initialize(nh_);
 
+    try
+    {
+        auto publishers = server.getParam<std::vector<std::string>>("ROS publishers");
+        for (auto pub : publishers)
+        {
+            WOLF_INFO("Pub: ", pub);
+            auto publisher = PublisherFactory::get().create(pub);
+            publishers_.push_back(publisher);
+            publishers_.back()->initialize(nh_);
+        }
+    }
+    catch (MissingValueException& e)
+    {
+        WOLF_WARN(e.what());
+        WOLF_WARN("No publishers found...");
+    }
     nh_.param<std::string>(  "map_frame_id",   map_frame_id_,  "map");
     nh_.param<std::string>(  "odom_frame_id",  odom_frame_id_, "odom");
     nh_.param<std::string>(  "base_frame_id",  base_frame_id_, "base_footprint");
@@ -171,6 +190,8 @@ int main(int argc, char **argv) {
             // solve
             wolf_node.solve();
             wolf_node.updateTf();
+            for(auto pub : wolf_node.publishers_)
+                pub->publish(wolf_node.problem_ptr_);
 
             // file.open("/home/jcasals/random/debug/wolf_debug" + std::to_string(current) + "-" +
             // std::to_string(last_id) + "-after.out"); file << "ROSTIME " << ros::Time::now(); file <<

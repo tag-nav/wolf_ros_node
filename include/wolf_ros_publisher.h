@@ -13,6 +13,7 @@
 
 namespace wolf
 {
+WOLF_PTR_TYPEDEFS(WolfRosPublisher);
 class WolfRosPublisher
 {
   public:

@@ -39,10 +39,9 @@
 #include <queue>
 #include <memory>
 
-#include "subscriber_factory.h"
-#include "visualizer_factory.h"
 #include "wolf_ros_subscriber.h"
 #include "wolf_ros_visualizer.h"
+#include "wolf_ros_publisher.h"
 //#include "wolf_ros_scan_visualizer.h"
 
 using namespace wolf;
@@ -57,16 +56,17 @@ class WolfRosNode
         // ROS node handle
         ros::NodeHandle nh_;
 
-
-    protected:
-        // solver
-        CeresManagerPtr ceres_manager_ptr_;
-
         // visualizer
         std::shared_ptr<WolfRosVisualizer> wolf_viz_;
 
         // subscribers
         std::vector<SubscriberWrapperPtr> subscribers_;
+        // publishers
+        std::vector<WolfRosPublisherPtr> publishers_;
+
+    protected:
+        // solver
+        CeresManagerPtr ceres_manager_ptr_;
 
         // transforms
         tf::TransformBroadcaster tfb_;

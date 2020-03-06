@@ -17,6 +17,7 @@ using namespace wolf;
 
 namespace wolf
 {
+WOLF_PTR_TYPEDEFS(WolfRosVisualizer);
 class WolfRosVisualizer
 {
   public:
