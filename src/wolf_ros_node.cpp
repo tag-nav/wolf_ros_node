@@ -20,6 +20,7 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
     nh_.param<std::string>("odom_frame_id",  odom_frame_id_, "odom");
     nh_.param<std::string>("base_frame_id",  base_frame_id_, "base_footprint");
 
+    std::cout <<"yaml: " << yaml_file << std::endl;
     int found = yaml_file.find_last_of("\\/");
     std::string yaml_dir = yaml_file.substr(0, found);
     ParserYAML parser = ParserYAML(yaml_file, yaml_dir);
@@ -53,13 +54,6 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
         subscribers_.push_back(subscriber_wrapper);
         subscribers_.back()->initSubscriber(nh_, topic);
     }
-    // TODO: integrate visualizers into YAML config. (We need to figure out how to have general visualizers first)
-    // std::vector<std::string> visualizers;
-    // visualizers.push_back("WolfRosScanVisualizer");
-    // for(auto const& visualizer: visualizers){
-    //     viz_ = VisualizerFactory::get().create(visualizer);
-    //     viz_->initialize(nh_);
-    // }
 
     // ROS VISUALIZER
     auto visualizer = server.getParam<std::string>("visualizer/type");
@@ -68,9 +62,9 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
     viz_period_ = server.getParam<int>("visualizer/period");
 
     // ROS PUBLISHERS
-    //try
-    //{
-        for (auto it : server.getParam<std::vector<std::map<std::string, std::string>>>("ROS publishers"))
+    try
+    {
+        for (auto it : server.getParam<std::vector<std::map<std::string, std::string>>>("ROS publisher managers"))
         {
             std::string pub = it["type"];
             WOLF_INFO("Pub: ", pub);
@@ -79,12 +73,12 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
             publishers_.push_back(publisher);
             publishers_.back()->initialize(nh_,it["topic"]);
         }
-//    }
-//    catch (MissingValueException& e)
-//    {
-//        WOLF_WARN(e.what());
-//        WOLF_WARN("No publishers found...");
-//    }
+    }
+    catch (MissingValueException& e)
+    {
+        WOLF_WARN(e.what());
+        WOLF_WARN("No publishers found...");
+    }
 
     // TF INIT
     updateTf();
