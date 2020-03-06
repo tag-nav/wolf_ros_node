@@ -17,6 +17,7 @@ SubscriberWrapperDiffdrive::SubscriberWrapperDiffdrive(const SensorBasePtr& sens
   , last_odom_seq_(-1)
 {
   last_angles_ = Eigen::Vector2d();
+  ticks_cov_factor_ = static_pointer_cast<SensorDiffDrive>(sensor_ptr)->getParams().ticks_cov_factor;
 }
 
 void SubscriberWrapperDiffdrive::initSubscriber(ros::NodeHandle& nh, const std::string& topic)
@@ -34,7 +35,7 @@ void SubscriberWrapperDiffdrive::callback(const sensor_msgs::JointState::ConstPt
   Eigen::Vector2d angles_inc (pi2pi(msg_angles(0) - last_angles_(0)), pi2pi(msg_angles(1) - last_angles_(1)));
   angles_inc *= ticks_per_revolution/(2*M_PI);
 
-  Eigen::MatrixXd cov        = Eigen::Matrix2d::Identity()*(angles_inc.norm() + 1)/10;  // TODO check this
+  Eigen::MatrixXd cov        = ticks_cov_factor_ * (angles_inc.cwiseAbs() + Eigen::Vector2d::Ones()).asDiagonal();  // TODO check this
 
   if (last_odom_seq_ != -1)
   {

@@ -57,13 +57,16 @@ class WolfRosNode
         // ROS node handle
         ros::NodeHandle nh_;
 
+        double solver_period_;
+        double viz_period_;
 
     protected:
         // solver
-        CeresManagerPtr ceres_manager_ptr_;
+        SolverManagerPtr solver_manager_ptr_;
+        SolverManager::ReportVerbosity solver_verbose_;
 
         // visualizer
-        std::shared_ptr<WolfRosVisualizer> wolf_viz_;
+        std::shared_ptr<WolfRosVisualizer> viz_;
 
         // subscribers
         std::vector<SubscriberWrapperPtr> subscribers_;
@@ -73,6 +76,7 @@ class WolfRosNode
         tf::TransformListener    tfl_;
         std::string base_frame_id_, map_frame_id_, odom_frame_id_;
         tf::Transform T_map2odom;
+
 
       public:
         WolfRosNode();

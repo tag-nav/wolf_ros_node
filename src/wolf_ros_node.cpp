@@ -9,10 +9,14 @@
 
 WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
 {
+    // ROS PARAMS
     std::string yaml_file, plugins_path, subscribers_path;
     nh_.param<std::string>("yaml_file_path", yaml_file, ros::package::getPath("wolf_ros_node")+"/yaml/params_demo.yaml");
     nh_.param<std::string>("plugins_path", plugins_path, "/usr/local/lib/iri-algorithms/");
     nh_.param<std::string>("packages_path", subscribers_path, ros::package::getPath("wolf_ros_node") + "/../../devel/lib/");
+    nh_.param<std::string>("map_frame_id",   map_frame_id_,  "map");
+    nh_.param<std::string>("odom_frame_id",  odom_frame_id_, "odom");
+    nh_.param<std::string>("base_frame_id",  base_frame_id_, "base_footprint");
 
     int found = yaml_file.find_last_of("\\/");
     std::string yaml_dir = yaml_file.substr(0, found);
@@ -25,13 +29,17 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
     while(not ros::Time::isValid()) sleep(1);
     server.addParam("problem/prior/timestamp", std::to_string(ros::Time::now().sec) + "." + std::to_string(ros::Time::now().nsec));
 
+    // PROBLEM
     problem_ptr_ = Problem::autoSetup(server);
 
-    // ceres::Solver::Options ceres_options;
-    // ceres_manager_ptr_ = std::make_shared<CeresManager>(problem_ptr_, ceres_options);
+    // SOLVER
+    solver_manager_ptr_ = std::static_pointer_cast<CeresManager>(SolverFactory::get().create("CERES", problem_ptr_, server));
+    int solver_verbose_int;
+    solver_period_ = server.getParam<int>("solver/period");
+    solver_verbose_int = server.getParam<int>("solver/verbose");
+    solver_verbose_ = static_cast<SolverManager::ReportVerbosity>(solver_verbose_int);
 
-    ceres_manager_ptr_ = std::static_pointer_cast<CeresManager>(SolverFactory::get().create("CERES", problem_ptr_, server));
-
+    // ROS SUBSCRIBERS
     for (auto it : server.getParam<std::vector<std::map<std::string, std::string>>>("ROS subscriber managers"))
         {
             std::string subscriber = it["type"];
@@ -46,18 +54,17 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
     // std::vector<std::string> visualizers;
     // visualizers.push_back("WolfRosScanVisualizer");
     // for(auto const& visualizer: visualizers){
-    //     wolf_viz_ = VisualizerFactory::get().create(visualizer);
-    //     wolf_viz_->initialize(nh_);
+    //     viz_ = VisualizerFactory::get().create(visualizer);
+    //     viz_->initialize(nh_);
     // }
 
-    auto visualizer = server.getParam<std::string>("visualizer");
-    wolf_viz_ = VisualizerFactory::get().create(visualizer);
-    wolf_viz_->initialize(nh_);
+    // VISUALIZER
+    auto visualizer = server.getParam<std::string>("visualizer/type");
+    viz_ = VisualizerFactory::get().create(visualizer);
+    viz_->initialize(nh_);
+    viz_period_ = server.getParam<int>("visualizer/period");
 
-    nh_.param<std::string>(  "map_frame_id",   map_frame_id_,  "map");
-    nh_.param<std::string>(  "odom_frame_id",  odom_frame_id_, "odom");
-    nh_.param<std::string>(  "base_frame_id",  base_frame_id_, "base_footprint");
-
+    // TF INIT
     updateTf();
     broadcastTf();
 }
@@ -65,23 +72,23 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
 void WolfRosNode::solve()
 {
     ROS_INFO("================ solve ==================");
-    std::string report = ceres_manager_ptr_->solve(SolverManager::ReportVerbosity::FULL);
-    std::cout << report << std::endl;
+    std::string report = solver_manager_ptr_->solve(solver_verbose_);
+    std::cout << report;
 }
 
 void WolfRosNode::visualize()
 {
     ROS_INFO("================ visualize ==================");
     auto start = std::chrono::high_resolution_clock::now();
-    wolf_viz_->visualize(problem_ptr_);
+    viz_->visualize(problem_ptr_);
     auto stop     = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-    std::cout << "Visualize took " << duration.count() << " microseconds" << std::endl;
+    //std::cout << "Visualize took " << duration.count() << " microseconds" << std::endl;
 }
 
 bool WolfRosNode::updateTf()
 {
-    ROS_INFO("================updateTf==================");
+    ROS_DEBUG("================updateTf==================");
 
     // get current vehicle pose
     ros::Time loc_stamp;
@@ -100,7 +107,7 @@ bool WolfRosNode::updateTf()
     //T_map2base.setOrigin( tf::Vector3((double) current_pose(0), (double) current_pose(1), 0) );
     //T_map2base.setRotation( tf::createQuaternionFromYaw((double) current_pose(2)) );
 
-    // std::cout << "Current pose: " << current_pose.transpose() << std::endl;
+    std::cout << "Current pose: " << current_pose.transpose() << std::endl;
 
     //gets T_map2odom_ (odom wrt map), by using tf listener, and assuming an odometry node is broadcasting odom2base
     tf::StampedTransform T_base2odom;
@@ -108,7 +115,7 @@ bool WolfRosNode::updateTf()
     {
         // tfl_.lookupTransform(base_frame_id_, odom_frame_id_, loc_stamp, T_base2odom);
         tfl_.lookupTransform(base_frame_id_, odom_frame_id_, ros::Time(0), T_base2odom);
-        std::cout << ros::Time::now().sec << " Odometry: " << T_base2odom.inverse().getOrigin().getX() << " " << T_base2odom.inverse().getOrigin().getY() << " " << T_base2odom.inverse().getRotation().getAngle() << std::endl;
+        //std::cout << ros::Time::now().sec << " Odometry: " << T_base2odom.inverse().getOrigin().getX() << " " << T_base2odom.inverse().getOrigin().getY() << " " << T_base2odom.inverse().getRotation().getAngle() << std::endl;
     }
     else
     {
@@ -124,7 +131,7 @@ bool WolfRosNode::updateTf()
     // tf::StampedTransform T_map2odom(T_map2base * T_base2odom, loc_stamp, map_frame_id_, odom_frame_id_);
     // this->T_map2odom = tf::StampedTransform(T_map2base * T_base2odom, loc_stamp, map_frame_id_, odom_frame_id_);
     this->T_map2odom = tf::Transform(T_map2base * T_base2odom);
-    std::cout << "T_map2odom: " << T_map2odom.getOrigin().getX() << " " << T_map2odom.getOrigin().getY() << " " << T_map2odom.getRotation().getAngle() << std::endl;
+    //std::cout << "T_map2odom: " << T_map2odom.getOrigin().getX() << " " << T_map2odom.getOrigin().getY() << " " << T_map2odom.getRotation().getAngle() << std::endl;
     return result;
     //T_map2odom.setData(T_map2base * T_base2odom);
     //T_map2odom.stamp_ = loc_stamp;
@@ -135,33 +142,30 @@ void WolfRosNode::broadcastTf()
     tfb_.sendTransform(current_map2odom);
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     std::cout << "\n=========== WOLF ROS WRAPPER MAIN ===========\n\n";
-
 
     // Init ROS
     ros::init(argc, argv, ros::this_node::getName());
     // Wolf node
     WolfRosNode wolf_node;
-    int visualize_interval;
-    wolf_node.nh_.param<int>("visualize_interval", visualize_interval, 1);
-    ros::Rate r(1);
 
     ros::Rate loopRate(20);
-    int n_iterations_solve(10);
-    int iteration(0);
-    ros::Time last_time = ros::Time(0);
-    int last_id = -1;
-    std::ofstream file;
+    ros::Time last_viz_time = ros::Time(0);
+    ros::Time last_solve_time = ros::Time(0);
+    //int last_id = -1;
+    //std::ofstream file;
     // file.open("/home/jcasals/wolf_debug.out");
 
-    while (ros::ok()) {
-        // solve every n iterations
-        // if (iteration++ >= n_iterations_solve)
-        int current = wolf_node.problem_ptr_->getLastKeyFrame()->id();
-        if (current != last_id)
+    while (ros::ok())
+    {
+        // solve periodically
+        if ((ros::Time::now() - last_solve_time).toSec() >= wolf_node.solver_period_)
+        //int current = wolf_node.problem_ptr_->getLastKeyFrame()->id();
+        //if (current != last_id)
         {
-            std::cout << "Last ID " << last_id << " Current " << current << " Current time " << ros::Time::now().sec << std::endl;
+            //std::cout << "Last ID " << last_id << " Current " << current << " Current time " << ros::Time::now().sec << std::endl;
             //  file.open("/home/jcasals/random/debug/wolf_debug" + std::to_string(current) + "-" +
             //  std::to_string(last_id) + "-before.out");
             // file << "ROSTIME " << ros::Time::now();
@@ -170,34 +174,36 @@ int main(int argc, char **argv) {
 
             // solve
             wolf_node.solve();
-            wolf_node.updateTf();
 
             // file.open("/home/jcasals/random/debug/wolf_debug" + std::to_string(current) + "-" +
             // std::to_string(last_id) + "-after.out"); file << "ROSTIME " << ros::Time::now(); file <<
             // wolf_node.problem_ptr_->printToString(); file.close(); update tf
-            last_id = current;
+
+            last_solve_time = ros::Time::now();
+            //last_id = current;
         }
         // if (ros::Time::now().sec > 1490285401)
         // {
         //     wolf_node.solve();
         //     wolf_node.updateTf();
         // }
-            // broadcast tf
-            // wolf_node.updateTf();
-            wolf_node.broadcastTf();
-            // visualize
-            auto Dt = ros::Time::now() - last_time;
-            if (Dt.toSec() >= visualize_interval)
-            {
-                last_time = ros::Time::now();
-                wolf_node.visualize();
-                // iteration = 1;
-        }
-    // execute pending callbacks
-    ros::spinOnce();
 
-    // relax to fit output rate
-    loopRate.sleep();
+        // broadcast tf
+        wolf_node.updateTf();
+        wolf_node.broadcastTf();
+
+        // visualize periodically
+        if ((ros::Time::now() - last_viz_time).toSec() >= wolf_node.viz_period_)
+        {
+            wolf_node.visualize();
+            last_viz_time = ros::Time::now();
+        }
+
+        // execute pending callbacks
+        ros::spinOnce();
+
+        // relax to fit output rate
+        loopRate.sleep();
     }
     // file.close();
     return 0;

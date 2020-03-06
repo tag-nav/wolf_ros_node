@@ -24,6 +24,7 @@ class SubscriberWrapperDiffdrive : public SubscriberWrapper
         Eigen::Vector2d last_angles_;
         int last_odom_seq_;
         int last_kf = -1;
+        double ticks_cov_factor_;
 
    public:
 

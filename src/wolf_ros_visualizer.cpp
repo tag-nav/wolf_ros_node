@@ -21,7 +21,9 @@ void WolfRosVisualizer::initialize(ros::NodeHandle& nh)
     nh.param<bool>(         "viz_trajectory",           viz_trajectory_,            true);
     // viz parameters
     nh.param<std::string>(  "map_frame_name",           map_frame_id_,              "map");
+    nh.param<double>(       "viz_scale",                viz_scale_,                 1);
     nh.param<double>(       "factors_width",            factors_width_,             0.02);
+    nh.param<double>(       "factors_absolute_height",  factors_absolute_height_,   20);
     nh.param<double>(       "landmark_text_z_offset",   landmark_text_z_offset_,    1);
     nh.param<double>(       "landmark_length",          landmark_length_,           1);
     nh.param<double>(       "frame_width",              frame_width_,               0.1);
@@ -50,7 +52,7 @@ void WolfRosVisualizer::initialize(ros::NodeHandle& nh)
     factor_marker_.type = visualization_msgs::Marker::LINE_LIST;
     factor_marker_.header.frame_id = map_frame_id_;
     factor_marker_.ns = "/factors";
-    factor_marker_.scale.x = factors_width_;
+    factor_marker_.scale.x = viz_scale_*factors_width_;
     factor_text_marker_ = factor_marker_;
     factor_text_marker_.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
     factor_text_marker_.ns = "/factors_text";
@@ -66,9 +68,9 @@ void WolfRosVisualizer::initialize(ros::NodeHandle& nh)
     frame_marker_.type = visualization_msgs::Marker::ARROW;
     frame_marker_.header.frame_id = map_frame_id_;
     frame_marker_.ns = "/frames";
-    frame_marker_.scale.x = frame_length_;
-    frame_marker_.scale.y = frame_width_;
-    frame_marker_.scale.z = frame_width_;
+    frame_marker_.scale.x = viz_scale_*frame_length_;
+    frame_marker_.scale.y = viz_scale_*frame_width_;
+    frame_marker_.scale.z = viz_scale_*frame_width_;
     frame_marker_.color = color_active_;
     frame_text_marker_ = frame_marker_;
     frame_text_marker_.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
@@ -85,9 +87,9 @@ void WolfRosVisualizer::initialize(ros::NodeHandle& nh)
     landmark_marker_.type = visualization_msgs::Marker::ARROW;
     landmark_marker_.header.frame_id = map_frame_id_;
     landmark_marker_.ns = "/landmarks";
-    landmark_marker_.scale.x = landmark_length_;
-    landmark_marker_.scale.y = landmark_width_;
-    landmark_marker_.scale.z = landmark_width_;
+    landmark_marker_.scale.x = viz_scale_*landmark_length_;
+    landmark_marker_.scale.y = viz_scale_*landmark_width_;
+    landmark_marker_.scale.z = viz_scale_*landmark_width_;
     landmark_marker_.color.a = 0.5;
     landmark_text_marker_ = landmark_marker_;
     landmark_text_marker_.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
@@ -277,23 +279,23 @@ void WolfRosVisualizer::fillLandmarkMarkers(LandmarkBaseConstPtr lmk,
     if (lmk->getO() != nullptr)
     {
         landmark_marker_.type = visualization_msgs::Marker::ARROW;
-        lmk_marker.scale.x = landmark_length_;
-        lmk_marker.scale.y = landmark_width_;
-        lmk_marker.scale.z = landmark_width_;
+        lmk_marker.scale.x = viz_scale_*landmark_length_;
+        lmk_marker.scale.y = viz_scale_*landmark_width_;
+        lmk_marker.scale.z = viz_scale_*landmark_width_;
     }
     else if (lmk->getP()->getSize() == 2)
     {
         landmark_marker_.type = visualization_msgs::Marker::CYLINDER;
-        lmk_marker.scale.x = landmark_width_;
-        lmk_marker.scale.y = landmark_width_;
-        lmk_marker.scale.z = landmark_length_;
+        lmk_marker.scale.x = viz_scale_*landmark_width_;
+        lmk_marker.scale.y = viz_scale_*landmark_width_;
+        lmk_marker.scale.z = viz_scale_*landmark_length_;
     }
     else
     {
         landmark_marker_.type = visualization_msgs::Marker::SPHERE;
-        lmk_marker.scale.x = landmark_width_;
-        lmk_marker.scale.y = landmark_width_;
-        lmk_marker.scale.z = landmark_width_;
+        lmk_marker.scale.x = viz_scale_*landmark_width_;
+        lmk_marker.scale.y = viz_scale_*landmark_width_;
+        lmk_marker.scale.z = viz_scale_*landmark_width_;
     }
 
     // COLOR ------------------------------------------------------
@@ -331,7 +333,7 @@ void WolfRosVisualizer::fillLandmarkMarkers(LandmarkBaseConstPtr lmk,
     lmk_text_marker.text = std::to_string(lmk->id());
     lmk_text_marker.pose.position.x = lmk_marker.pose.position.x;
     lmk_text_marker.pose.position.y = lmk_marker.pose.position.y;
-    lmk_text_marker.pose.position.z = lmk_marker.pose.position.z + landmark_text_z_offset_;
+    lmk_text_marker.pose.position.z = lmk_marker.pose.position.z + viz_scale_*landmark_text_z_offset_;
 }
 
 void WolfRosVisualizer::fillFactorMarker(FactorBaseConstPtr fac,
@@ -395,7 +397,7 @@ void WolfRosVisualizer::fillFactorMarker(FactorBaseConstPtr fac,
   // ABSOLUTE
   else {
     point2 = point1;
-    point2.z = 20;
+    point2.z = viz_scale_ * factors_absolute_height_;
   }
 
   // store points ------------------------------------------------------
@@ -443,14 +445,14 @@ void WolfRosVisualizer::fillFrameMarker(FrameBaseConstPtr frm,
   // Pose -> ARROW
   if (frm->getO() != nullptr) {
     landmark_marker_.type = visualization_msgs::Marker::ARROW;
-    frm_marker.scale.x = frame_length_;
-    frm_marker.scale.y = frame_width_;
-    frm_marker.scale.z = frame_width_;
+    frm_marker.scale.x = viz_scale_*frame_length_;
+    frm_marker.scale.y = viz_scale_*frame_width_;
+    frm_marker.scale.z = viz_scale_*frame_width_;
   } else {
     landmark_marker_.type = visualization_msgs::Marker::SPHERE;
-    frm_marker.scale.x = frame_width_;
-    frm_marker.scale.y = frame_width_;
-    frm_marker.scale.z = frame_width_;
+    frm_marker.scale.x = viz_scale_*frame_width_;
+    frm_marker.scale.y = viz_scale_*frame_width_;
+    frm_marker.scale.z = viz_scale_*frame_width_;
   }
 
   // POSITION & ORIENTATION
@@ -480,7 +482,7 @@ void WolfRosVisualizer::fillFrameMarker(FrameBaseConstPtr frm,
   frm_text_marker.text = std::to_string(frm->id());
   frm_text_marker.pose.position.x = frm_marker.pose.position.x;
   frm_text_marker.pose.position.y = frm_marker.pose.position.y;
-  frm_text_marker.pose.position.z = frm_marker.pose.position.z + landmark_text_z_offset_;
+  frm_text_marker.pose.position.z = frm_marker.pose.position.z + viz_scale_*landmark_text_z_offset_;
 }
 
 std::shared_ptr<WolfRosVisualizer> WolfRosVisualizer::create()

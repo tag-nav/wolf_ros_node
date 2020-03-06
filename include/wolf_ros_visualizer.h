@@ -65,7 +65,7 @@ class WolfRosVisualizer
     // Options
     std::string map_frame_id_;
     bool        viz_factors_, viz_landmarks_, viz_trajectory_;
-    double      factors_width_, landmark_text_z_offset_, landmark_width_, landmark_length_, frame_width_, frame_length_;
+    double      viz_scale_, factors_width_, factors_absolute_height_, landmark_text_z_offset_, landmark_width_, landmark_length_, frame_width_, frame_length_;
     std_msgs::ColorRGBA color_active_, color_inactive_;
 
     // auxiliar variables
