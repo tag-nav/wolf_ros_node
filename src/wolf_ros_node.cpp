@@ -44,7 +44,7 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
     solver_verbose_ = static_cast<SolverManager::ReportVerbosity>(solver_verbose_int);
 
     // ROS SUBSCRIBERS
-    for (auto it : server.getParam<std::vector<std::map<std::string, std::string>>>("ROS subscriber managers"))
+    for (auto it : server.getParam<std::vector<std::map<std::string, std::string>>>("ROS subscriber"))
     {
         std::string subscriber = it["type"];
         std::string topic      = it["topic"];
@@ -64,7 +64,7 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
     // ROS PUBLISHERS
     try
     {
-        for (auto it : server.getParam<std::vector<std::map<std::string, std::string>>>("ROS publisher managers"))
+        for (auto it : server.getParam<std::vector<std::map<std::string, std::string>>>("ROS publisher"))
         {
             std::string pub = it["type"];
             WOLF_INFO("Pub: ", pub);
