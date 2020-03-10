@@ -17,21 +17,21 @@ using namespace wolf;
 
 namespace wolf
 {
-WOLF_PTR_TYPEDEFS(WolfRosVisualizer);
-class WolfRosVisualizer
+WOLF_PTR_TYPEDEFS(WolfVisualizer);
+class WolfVisualizer
 {
   public:
     bool publish_markers_;
 
-    WolfRosVisualizer();
+    WolfVisualizer();
 
     virtual void initialize(ros::NodeHandle& nh);
 
-    virtual ~WolfRosVisualizer(){};
+    virtual ~WolfVisualizer(){};
 
     virtual void visualize(const ProblemPtr problem);
 
-    static std::shared_ptr<WolfRosVisualizer> create();
+    static std::shared_ptr<WolfVisualizer> create();
 
   protected:
     void publishLandmarks(const ProblemPtr problem);

@@ -1,5 +1,5 @@
-#ifndef WOLF_ROS_PUBLISHER_H
-#define WOLF_ROS_PUBLISHER_H
+#ifndef WOLF_PUBLISHER_H
+#define WOLF_PUBLISHER_H
 /**************************
  *      ROS includes      *
  **************************/
@@ -13,17 +13,17 @@
 
 namespace wolf
 {
-WOLF_PTR_TYPEDEFS(WolfRosPublisher);
-class WolfRosPublisher
+WOLF_PTR_TYPEDEFS(WolfPublisher);
+class WolfPublisher
 {
   public:
 
-    WolfRosPublisher()
+    WolfPublisher()
       : period_(1)
       , last_publish_time_(ros::Time(0))
     {};
 
-    virtual ~WolfRosPublisher(){};
+    virtual ~WolfPublisher(){};
 
     virtual void initialize(ros::NodeHandle& nh, const std::string& topic) = 0;
 

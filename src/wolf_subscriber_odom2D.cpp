@@ -18,25 +18,25 @@
 #include <iomanip>
 #include <queue>
 
-#include "wolf_ros_subscriber.h"
-#include "wolf_ros_subscriber_odom2D.h"
+#include "wolf_subscriber.h"
+#include "wolf_subscriber_odom2D.h"
 
 namespace wolf
 {
-SubscriberWrapperOdom2D::SubscriberWrapperOdom2D(const SensorBasePtr& sensor_ptr)
-  : SubscriberWrapper(sensor_ptr)
+SubscriberOdom2D::SubscriberOdom2D(const SensorBasePtr& sensor_ptr)
+  : WolfSubscriber(sensor_ptr)
   , last_odom_stamp_(ros::Time(0))
   , odometry_translational_cov_factor_(std::static_pointer_cast<SensorOdom2D>(sensor_ptr)->getDispVarToDispNoiseFactor())
   , odometry_rotational_cov_factor_(std::static_pointer_cast<SensorOdom2D>(sensor_ptr)->getRotVarToRotNoiseFactor())
 {
 }
 
-void SubscriberWrapperOdom2D::initSubscriber(ros::NodeHandle& nh, const std::string& topic)
+void SubscriberOdom2D::initSubscriber(ros::NodeHandle& nh, const std::string& topic)
 {
-    sub_ = nh.subscribe(topic, 100, &SubscriberWrapperOdom2D::callback, this);
+    sub_ = nh.subscribe(topic, 100, &SubscriberOdom2D::callback, this);
 }
 
-void SubscriberWrapperOdom2D::callback(const nav_msgs::Odometry::ConstPtr& msg)
+void SubscriberOdom2D::callback(const nav_msgs::Odometry::ConstPtr& msg)
 {
     ROS_DEBUG("WolfNodePolyline::odomCallback");
     ROS_INFO("WolfNodePolyline::odomCallback: start");
@@ -58,10 +58,10 @@ void SubscriberWrapperOdom2D::callback(const nav_msgs::Odometry::ConstPtr& msg)
     ROS_DEBUG("WolfNodePolyline::odomCallback: end");
 }
 
-    std::shared_ptr<SubscriberWrapper> SubscriberWrapperOdom2D::create(const std::string&  _unique_name,
+    std::shared_ptr<WolfSubscriber> SubscriberOdom2D::create(const std::string&  _unique_name,
                                                                        const ParamsServer& _params,
                                                                        const SensorBasePtr _sensor_ptr)
     {
-        return std::make_shared<SubscriberWrapperOdom2D>(_sensor_ptr);
+        return std::make_shared<SubscriberOdom2D>(_sensor_ptr);
     };
 }  // namespace wolf

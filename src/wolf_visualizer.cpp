@@ -1,14 +1,14 @@
-#include "wolf_ros_visualizer.h"
+#include "wolf_visualizer.h"
 
 
-WolfRosVisualizer::WolfRosVisualizer() :
+WolfVisualizer::WolfVisualizer() :
     landmark_max_hits_(10),
     last_markers_publish_(0)
 {
 }
 
 
-void WolfRosVisualizer::initialize(ros::NodeHandle& nh)
+void WolfVisualizer::initialize(ros::NodeHandle& nh)
 {
     // init publishers ---------------------------------------------------
     factors_publisher_      = nh.advertise<visualization_msgs::MarkerArray>("factors", 1);
@@ -101,7 +101,7 @@ void WolfRosVisualizer::initialize(ros::NodeHandle& nh)
     landmark_text_marker_.scale.z = 3;
 }
 
-void WolfRosVisualizer::visualize(const ProblemPtr problem)
+void WolfVisualizer::visualize(const ProblemPtr problem)
 {
     if (viz_factors_)
         publishFactors(problem);
@@ -111,7 +111,7 @@ void WolfRosVisualizer::visualize(const ProblemPtr problem)
         publishTrajectory(problem);
 }
 
-void WolfRosVisualizer::publishLandmarks(const ProblemPtr problem)
+void WolfVisualizer::publishLandmarks(const ProblemPtr problem)
 {
     // Iterate over all landmarks
     int marker_i = 0;
@@ -164,7 +164,7 @@ void WolfRosVisualizer::publishLandmarks(const ProblemPtr problem)
 }
 
 
-void WolfRosVisualizer::publishFactors(const ProblemPtr problem)
+void WolfVisualizer::publishFactors(const ProblemPtr problem)
 {
     // Get a list of factors of the trajectory (discarded all prior factors for extrinsics/intrinsics..)
     FactorBasePtrList fac_list;
@@ -217,7 +217,7 @@ void WolfRosVisualizer::publishFactors(const ProblemPtr problem)
     factors_publisher_.publish(factors_marker_array_);
 }
 
-void WolfRosVisualizer::publishTrajectory(const ProblemPtr problem)
+void WolfVisualizer::publishTrajectory(const ProblemPtr problem)
 {
     // Iterate over the key frames
     int marker_i = 0;
@@ -267,7 +267,7 @@ void WolfRosVisualizer::publishTrajectory(const ProblemPtr problem)
     trajectory_publisher_.publish(trajectory_marker_array_);
 }
 
-void WolfRosVisualizer::fillLandmarkMarkers(LandmarkBaseConstPtr lmk,
+void WolfVisualizer::fillLandmarkMarkers(LandmarkBaseConstPtr lmk,
                                             visualization_msgs::Marker& lmk_marker,
                                             visualization_msgs::Marker& lmk_text_marker)
 {
@@ -336,7 +336,7 @@ void WolfRosVisualizer::fillLandmarkMarkers(LandmarkBaseConstPtr lmk,
     lmk_text_marker.pose.position.z = lmk_marker.pose.position.z + viz_scale_*landmark_text_z_offset_;
 }
 
-void WolfRosVisualizer::fillFactorMarker(FactorBaseConstPtr fac,
+void WolfVisualizer::fillFactorMarker(FactorBaseConstPtr fac,
                                          visualization_msgs::Marker &fac_marker,
                                          visualization_msgs::Marker &fac_text_marker)
 {
@@ -436,7 +436,7 @@ void WolfRosVisualizer::fillFactorMarker(FactorBaseConstPtr fac,
   fac_text_marker.pose.position.z = fac_marker.pose.position.z;
 }
 
-void WolfRosVisualizer::fillFrameMarker(FrameBaseConstPtr frm,
+void WolfVisualizer::fillFrameMarker(FrameBaseConstPtr frm,
                                         visualization_msgs::Marker &frm_marker,
                                         visualization_msgs::Marker &frm_text_marker)
 {
@@ -485,9 +485,9 @@ void WolfRosVisualizer::fillFrameMarker(FrameBaseConstPtr frm,
   frm_text_marker.pose.position.z = frm_marker.pose.position.z + viz_scale_*landmark_text_z_offset_;
 }
 
-std::shared_ptr<WolfRosVisualizer> WolfRosVisualizer::create()
+std::shared_ptr<WolfVisualizer> WolfVisualizer::create()
 {
-    return std::make_shared<WolfRosVisualizer>();
+    return std::make_shared<WolfVisualizer>();
 }
 
-WOLF_REGISTER_VISUALIZER(WolfRosVisualizer)
+WOLF_REGISTER_VISUALIZER(WolfVisualizer)

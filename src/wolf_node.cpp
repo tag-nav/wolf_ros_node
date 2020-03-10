@@ -1,4 +1,4 @@
-#include "wolf_ros_node.h"
+#include "wolf_node.h"
 #include "core/solver/solver_factory.h"
 #include "ros/time.h"
 #include "tf/transform_datatypes.h"
@@ -28,6 +28,8 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
 
     server.addParam("plugins_path", plugins_path);
     server.addParam("packages_path", subscribers_path);
+
+    server.print();
 
     while(not ros::Time::isValid()) sleep(1);
     server.addParam("problem/prior/timestamp", std::to_string(ros::Time::now().sec) + "." + std::to_string(ros::Time::now().nsec));

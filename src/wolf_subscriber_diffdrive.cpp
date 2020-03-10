@@ -8,12 +8,12 @@
 
 // #include "Eigen/src/Core/Matrix.h"
 #include "core/math/rotations.h"
-#include "wolf_ros_subscriber_diffdrive.h"
+#include "wolf_subscriber_diffdrive.h"
 
 namespace wolf
 {
-SubscriberWrapperDiffdrive::SubscriberWrapperDiffdrive(const SensorBasePtr& sensor_ptr)
-  : SubscriberWrapper(sensor_ptr)
+SubscriberDiffdrive::SubscriberDiffdrive(const SensorBasePtr& sensor_ptr)
+  : WolfSubscriber(sensor_ptr)
   , last_odom_stamp_(ros::Time(0))
   , last_odom_seq_(-1)
 {
@@ -21,12 +21,12 @@ SubscriberWrapperDiffdrive::SubscriberWrapperDiffdrive(const SensorBasePtr& sens
   ticks_cov_factor_ = std::static_pointer_cast<SensorDiffDrive>(sensor_ptr)->getParams()->ticks_cov_factor;
 }
 
-void SubscriberWrapperDiffdrive::initSubscriber(ros::NodeHandle& nh, const std::string& topic)
+void SubscriberDiffdrive::initSubscriber(ros::NodeHandle& nh, const std::string& topic)
 {
-    sub_ = nh.subscribe(topic, 100, &SubscriberWrapperDiffdrive::callback, this);
+    sub_ = nh.subscribe(topic, 100, &SubscriberDiffdrive::callback, this);
 }
 
-void SubscriberWrapperDiffdrive::callback(const sensor_msgs::JointState::ConstPtr& msg)
+void SubscriberDiffdrive::callback(const sensor_msgs::JointState::ConstPtr& msg)
 {
   auto left_angle            = msg->position[0];
   auto right_angle           = msg->position[1];
@@ -66,10 +66,10 @@ void SubscriberWrapperDiffdrive::callback(const sensor_msgs::JointState::ConstPt
   last_odom_seq_   = msg->header.seq;
 }
 
-    std::shared_ptr<SubscriberWrapper> SubscriberWrapperDiffdrive::create(const std::string&  _unique_name,
+    std::shared_ptr<WolfSubscriber> SubscriberDiffdrive::create(const std::string&  _unique_name,
                                                                        const ParamsServer& _params,
                                                                        const SensorBasePtr _sensor_ptr)
     {
-        return std::make_shared<SubscriberWrapperDiffdrive>(_sensor_ptr);
+        return std::make_shared<SubscriberDiffdrive>(_sensor_ptr);
     };
 }  // namespace wolf

@@ -144,10 +144,10 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 
-add_executable(${PROJECT_NAME} src/wolf_ros_node.cpp)
-add_library(wolf_subscriber_odom2D src/wolf_ros_subscriber_odom2D.cpp)
-add_library(wolf_subscriber_diffdrive src/wolf_ros_subscriber_diffdrive.cpp)
-add_library(wolf_ros_visualizer src/wolf_ros_visualizer.cpp)
+add_executable(${PROJECT_NAME} src/wolf_node.cpp)
+add_library(wolf_subscriber_odom2D src/wolf_subscriber_odom2D.cpp)
+add_library(wolf_subscriber_diffdrive src/wolf_subscriber_diffdrive.cpp)
+add_library(wolf_visualizer src/wolf_visualizer.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -158,13 +158,13 @@ add_library(wolf_ros_visualizer src/wolf_ros_visualizer.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg)
-add_dependencies(wolf_ros_visualizer ${PROJECT_NAME}_gencfg)
+add_dependencies(wolf_visualizer ${PROJECT_NAME}_gencfg)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(wolf_ros_visualizer ${wolf_LIBRARIES})
+target_link_libraries(wolf_visualizer ${wolf_LIBRARIES})
 
 target_link_libraries(${PROJECT_NAME}
-                      wolf_ros_visualizer
+                      wolf_visualizer
                       ${catkin_LIBRARIES}
                       ${CERES_LIBRARIES}
                       ${wolf_LIBRARIES}

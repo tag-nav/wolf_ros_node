@@ -156,8 +156,8 @@ namespace wolf
  *
  * You can also check the code in the example file ````src/examples/test_wolf_factories.cpp````.
  */
-    class WolfRosPublisher;
-    typedef Factory<WolfRosPublisher> PublisherFactory;
+    class WolfPublisher;
+    typedef Factory<WolfPublisher> PublisherFactory;
 template<>
 inline std::string PublisherFactory::getClass()
 {

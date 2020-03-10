@@ -156,8 +156,8 @@ namespace wolf
  *
  * You can also check the code in the example file ````src/examples/test_wolf_factories.cpp````.
  */
-    class WolfRosVisualizer;
-    typedef Factory<WolfRosVisualizer> VisualizerFactory;
+    class WolfVisualizer;
+    typedef Factory<WolfVisualizer> VisualizerFactory;
 template<>
 inline std::string VisualizerFactory::getClass()
 {
