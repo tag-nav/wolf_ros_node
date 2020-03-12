@@ -1,4 +1,4 @@
-#include "wolf_node.h"
+#include "node.h"
 #include "core/solver/solver_factory.h"
 #include "ros/time.h"
 #include "tf/transform_datatypes.h"

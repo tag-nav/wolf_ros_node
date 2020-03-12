@@ -39,9 +39,10 @@
 #include <queue>
 #include <memory>
 
-#include "wolf_subscriber.h"
-#include "wolf_visualizer.h"
-#include "wolf_publisher.h"
+#include "subscriber.h"
+#include "visualizer.h"
+#include "publisher.h"
+//#include "wolf_ros_scan_visualizer.h"
 
 using namespace wolf;
 using namespace std;
@@ -60,12 +61,12 @@ class WolfRosNode
         double publisher_period_;
 
         // visualizer
-        std::shared_ptr<WolfVisualizer> viz_;
+        std::shared_ptr<Visualizer> viz_;
 
         // subscribers
-        std::vector<WolfSubscriberPtr> subscribers_;
+        std::vector<SubscriberPtr> subscribers_;
         // publishers
-        std::vector<WolfPublisherPtr> publishers_;
+        std::vector<PublisherPtr> publishers_;
 
     protected:
         // solver
