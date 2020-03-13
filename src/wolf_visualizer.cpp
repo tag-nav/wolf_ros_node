@@ -397,7 +397,7 @@ void WolfVisualizer::fillFactorMarker(FactorBaseConstPtr fac,
   // ABSOLUTE
   else {
     point2 = point1;
-    point2.z = viz_scale_ * factors_absolute_height_;
+    point2.z = point1.z + viz_scale_ * factors_absolute_height_;
   }
 
   // store points ------------------------------------------------------
