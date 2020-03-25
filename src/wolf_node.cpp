@@ -91,7 +91,8 @@ void WolfRosNode::solve()
 {
     ROS_INFO("================ solve ==================");
     std::string report = solver_manager_ptr_->solve(solver_verbose_);
-    std::cout << report;
+    if (!report.empty())
+        std::cout << report << std::endl;
 }
 
 void WolfRosNode::visualize()
@@ -120,10 +121,19 @@ bool WolfRosNode::updateTf()
     // loc_stamp = ros::Time::now();
 
     //Get map2base from Wolf result, and builds base2map pose
-    tf::Transform T_map2base(tf::createQuaternionFromYaw((double) current_pose(2)),
-                             tf::Vector3((double) current_pose(0), (double) current_pose(1), 0) );
-    //T_map2base.setOrigin( tf::Vector3((double) current_pose(0), (double) current_pose(1), 0) );
-    //T_map2base.setRotation( tf::createQuaternionFromYaw((double) current_pose(2)) );
+    tf::Transform T_map2base;
+    if (problem_ptr_->getDim() == 2)
+    {
+        T_map2base = tf::Transform (tf::createQuaternionFromYaw(current_pose(2)),
+                                    tf::Vector3(current_pose(0), current_pose(1), 0) );
+        //T_map2base.setOrigin( tf::Vector3(current_pose(0), current_pose(1), 0) );
+        //T_map2base.setRotation( tf::createQuaternionFromYaw(current_pose(2)) );
+    }
+    else
+    {
+        T_map2base = tf::Transform (tf::Quaternion(current_pose(3), current_pose(4), current_pose(5), current_pose(6)),
+                                    tf::Vector3(current_pose(0), current_pose(1), current_pose(2)) );
+    }
 
     std::cout << "Current pose: " << current_pose.transpose() << std::endl;
 

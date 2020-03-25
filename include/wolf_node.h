@@ -3,19 +3,19 @@
  **************************/
 #include "core/common/node_base.h"
 #include "core/common/wolf.h"
-#include <core/capture/capture_odom_2D.h>
-#include <core/sensor/sensor_odom_2D.h>
-#include <core/processor/processor_odom_2D.h>
-#include <core/problem/problem.h>
-#include <core/utils/loader.hpp>
-#include <core/yaml/parser_yaml.hpp>
-#include <core/solver/solver_factory.h>
+#include "core/capture/capture_odom_2D.h"
+#include "core/sensor/sensor_odom_2D.h"
+#include "core/processor/processor_odom_2D.h"
+#include "core/problem/problem.h"
+#include "core/utils/loader.hpp"
+#include "core/yaml/parser_yaml.hpp"
+#include "core/solver/solver_factory.h"
 
 
 /**************************
  *     CERES includes     *
  **************************/
-#include <core/ceres_wrapper/ceres_manager.h>
+#include "core/ceres_wrapper/ceres_manager.h"
 //#include "glog/logging.h"
 
 /**************************
@@ -42,7 +42,6 @@
 #include "wolf_subscriber.h"
 #include "wolf_visualizer.h"
 #include "wolf_publisher.h"
-//#include "wolf_ros_scan_visualizer.h"
 
 using namespace wolf;
 using namespace std;
