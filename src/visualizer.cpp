@@ -273,8 +273,8 @@ void Visualizer::fillLandmarkMarkers(LandmarkBaseConstPtr lmk,
 {
     // SHAPE ------------------------------------------------------
     // Position
-    //    2D: CYLINDER
-    //    3D: SPHERE
+    //    2d: CYLINDER
+    //    3d: SPHERE
     // Pose -> ARROW
     if (lmk->getO() != nullptr)
     {
@@ -316,7 +316,7 @@ void Visualizer::fillLandmarkMarkers(LandmarkBaseConstPtr lmk,
     // orientation
     if (lmk->getO() != nullptr)
     {
-        // 3D
+        // 3d
         if (lmk->getO()->getSize() > 1)
         {
             lmk_marker.pose.orientation.x = lmk->getO()->getState()(0);
@@ -324,7 +324,7 @@ void Visualizer::fillLandmarkMarkers(LandmarkBaseConstPtr lmk,
             lmk_marker.pose.orientation.z = lmk->getO()->getState()(2);
             lmk_marker.pose.orientation.w = lmk->getO()->getState()(3);
         }
-        // 2D
+        // 2d
         else
             lmk_marker.pose.orientation = tf::createQuaternionMsgFromYaw(lmk->getO()->getState()(0));
     }
@@ -466,14 +466,14 @@ void Visualizer::fillFrameMarker(FrameBaseConstPtr frm,
 
   // orientation
   if (frm->getO() != nullptr) {
-    // 3D
+    // 3d
     if (frm->getO()->getSize() > 1) {
       frm_marker.pose.orientation.x = frm->getO()->getState()(0);
       frm_marker.pose.orientation.y = frm->getO()->getState()(1);
       frm_marker.pose.orientation.z = frm->getO()->getState()(2);
       frm_marker.pose.orientation.w = frm->getO()->getState()(3);
     }
-    // 2D
+    // 2d
     else
       frm_marker.pose.orientation =
           tf::createQuaternionMsgFromYaw(frm->getO()->getState()(0));

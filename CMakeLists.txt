@@ -146,7 +146,7 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 
 add_executable(${PROJECT_NAME} src/node.cpp)
-add_library(subscriber_odom2D src/subscriber_odom2D.cpp)
+add_library(subscriber_odom2d src/subscriber_odom2d.cpp)
 add_library(subscriber_diffdrive src/subscriber_diffdrive.cpp)
 add_library(visualizer src/visualizer.cpp)
 
