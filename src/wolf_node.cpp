@@ -135,7 +135,7 @@ bool WolfRosNode::updateTf()
                                     tf::Vector3(current_pose(0), current_pose(1), current_pose(2)) );
     }
 
-    std::cout << "Current pose: " << current_pose.transpose() << std::endl;
+    //std::cout << "Current pose: " << current_pose.transpose() << std::endl;
 
     //gets T_map2odom_ (odom wrt map), by using tf listener, and assuming an odometry node is broadcasting odom2base
     tf::StampedTransform T_base2odom;
@@ -179,7 +179,7 @@ int main(int argc, char **argv)
     // Wolf node
     WolfRosNode wolf_node;
 
-    ros::Rate loopRate(20);
+    ros::Rate loopRate(100);
     ros::Time last_viz_time = ros::Time(0);
     ros::Time last_solve_time = ros::Time(0);
 
