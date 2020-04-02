@@ -8,12 +8,12 @@
 
 // #include "Eigen/src/Core/Matrix.h"
 #include "core/math/rotations.h"
-#include "wolf_subscriber_diffdrive.h"
+#include "subscriber_diffdrive.h"
 
 namespace wolf
 {
 SubscriberDiffdrive::SubscriberDiffdrive(const SensorBasePtr& sensor_ptr)
-  : WolfSubscriber(sensor_ptr)
+  : Subscriber(sensor_ptr)
   , last_odom_stamp_(ros::Time(0))
   , last_odom_seq_(-1)
 {
@@ -66,10 +66,10 @@ void SubscriberDiffdrive::callback(const sensor_msgs::JointState::ConstPtr& msg)
   last_odom_seq_   = msg->header.seq;
 }
 
-    std::shared_ptr<WolfSubscriber> SubscriberDiffdrive::create(const std::string&  _unique_name,
-                                                                       const ParamsServer& _params,
-                                                                       const SensorBasePtr _sensor_ptr)
-    {
-        return std::make_shared<SubscriberDiffdrive>(_sensor_ptr);
-    };
+std::shared_ptr<Subscriber> SubscriberDiffdrive::create(const std::string&  _unique_name,
+                                                        const ParamsServer& _params,
+                                                        const SensorBasePtr _sensor_ptr)
+{
+    return std::make_shared<SubscriberDiffdrive>(_sensor_ptr);
+};
 }  // namespace wolf

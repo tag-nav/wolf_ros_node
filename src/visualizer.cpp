@@ -1,14 +1,14 @@
-#include "wolf_visualizer.h"
+#include "visualizer.h"
 
 
-WolfVisualizer::WolfVisualizer() :
+Visualizer::Visualizer() :
     landmark_max_hits_(10),
     last_markers_publish_(0)
 {
 }
 
 
-void WolfVisualizer::initialize(ros::NodeHandle& nh)
+void Visualizer::initialize(ros::NodeHandle& nh)
 {
     // init publishers ---------------------------------------------------
     factors_publisher_      = nh.advertise<visualization_msgs::MarkerArray>("factors", 1);
@@ -101,7 +101,7 @@ void WolfVisualizer::initialize(ros::NodeHandle& nh)
     landmark_text_marker_.scale.z = 3;
 }
 
-void WolfVisualizer::visualize(const ProblemPtr problem)
+void Visualizer::visualize(const ProblemPtr problem)
 {
     if (viz_factors_)
         publishFactors(problem);
@@ -111,7 +111,7 @@ void WolfVisualizer::visualize(const ProblemPtr problem)
         publishTrajectory(problem);
 }
 
-void WolfVisualizer::publishLandmarks(const ProblemPtr problem)
+void Visualizer::publishLandmarks(const ProblemPtr problem)
 {
     // Iterate over all landmarks
     int marker_i = 0;
@@ -164,7 +164,7 @@ void WolfVisualizer::publishLandmarks(const ProblemPtr problem)
 }
 
 
-void WolfVisualizer::publishFactors(const ProblemPtr problem)
+void Visualizer::publishFactors(const ProblemPtr problem)
 {
     // Get a list of factors of the trajectory (discarded all prior factors for extrinsics/intrinsics..)
     FactorBasePtrList fac_list;
@@ -217,7 +217,7 @@ void WolfVisualizer::publishFactors(const ProblemPtr problem)
     factors_publisher_.publish(factors_marker_array_);
 }
 
-void WolfVisualizer::publishTrajectory(const ProblemPtr problem)
+void Visualizer::publishTrajectory(const ProblemPtr problem)
 {
     // Iterate over the key frames
     int marker_i = 0;
@@ -267,14 +267,14 @@ void WolfVisualizer::publishTrajectory(const ProblemPtr problem)
     trajectory_publisher_.publish(trajectory_marker_array_);
 }
 
-void WolfVisualizer::fillLandmarkMarkers(LandmarkBaseConstPtr lmk,
+void Visualizer::fillLandmarkMarkers(LandmarkBaseConstPtr lmk,
                                             visualization_msgs::Marker& lmk_marker,
                                             visualization_msgs::Marker& lmk_text_marker)
 {
     // SHAPE ------------------------------------------------------
     // Position
-    //    2D: CYLINDER
-    //    3D: SPHERE
+    //    2d: CYLINDER
+    //    3d: SPHERE
     // Pose -> ARROW
     if (lmk->getO() != nullptr)
     {
@@ -316,7 +316,7 @@ void WolfVisualizer::fillLandmarkMarkers(LandmarkBaseConstPtr lmk,
     // orientation
     if (lmk->getO() != nullptr)
     {
-        // 3D
+        // 3d
         if (lmk->getO()->getSize() > 1)
         {
             lmk_marker.pose.orientation.x = lmk->getO()->getState()(0);
@@ -324,7 +324,7 @@ void WolfVisualizer::fillLandmarkMarkers(LandmarkBaseConstPtr lmk,
             lmk_marker.pose.orientation.z = lmk->getO()->getState()(2);
             lmk_marker.pose.orientation.w = lmk->getO()->getState()(3);
         }
-        // 2D
+        // 2d
         else
             lmk_marker.pose.orientation = tf::createQuaternionMsgFromYaw(lmk->getO()->getState()(0));
     }
@@ -336,7 +336,7 @@ void WolfVisualizer::fillLandmarkMarkers(LandmarkBaseConstPtr lmk,
     lmk_text_marker.pose.position.z = lmk_marker.pose.position.z + viz_scale_*landmark_text_z_offset_;
 }
 
-void WolfVisualizer::fillFactorMarker(FactorBaseConstPtr fac,
+void Visualizer::fillFactorMarker(FactorBaseConstPtr fac,
                                          visualization_msgs::Marker &fac_marker,
                                          visualization_msgs::Marker &fac_text_marker)
 {
@@ -436,7 +436,7 @@ void WolfVisualizer::fillFactorMarker(FactorBaseConstPtr fac,
   fac_text_marker.pose.position.z = fac_marker.pose.position.z;
 }
 
-void WolfVisualizer::fillFrameMarker(FrameBaseConstPtr frm,
+void Visualizer::fillFrameMarker(FrameBaseConstPtr frm,
                                         visualization_msgs::Marker &frm_marker,
                                         visualization_msgs::Marker &frm_text_marker)
 {
@@ -466,14 +466,14 @@ void WolfVisualizer::fillFrameMarker(FrameBaseConstPtr frm,
 
   // orientation
   if (frm->getO() != nullptr) {
-    // 3D
+    // 3d
     if (frm->getO()->getSize() > 1) {
       frm_marker.pose.orientation.x = frm->getO()->getState()(0);
       frm_marker.pose.orientation.y = frm->getO()->getState()(1);
       frm_marker.pose.orientation.z = frm->getO()->getState()(2);
       frm_marker.pose.orientation.w = frm->getO()->getState()(3);
     }
-    // 2D
+    // 2d
     else
       frm_marker.pose.orientation =
           tf::createQuaternionMsgFromYaw(frm->getO()->getState()(0));
@@ -485,9 +485,9 @@ void WolfVisualizer::fillFrameMarker(FrameBaseConstPtr frm,
   frm_text_marker.pose.position.z = frm_marker.pose.position.z + viz_scale_*landmark_text_z_offset_;
 }
 
-std::shared_ptr<WolfVisualizer> WolfVisualizer::create()
+std::shared_ptr<Visualizer> Visualizer::create()
 {
-    return std::make_shared<WolfVisualizer>();
+    return std::make_shared<Visualizer>();
 }
 
-WOLF_REGISTER_VISUALIZER(WolfVisualizer)
+WOLF_REGISTER_VISUALIZER(Visualizer)

@@ -12,12 +12,12 @@
 #include "sensor_msgs/JointState.h"
 
 
-#include "wolf_subscriber.h"
+#include "subscriber.h"
 #include "subscriber_factory.h"
 
 namespace wolf
 {
-class SubscriberDiffdrive : public WolfSubscriber
+class SubscriberDiffdrive : public Subscriber
 {
    protected:
         ros::Time last_odom_stamp_;
@@ -34,7 +34,7 @@ class SubscriberDiffdrive : public WolfSubscriber
 
     void callback(const sensor_msgs::JointState::ConstPtr& msg);
 
-    static std::shared_ptr<WolfSubscriber> create(const std::string& _unique_name, const ParamsServer& _params, const SensorBasePtr _sensor_ptr);
+    static std::shared_ptr<Subscriber> create(const std::string& _unique_name, const ParamsServer& _params, const SensorBasePtr _sensor_ptr);
 };
 
 WOLF_REGISTER_SUBSCRIBER(SubscriberDiffdrive)

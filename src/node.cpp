@@ -1,4 +1,4 @@
-#include "wolf_node.h"
+#include "node.h"
 #include "core/solver/solver_factory.h"
 #include "ros/time.h"
 #include "tf/transform_datatypes.h"
@@ -135,7 +135,7 @@ bool WolfRosNode::updateTf()
                                     tf::Vector3(current_pose(0), current_pose(1), current_pose(2)) );
     }
 
-    //std::cout << "Current pose: " << current_pose.transpose() << std::endl;
+    std::cout << "Current pose: " << current_pose.transpose() << std::endl;
 
     //gets T_map2odom_ (odom wrt map), by using tf listener, and assuming an odometry node is broadcasting odom2base
     tf::StampedTransform T_base2odom;

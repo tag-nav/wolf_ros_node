@@ -11,12 +11,12 @@
 #include <nav_msgs/Odometry.h>
 
 
-#include "wolf_subscriber.h"
+#include "subscriber.h"
 #include "subscriber_factory.h"
 
 namespace wolf
 {
-class SubscriberOdom2D : public WolfSubscriber
+class SubscriberOdom2d : public Subscriber
 {
    protected:
       ros::Time last_odom_stamp_;
@@ -24,14 +24,14 @@ class SubscriberOdom2D : public WolfSubscriber
 
    public:
 
-    SubscriberOdom2D(const SensorBasePtr& sensor_ptr);
+    SubscriberOdom2d(const SensorBasePtr& sensor_ptr);
 
     virtual void initSubscriber(ros::NodeHandle& nh, const std::string& topic);
 
     void callback(const nav_msgs::Odometry::ConstPtr& msg);
 
-    static std::shared_ptr<WolfSubscriber> create(const std::string& _unique_name, const ParamsServer& _params, const SensorBasePtr _sensor_ptr);
+    static std::shared_ptr<Subscriber> create(const std::string& _unique_name, const ParamsServer& _params, const SensorBasePtr _sensor_ptr);
 };
 
-WOLF_REGISTER_SUBSCRIBER(SubscriberOdom2D)
+WOLF_REGISTER_SUBSCRIBER(SubscriberOdom2d)
 }  // namespace wolf

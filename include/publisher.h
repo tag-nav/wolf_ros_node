@@ -13,17 +13,17 @@
 
 namespace wolf
 {
-WOLF_PTR_TYPEDEFS(WolfPublisher);
-class WolfPublisher
+WOLF_PTR_TYPEDEFS(Publisher);
+class Publisher
 {
   public:
 
-    WolfPublisher()
+    Publisher()
       : period_(1)
       , last_publish_time_(ros::Time(0))
     {};
 
-    virtual ~WolfPublisher(){};
+    virtual ~Publisher(){};
 
     virtual void initialize(ros::NodeHandle& nh, const std::string& topic) = 0;
 
