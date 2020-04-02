@@ -2,7 +2,7 @@
  *      WOLF includes     *
  **************************/
 #include <core/common/wolf.h>
-#include <core/utils/params_server.hpp>
+#include <core/utils/params_server.h>
 
 /**************************
  *      ROS includes      *

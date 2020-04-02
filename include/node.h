@@ -1,14 +1,14 @@
 /**************************
  *      WOLF includes     *
  **************************/
-#include "core/common/node_base.h"
-#include "core/common/wolf.h"
+#include <core/common/node_base.h>
+#include <core/common/wolf.h>
 #include <core/capture/capture_odom_2d.h>
 #include <core/sensor/sensor_odom_2d.h>
 #include <core/processor/processor_odom_2d.h>
 #include <core/problem/problem.h>
-#include <core/utils/loader.hpp>
-#include <core/yaml/parser_yaml.hpp>
+#include <core/utils/loader.h>
+#include <core/yaml/parser_yaml.h>
 #include <core/solver/solver_factory.h>
 
 

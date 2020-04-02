@@ -3,7 +3,7 @@
 
 // wolf
 #include <core/common/factory.h>
-#include <core/utils/params_server.hpp>
+#include <core/utils/params_server.h>
 #include <ros/ros.h>
 #include <nav_msgs/Odometry.h>
 
