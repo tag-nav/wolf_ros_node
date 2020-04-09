@@ -89,7 +89,9 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
 
 void WolfRosNode::solve()
 {
-    ROS_INFO("================ solve ==================");
+    if (solver_verbose_ != SolverManager::ReportVerbosity::QUIET)
+        ROS_INFO("================ solve ==================");
+
     std::string report = solver_manager_ptr_->solve(solver_verbose_);
     if (!report.empty())
         std::cout << report << std::endl;
@@ -97,7 +99,7 @@ void WolfRosNode::solve()
 
 void WolfRosNode::visualize()
 {
-    ROS_INFO("================ visualize ==================");
+    ROS_DEBUG("================ visualize ==================");
     auto start = std::chrono::high_resolution_clock::now();
     viz_->visualize(problem_ptr_);
     auto stop     = std::chrono::high_resolution_clock::now();
@@ -135,7 +137,7 @@ bool WolfRosNode::updateTf()
                                     tf::Vector3(current_pose(0), current_pose(1), current_pose(2)) );
     }
 
-    std::cout << "Current pose: " << current_pose.transpose() << std::endl;
+    //std::cout << "Current pose: " << current_pose.transpose() << std::endl;
 
     //gets T_map2odom_ (odom wrt map), by using tf listener, and assuming an odometry node is broadcasting odom2base
     tf::StampedTransform T_base2odom;
