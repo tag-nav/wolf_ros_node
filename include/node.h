@@ -9,7 +9,7 @@
 #include <core/problem/problem.h>
 #include <core/utils/loader.h>
 #include <core/yaml/parser_yaml.h>
-#include <core/solver/solver_factory.h>
+#include <core/solver/factory_solver.h>
 
 
 /**************************

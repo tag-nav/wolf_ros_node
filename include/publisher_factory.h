@@ -39,17 +39,17 @@ namespace wolf
  *   - Write a processor creator for ProcessorOdom2d (example).
  *
  * #### Accessing the Factory
- * The ProcessorFactory class is a singleton: it can only exist once in your application.
+ * The FactoryProcessor class is a singleton: it can only exist once in your application.
  * To obtain an instance of it, use the static method get(),
  *
  *     \code
- *     ProcessorFactory::get()
+ *     FactoryProcessor::get()
  *     \endcode
  *
  * You can then call the methods you like, e.g. to create a processor, you type:
  *
  *     \code
- *     ProcessorFactory::get().create(...); // see below for creating processors ...
+ *     FactoryProcessor::get().create(...); // see below for creating processors ...
  *     \endcode
  *
  * #### Registering processor creators
@@ -61,21 +61,21 @@ namespace wolf
  * that knows how to create your specific processor, e.g.:
  *
  *     \code
- *     ProcessorFactory::get().registerCreator("ODOM 2d", ProcessorOdom2d::create);
+ *     FactoryProcessor::get().registerCreator("ODOM 2d", ProcessorOdom2d::create);
  *     \endcode
  *
  * The method ProcessorOdom2d::create() exists in the ProcessorOdom2d class as a static method.
  * All these ProcessorXxx::create() methods need to have exactly the same API, regardless of the processor type.
- * This API includes a processor name, and a pointer to a base struct of parameters, ProcessorParamsBasePtr,
+ * This API includes a processor name, and a pointer to a base struct of parameters, ParamsProcessorBasePtr,
  * that can be derived for each derived processor.
  *
  * Here is an example of ProcessorOdom2d::create() extracted from processor_odom_2d.h:
  *
  *     \code
- *     static ProcessorBasePtr create(const std::string& _name, ProcessorParamsBasePtr _params)
+ *     static ProcessorBasePtr create(const std::string& _name, ParamsProcessorBasePtr _params)
  *     {
  *         // cast _params to good type
- *         ProcessorParamsOdom2d* params = (ProcessorParamsOdom2d*)_params;
+ *         ParamsProcessorOdom2d* params = (ParamsProcessorOdom2d*)_params;
  *
  *         ProcessorBasePtr prc = new ProcessorOdom2d(params);
  *         prc->setName(_name); // pass the name to the created ProcessorOdom2d.
@@ -88,7 +88,7 @@ namespace wolf
  * For example, in processor_odom_2d.cpp we find the line:
  *
  *     \code
- *     const bool registered_odom_2d = ProcessorFactory::get().registerCreator("ODOM 2d", ProcessorOdom2d::create);
+ *     const bool registered_odom_2d = FactoryProcessor::get().registerCreator("ODOM 2d", ProcessorOdom2d::create);
  *     \endcode
  *
  * which is a static invocation (i.e., it is placed at global scope outside of the ProcessorOdom2d class).
@@ -99,7 +99,7 @@ namespace wolf
  * It only needs to be passed the string of the processor type.
  *
  *     \code
- *     ProcessorFactory::get().unregisterCreator("ODOM 2d");
+ *     FactoryProcessor::get().unregisterCreator("ODOM 2d");
  *     \endcode
  *
  * #### Creating processors
@@ -109,7 +109,7 @@ namespace wolf
  * To create a ProcessorOdom2d, you type:
  *
  *     \code
- *     ProcessorFactory::get().create("ODOM 2d", "main odometry", params_ptr);
+ *     FactoryProcessor::get().create("ODOM 2d", "main odometry", params_ptr);
  *     \endcode
  *
  * #### Example 1 : using the Factories alone
@@ -117,21 +117,21 @@ namespace wolf
  * and bind it to a SensorOdom2d:
  *
  *     \code
- *     #include "sensor_odom_2d.h"      // provides SensorOdom2d    and SensorFactory
- *     #include "processor_odom_2d.h"   // provides ProcessorOdom2d and ProcessorFactory
+ *     #include "sensor_odom_2d.h"      // provides SensorOdom2d    and FactorySensor
+ *     #include "processor_odom_2d.h"   // provides ProcessorOdom2d and FactoryProcessor
  *
  *     // Note: SensorOdom2d::create()    is already registered, automatically.
  *     // Note: ProcessorOdom2d::create() is already registered, automatically.
  *
- *     // First create the sensor (See SensorFactory for details)
- *     SensorBasePtr sensor_ptr = SensorFactory::get().create ( "ODOM 2d" , "Main odometer" , extrinsics , &intrinsics );
+ *     // First create the sensor (See FactorySensor for details)
+ *     SensorBasePtr sensor_ptr = FactorySensor::get().create ( "ODOM 2d" , "Main odometer" , extrinsics , &intrinsics );
  *
  *     // To create a odometry integrator, provide a type="ODOM 2d", a name="main odometry", and a pointer to the parameters struct:
  *
- *     ProcessorParamsOdom2d  params({...});   // fill in the derived struct (note: ProcessorOdom2d actually has no input params)
+ *     ParamsProcessorOdom2d  params({...});   // fill in the derived struct (note: ProcessorOdom2d actually has no input params)
  *
  *     ProcessorBasePtr processor_ptr =
- *         ProcessorFactory::get().create ( "ODOM 2d" , "main odometry" , &params );
+ *         FactoryProcessor::get().create ( "ODOM 2d" , "main odometry" , &params );
  *
  *     // Bind processor to sensor
  *     sensor_ptr->addProcessor(processor_ptr);

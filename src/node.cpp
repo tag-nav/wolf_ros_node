@@ -1,5 +1,5 @@
 #include "node.h"
-#include "core/solver/solver_factory.h"
+#include "core/solver/factory_solver.h"
 #include "ros/time.h"
 #include "tf/transform_datatypes.h"
 #include "subscriber_factory.h"
@@ -39,7 +39,7 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
     problem_ptr_ = Problem::autoSetup(server);
 
     // SOLVER
-    solver_manager_ptr_ = std::static_pointer_cast<CeresManager>(SolverFactory::get().create("CERES", problem_ptr_, server));
+    solver_manager_ptr_ = std::static_pointer_cast<CeresManager>(FactorySolver::get().create("CERES", problem_ptr_, server));
     int solver_verbose_int;
     solver_period_ = server.getParam<int>("solver/period");
     solver_verbose_int = server.getParam<int>("solver/verbose");
