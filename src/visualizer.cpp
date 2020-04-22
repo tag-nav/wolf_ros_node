@@ -424,6 +424,10 @@ void Visualizer::fillFactorMarker(FactorBaseConstPtr fac,
       color.r = 0;
       color.g = 0;
       color.b = 1;
+  } else if(fac->getTopology() == "GEOM") {
+      color.r = 0;
+      color.g = 1;
+      color.b = 1;
   }
 
   fac_marker.colors.push_back(color);
