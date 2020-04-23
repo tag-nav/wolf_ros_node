@@ -11,7 +11,6 @@
  **************************/
 #include "core/common/wolf.h"
 #include "core/problem/problem.h"
-#include "visualizer_factory.h"
 
 using namespace wolf;
 

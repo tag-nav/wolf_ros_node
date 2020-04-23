@@ -493,5 +493,3 @@ std::shared_ptr<Visualizer> Visualizer::create()
 {
     return std::make_shared<Visualizer>();
 }
-
-WOLF_REGISTER_VISUALIZER(Visualizer)
