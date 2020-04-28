@@ -10,9 +10,7 @@
 #include <ros/ros.h>
 #include <nav_msgs/Odometry.h>
 
-
 #include "subscriber.h"
-#include "factory_subscriber.h"
 
 namespace wolf
 {

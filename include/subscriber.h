@@ -5,6 +5,7 @@
  *      WOLF includes     *
  **************************/
 #include <core/sensor/sensor_base.h>
+#include "factory_subscriber.h"
 
 /**************************
  *      ROS includes      *
