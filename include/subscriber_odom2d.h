@@ -12,7 +12,7 @@
 
 
 #include "subscriber.h"
-#include "subscriber_factory.h"
+#include "factory_subscriber.h"
 
 namespace wolf
 {

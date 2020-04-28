@@ -2,9 +2,8 @@
 #include "core/solver/factory_solver.h"
 #include "ros/time.h"
 #include "tf/transform_datatypes.h"
-#include "subscriber_factory.h"
-#include "visualizer_factory.h"
-#include "publisher_factory.h"
+#include "factory_subscriber.h"
+#include "factory_publisher.h"
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -53,9 +52,11 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
         subscribers_.back()->initSubscriber(nh_, topic);
     }
 
-    // ROS VISUALIZER
-    auto visualizer = server.getParam<std::string>("visualizer/type");
-    viz_ = VisualizerFactory::get().create(visualizer);
+    // // ROS VISUALIZER
+    // auto visualizer = server.getParam<std::string>("visualizer/type");
+    // viz_ = VisualizerFactory::get().create(visualizer);
+
+    viz_ = std::make_shared<Visualizer>();
     viz_->initialize(nh_);
     viz_period_ = server.getParam<int>("visualizer/period");
 
