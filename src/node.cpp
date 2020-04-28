@@ -31,10 +31,6 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
 
     server.print();
 
-    while(not ros::Time::isValid()) sleep(1);
-    server.addParam("problem/prior/timestamp", std::to_string(ros::Time::now().sec) + "." + std::to_string(ros::Time::now().nsec));
-    // std::cout << "Prior timestamp " << server.getParam<std::string>("problem/prior/timestamp") << "\n";
-
     // PROBLEM
     problem_ptr_ = Problem::autoSetup(server);
 
