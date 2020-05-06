@@ -1,5 +1,5 @@
-#ifndef SUBSCRIBER_FACTORY_H_
-#define SUBSCRIBER_FACTORY_H_
+#ifndef FACTORY_SUBSCRIBER_H_
+#define FACTORY_SUBSCRIBER_H_
 
 // wolf
 #include <core/common/factory.h>
@@ -160,17 +160,17 @@ namespace wolf
     typedef Factory<Subscriber,
                     const std::string&,
                     const ParamsServer&,
-                    const SensorBasePtr> SubscriberFactory;
+                    const SensorBasePtr> FactorySubscriber;
 template<>
-inline std::string SubscriberFactory::getClass()
+inline std::string FactorySubscriber::getClass() const
 {
-  return "SubscriberFactory";
+  return "FactorySubscriber";
 }
 
 
 #define WOLF_REGISTER_SUBSCRIBER(SubscriberType)                        \
     namespace{ const bool WOLF_UNUSED SubscriberType##Registered =      \
-            wolf::SubscriberFactory::get().registerCreator(#SubscriberType, SubscriberType::create); } \
+            wolf::FactorySubscriber::get().registerCreator(#SubscriberType, SubscriberType::create); } \
 
 } /* namespace wolf */
-#endif /* SUBSCRIBER_FACTORY_H_ */
+#endif /* FACTORY_SUBSCRIBER_H_ */

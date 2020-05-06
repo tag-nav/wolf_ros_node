@@ -1,5 +1,5 @@
-#ifndef PUBLISHER_FACTORY_H_
-#define PUBLISHER_FACTORY_H_
+#ifndef FACTORY_PUBLISHER_H_
+#define FACTORY_PUBLISHER_H_
 
 // wolf
 #include <core/common/factory.h>
@@ -157,17 +157,17 @@ namespace wolf
  * You can also check the code in the example file ````src/examples/test_wolf_factories.cpp````.
  */
     class Publisher;
-    typedef Factory<Publisher> PublisherFactory;
+    typedef Factory<Publisher> FactoryPublisher;
 template<>
-inline std::string PublisherFactory::getClass()
+inline std::string FactoryPublisher::getClass() const
 {
-  return "PublisherFactory";
+  return "FactoryPublisher";
 }
 
 
 #define WOLF_REGISTER_PUBLISHER(PublisherType)                        \
     namespace{ const bool WOLF_UNUSED PublisherType##Registered =      \
-            wolf::PublisherFactory::get().registerCreator(#PublisherType, PublisherType::create); } \
+            wolf::FactoryPublisher::get().registerCreator(#PublisherType, PublisherType::create); } \
 
 } /* namespace wolf */
-#endif /* PUBLISHER_FACTORY_H_ */
+#endif /* FACTORY_PUBLISHER_H_ */

@@ -47,7 +47,7 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
         std::string topic      = it["topic"];
         std::string sensor     = it["sensor_name"];
         WOLF_TRACE("From sensor {" + sensor + "} subscribing {" + subscriber + "} to {" + topic + "} topic");
-        auto subscriber_wrapper = SubscriberFactory::get().create(subscriber, topic, server, problem_ptr_->getSensor(sensor));
+        auto subscriber_wrapper = FactorySubscriber::get().create(subscriber, topic, server, problem_ptr_->getSensor(sensor));
         subscribers_.push_back(subscriber_wrapper);
         subscribers_.back()->initSubscriber(nh_, topic);
     }
@@ -67,7 +67,7 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
         {
             std::string pub = it["type"];
             WOLF_INFO("Pub: ", pub);
-            auto publisher = PublisherFactory::get().create(pub);
+            auto publisher = FactoryPublisher::get().create(pub);
             publisher->period_ = converter<double>::convert(it["period"]);
             publishers_.push_back(publisher);
             publishers_.back()->initialize(nh_,it["topic"]);
