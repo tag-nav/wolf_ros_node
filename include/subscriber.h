@@ -1,10 +1,11 @@
-#ifndef WOLF_ROS_SUBSCRIBER_H_
-#define WOLF_ROS_SUBSCRIBER_H_
+#ifndef WOLF_SUBSCRIBER_H_
+#define WOLF_SUBSCRIBER_H_
 
 /**************************
  *      WOLF includes     *
  **************************/
 #include <core/sensor/sensor_base.h>
+#include "factory_subscriber.h"
 
 /**************************
  *      ROS includes      *
@@ -13,9 +14,9 @@
 #include <nav_msgs/Odometry.h>
 
 namespace wolf {
-WOLF_PTR_TYPEDEFS(SubscriberWrapper);
+WOLF_PTR_TYPEDEFS(Subscriber);
 
-class SubscriberWrapper
+class Subscriber
 {
     protected:
         //wolf
@@ -25,11 +26,11 @@ class SubscriberWrapper
         ros::Subscriber sub_;
 
     public:
-        SubscriberWrapper(const SensorBasePtr& sensor_ptr) :
+        Subscriber(const SensorBasePtr& sensor_ptr) :
             sensor_ptr_(sensor_ptr)
         {
         }
-        virtual ~SubscriberWrapper(){};
+        virtual ~Subscriber(){};
 
         virtual void initSubscriber(ros::NodeHandle& nh, const std::string& topic) = 0;
 };
