@@ -36,7 +36,7 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
     // SOLVER
     solver_manager_ptr_ = std::static_pointer_cast<CeresManager>(FactorySolver::get().create("CeresManager", problem_ptr_, server));
     int solver_verbose_int;
-    solver_period_ = server.getParam<int>("solver/period");
+    solver_period_ = server.getParam<double>("solver/period");
     solver_verbose_int = server.getParam<int>("solver/verbose");
     solver_verbose_ = static_cast<SolverManager::ReportVerbosity>(solver_verbose_int);
 
@@ -169,6 +169,21 @@ void WolfRosNode::broadcastTf()
     tfb_.sendTransform(current_map2odom);
 }
 
+void WolfRosNode::solveLoop()
+{
+    ros::Rate solverRate(1/solver_period_);
+
+    while (ros::ok())
+    {
+        solve();
+        solverRate.sleep();
+
+        if(ros::isShuttingDown())
+            break;
+    }
+    WOLF_INFO("Solver loop finished");
+}
+
 int main(int argc, char **argv)
 {
     std::cout << "\n=========== WOLF ROS WRAPPER MAIN ===========\n\n";
@@ -182,34 +197,11 @@ int main(int argc, char **argv)
     ros::Time last_viz_time = ros::Time(0);
     ros::Time last_solve_time = ros::Time(0);
 
-    std::thread t([&]() {
-                       while (true)
-                           {
-                               auto start = std::chrono::high_resolution_clock::now();
-                               wolf_node.solve();
-                               // wolf_node.updateTf();
-                               auto finish = std::chrono::high_resolution_clock::now();
-                               std::chrono::duration<double> elapsed = finish - start;
-                               double                        delta   = wolf_node.solver_period_ - elapsed.count();
-                               std::string time_report = "Solve took " + std::to_string(elapsed.count()) + "s. Will sleep for " + std::to_string(delta);
-                               ROS_INFO(time_report.c_str());
-                               std::string aux = "In total spent " + std::to_string(elapsed.count() + delta) +
-                                   "s";
-                               ROS_INFO(aux.c_str());
-                               if(delta > 0) sleep(delta);
-                               // for (int i = 0; i < 10; i++)
-                               //   std::cout << i << std::endl;
-                           }
-                   });
+    // Solver thread
+    std::thread (&WolfRosNode::solveLoop, &wolf_node).detach();
+
     while (ros::ok())
     {
-        // solve periodically
-        // if ((ros::Time::now() - last_solve_time).toSec() >= wolf_node.solver_period_)
-        // {
-        //     wolf_node.solve();
-        //     last_solve_time = ros::Time::now();
-        // }
-
         // broadcast tf
         wolf_node.updateTf();
         wolf_node.broadcastTf();
@@ -232,15 +224,14 @@ int main(int argc, char **argv)
         // execute pending callbacks
         ros::spinOnce();
 
-        if(ros::isShuttingDown()) {
-            WOLF_INFO("Node is shutting down inside loop...");
-            std::terminate();
-        }
         // relax to fit output rate
         loopRate.sleep();
     }
-    WOLF_INFO("Node is shutting down outside loop...");
-    std::terminate();
+    WOLF_INFO("Node is shutting down outside loop... waiting for the thread to stop...");
+    //solver_thread.join();
+    //std::terminate();
+    WOLF_INFO("thread stopped.");
+
     // file.close();
     return 0;
 }

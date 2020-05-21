@@ -86,6 +86,7 @@ class WolfRosNode
         virtual ~WolfRosNode(){};
 
         void solve();
+        void solveLoop();
 
         void broadcastTf();
 
