@@ -36,7 +36,7 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
     // SOLVER
     solver_manager_ptr_ = std::static_pointer_cast<CeresManager>(FactorySolver::get().create("CeresManager", problem_ptr_, server));
     int solver_verbose_int;
-    solver_period_ = server.getParam<int>("solver/period");
+    solver_period_ = server.getParam<double>("solver/period");
     solver_verbose_int = server.getParam<int>("solver/verbose");
     solver_verbose_ = static_cast<SolverManager::ReportVerbosity>(solver_verbose_int);
 
