@@ -171,6 +171,7 @@ void WolfRosNode::broadcastTf()
 
 void WolfRosNode::solveLoop()
 {
+    WOLF_DEBUG("Started solver loop");
     ros::Rate solverRate(1/solver_period_);
 
     while (ros::ok())
@@ -181,7 +182,7 @@ void WolfRosNode::solveLoop()
         if(ros::isShuttingDown())
             break;
     }
-    WOLF_INFO("Solver loop finished");
+    WOLF_DEBUG("Solver loop finished");
 }
 
 int main(int argc, char **argv)
@@ -198,7 +199,7 @@ int main(int argc, char **argv)
     ros::Time last_solve_time = ros::Time(0);
 
     // Solver thread
-    std::thread (&WolfRosNode::solveLoop, &wolf_node).detach();
+    std::thread solver_thread(&WolfRosNode::solveLoop, &wolf_node);
 
     while (ros::ok())
     {
@@ -227,10 +228,9 @@ int main(int argc, char **argv)
         // relax to fit output rate
         loopRate.sleep();
     }
-    WOLF_INFO("Node is shutting down outside loop... waiting for the thread to stop...");
-    //solver_thread.join();
-    //std::terminate();
-    WOLF_INFO("thread stopped.");
+    WOLF_DEBUG("Node is shutting down outside loop... waiting for the thread to stop...");
+    solver_thread.join();
+    WOLF_DEBUG("thread stopped.");
 
     // file.close();
     return 0;
