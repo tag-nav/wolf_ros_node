@@ -36,7 +36,7 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
     // SOLVER
     solver_manager_ptr_ = std::static_pointer_cast<CeresManager>(FactorySolver::get().create("CeresManager", problem_ptr_, server));
     int solver_verbose_int;
-    solver_period_ = server.getParam<int>("solver/period");
+    solver_period_ = server.getParam<double>("solver/period");
     solver_verbose_int = server.getParam<int>("solver/verbose");
     solver_verbose_ = static_cast<SolverManager::ReportVerbosity>(solver_verbose_int);
 
@@ -169,6 +169,22 @@ void WolfRosNode::broadcastTf()
     tfb_.sendTransform(current_map2odom);
 }
 
+void WolfRosNode::solveLoop()
+{
+    WOLF_DEBUG("Started solver loop");
+    ros::Rate solverRate(1/solver_period_);
+
+    while (ros::ok())
+    {
+        solve();
+        solverRate.sleep();
+
+        if(ros::isShuttingDown())
+            break;
+    }
+    WOLF_DEBUG("Solver loop finished");
+}
+
 int main(int argc, char **argv)
 {
     std::cout << "\n=========== WOLF ROS WRAPPER MAIN ===========\n\n";
@@ -182,24 +198,14 @@ int main(int argc, char **argv)
     ros::Time last_viz_time = ros::Time(0);
     ros::Time last_solve_time = ros::Time(0);
 
-    double t_solve(0), t_tf(0), t_viz(0), t_pub(0), t_process(0), t_sleep(0), t_step(0);
-    auto start0 = std::chrono::high_resolution_clock::now();
+    // Solver thread
+    std::thread solver_thread(&WolfRosNode::solveLoop, &wolf_node);
+
     while (ros::ok())
     {
-        // solve periodically
-        auto start1 = std::chrono::high_resolution_clock::now();
-        if ((ros::Time::now() - last_solve_time).toSec() >= wolf_node.solver_period_)
-        {
-            wolf_node.solve();
-            last_solve_time = ros::Time::now();
-        }
-        t_solve += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - start1).count();
-
         // broadcast tf
-        auto start2 = std::chrono::high_resolution_clock::now();
         wolf_node.updateTf();
         wolf_node.broadcastTf();
-        t_tf += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - start2).count();
 
         // visualize periodically
         auto start3 = std::chrono::high_resolution_clock::now();
@@ -208,42 +214,25 @@ int main(int argc, char **argv)
             wolf_node.visualize();
             last_viz_time = ros::Time::now();
         }
-        t_viz += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - start3).count();
 
         // publish periodically
-        auto start4 = std::chrono::high_resolution_clock::now();
         for(auto pub : wolf_node.publishers_)
             if ((ros::Time::now() - pub->last_publish_time_).toSec() >= pub->period_)
             {
                 pub->publish(wolf_node.problem_ptr_);
                 pub->last_publish_time_ = ros::Time::now();
             }
-        t_pub += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - start4).count();
 
         // execute pending callbacks
-        auto start5 = std::chrono::high_resolution_clock::now();
         ros::spinOnce();
-        t_process += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - start5).count();
 
         // relax to fit output rate
-        auto start6 = std::chrono::high_resolution_clock::now();
         loopRate.sleep();
-        t_sleep += std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - start6).count();
-
-        // TIMING
-        double t_total = std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now() - start0).count();
-        if (t_total > t_step)
-        {
-            std::cout << "===== TIMING (total: " << t_total << " s)\n";
-            std::cout << "\tsolving:    " << t_solve << " s \t" << 100.0*t_solve/t_total << "%\n";
-            std::cout << "\ttf:         " << t_tf << " s \t" << 100.0*t_tf/t_total << "%\n";
-            std::cout << "\tviz:        " << t_viz << " s \t" << 100.0*t_viz/t_total << "%\n";
-            std::cout << "\tpublish:    " << t_pub << " s \t" << 100.0*t_pub/t_total << "%\n";
-            std::cout << "\tprocess:    " << t_process << " s \t" << 100.0*t_process/t_total << "%\n";
-            std::cout << "\tsleep:      " << t_sleep << " s \t" << 100.0*t_sleep/t_total << "%\n";
-            t_step += 10;
-        }
     }
+    WOLF_DEBUG("Node is shutting down outside loop... waiting for the thread to stop...");
+    solver_thread.join();
+    WOLF_DEBUG("thread stopped.");
+
     // file.close();
     return 0;
 }
