@@ -169,6 +169,22 @@ void WolfRosNode::broadcastTf()
     tfb_.sendTransform(current_map2odom);
 }
 
+void WolfRosNode::solveLoop()
+{
+    WOLF_DEBUG("Started solver loop");
+    ros::Rate solverRate(1/solver_period_);
+
+    while (ros::ok())
+    {
+        solve();
+        solverRate.sleep();
+
+        if(ros::isShuttingDown())
+            break;
+    }
+    WOLF_DEBUG("Solver loop finished");
+}
+
 int main(int argc, char **argv)
 {
     std::cout << "\n=========== WOLF ROS WRAPPER MAIN ===========\n\n";
@@ -182,15 +198,11 @@ int main(int argc, char **argv)
     ros::Time last_viz_time = ros::Time(0);
     ros::Time last_solve_time = ros::Time(0);
 
+    // Solver thread
+    std::thread solver_thread(&WolfRosNode::solveLoop, &wolf_node);
+
     while (ros::ok())
     {
-        // solve periodically
-        if ((ros::Time::now() - last_solve_time).toSec() >= wolf_node.solver_period_)
-        {
-            wolf_node.solve();
-            last_solve_time = ros::Time::now();
-        }
-
         // broadcast tf
         wolf_node.updateTf();
         wolf_node.broadcastTf();
@@ -216,6 +228,10 @@ int main(int argc, char **argv)
         // relax to fit output rate
         loopRate.sleep();
     }
+    WOLF_DEBUG("Node is shutting down outside loop... waiting for the thread to stop...");
+    solver_thread.join();
+    WOLF_DEBUG("thread stopped.");
+
     // file.close();
     return 0;
 }
