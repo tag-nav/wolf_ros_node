@@ -28,24 +28,36 @@ void Visualizer::initialize(ros::NodeHandle& nh)
     nh.param<double>(       "landmark_length",          landmark_length_,           1);
     nh.param<double>(       "frame_width",              frame_width_,               0.1);
     nh.param<double>(       "frame_length",             frame_length_,              1);
-    // colors: active yellow, inactive gray
-    double col_R, col_G, col_B, col_A;
-    nh.param<double>(       "color_active_r",           col_R, 1.0);
-    nh.param<double>(       "color_active_g",           col_G, 0.8);
-    nh.param<double>(       "color_active_b",           col_B, 0.0);
-    nh.param<double>(       "color_active_a",           col_A, 0.5);
-    color_active_.r = col_R;
-    color_active_.g = col_G;
-    color_active_.b = col_B;
-    color_active_.a = col_A;
-    nh.param<double>(       "color_inactive_r",           col_R, 0.5);
-    nh.param<double>(       "color_inactive_g",           col_G, 0.5);
-    nh.param<double>(       "color_inactive_b",           col_B, 0.5);
-    nh.param<double>(       "color_inactive_a",           col_A, 0.5);
-    color_inactive_.r = col_R;
-    color_inactive_.g = col_G;
-    color_inactive_.b = col_B;
-    color_inactive_.a = col_A;
+    // colors:
+    nh.param<float>(        "frame_color_r",            frame_color_.r,             1.0);
+    nh.param<float>(        "frame_color_g",            frame_color_.g,             0.8);
+    nh.param<float>(        "frame_color_b",            frame_color_.b,             0.0);
+    nh.param<float>(        "frame_color_a",            frame_color_.a,             0.5);
+
+    nh.param<float>(        "factor_abs_color_r",       factor_abs_color_.r,        0.92);
+    nh.param<float>(        "factor_abs_color_g",       factor_abs_color_.g,        0.19);
+    nh.param<float>(        "factor_abs_color_b",       factor_abs_color_.b,        0.6);
+    nh.param<float>(        "factor_abs_color_a",       factor_abs_color_.a,        0.5);
+
+    nh.param<float>(        "factor_motion_color_r",    factor_motion_color_.r,     1.0);
+    nh.param<float>(        "factor_motion_color_g",    factor_motion_color_.g,     1.0);
+    nh.param<float>(        "factor_motion_color_b",    factor_motion_color_.b,     0.0);
+    nh.param<float>(        "factor_motion_color_a",    factor_motion_color_.a,     0.5);
+
+    nh.param<float>(        "factor_loop_color_r",      factor_loop_color_.r,       1.0);
+    nh.param<float>(        "factor_loop_color_g",      factor_loop_color_.g,       0.0);
+    nh.param<float>(        "factor_loop_color_b",      factor_loop_color_.b,       0.0);
+    nh.param<float>(        "factor_loop_color_a",      factor_loop_color_.a,       0.5);
+
+    nh.param<float>(        "factor_lmk_color_r",       factor_lmk_color_.r,        0.0);
+    nh.param<float>(        "factor_lmk_color_g",       factor_lmk_color_.g,        0.0);
+    nh.param<float>(        "factor_lmk_color_b",       factor_lmk_color_.b,        1.0);
+    nh.param<float>(        "factor_lmk_color_a",       factor_lmk_color_.a,        0.5);
+
+    nh.param<float>(        "factor_geom_color_r",      factor_geom_color_.r,       0.0);
+    nh.param<float>(        "factor_geom_color_g",      factor_geom_color_.g,       1.0);
+    nh.param<float>(        "factor_geom_color_b",      factor_geom_color_.b,       1.0);
+    nh.param<float>(        "factor_geom_color_a",      factor_geom_color_.a,       0.5);
 
     // init markers ---------------------------------------------------
     // factor markers message
@@ -60,9 +72,9 @@ void Visualizer::initialize(ros::NodeHandle& nh)
     factor_text_marker_.color.g = 1;
     factor_text_marker_.color.b = 1;
     factor_text_marker_.color.a = 0.5;
-    factor_text_marker_.scale.x = 0.3;
-    factor_text_marker_.scale.y = 0.3;
-    factor_text_marker_.scale.z = 0.3;
+    factor_text_marker_.scale.x = viz_scale_*0.3;
+    factor_text_marker_.scale.y = viz_scale_*0.3;
+    factor_text_marker_.scale.z = viz_scale_*0.3;
 
     // frame markers
     frame_marker_.type = visualization_msgs::Marker::ARROW;
@@ -71,7 +83,7 @@ void Visualizer::initialize(ros::NodeHandle& nh)
     frame_marker_.scale.x = viz_scale_*frame_length_;
     frame_marker_.scale.y = viz_scale_*frame_width_;
     frame_marker_.scale.z = viz_scale_*frame_width_;
-    frame_marker_.color = color_active_;
+    frame_marker_.color = frame_color_;
     frame_text_marker_ = frame_marker_;
     frame_text_marker_.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
     frame_text_marker_.ns = "/frames_text";
@@ -79,9 +91,9 @@ void Visualizer::initialize(ros::NodeHandle& nh)
     frame_text_marker_.color.g = 1;
     frame_text_marker_.color.b = 1;
     frame_text_marker_.color.a = 0.5;
-    frame_text_marker_.scale.x = 0.3;
-    frame_text_marker_.scale.y = 0.3;
-    frame_text_marker_.scale.z = 0.3;
+    frame_text_marker_.scale.x = viz_scale_*0.3;
+    frame_text_marker_.scale.y = viz_scale_*0.3;
+    frame_text_marker_.scale.z = viz_scale_*0.3;
 
     // landmark markers
     landmark_marker_.type = visualization_msgs::Marker::ARROW;
@@ -98,7 +110,7 @@ void Visualizer::initialize(ros::NodeHandle& nh)
     landmark_text_marker_.color.g = 1;
     landmark_text_marker_.color.b = 1;
     landmark_text_marker_.color.a = 0.5;
-    landmark_text_marker_.scale.z = 3;
+    landmark_text_marker_.scale.z = viz_scale_*3;
 }
 
 void Visualizer::visualize(const ProblemPtr problem)
@@ -405,30 +417,21 @@ void Visualizer::fillFactorMarker(FactorBaseConstPtr fac,
   fac_marker.points.push_back(point2);
 
   // colors ------------------------------------------------------
-  auto color =
-      (fac->getStatus() == FAC_ACTIVE ? color_active_ : color_inactive_);
-  if(fac->getTopology() == "ABS") {
-    //Kind of pink
-      color.r = 0.92;
-      color.g = 0.19;
-      color.b = 0.6;
-  } else if(fac->getTopology() == "MOTION") {
-      color.r = 1;
-      color.g = 1;
-      color.b = 0;
-  } else if(fac->getTopology() == "LOOP") {
-      color.r = 1;
-      color.g = 0;
-      color.b = 0;
-  } else if(fac->getTopology() == "LMK") {
-      color.r = 0;
-      color.g = 0;
-      color.b = 1;
-  } else if(fac->getTopology() == "GEOM") {
-      color.r = 0;
-      color.g = 1;
-      color.b = 1;
-  }
+  auto color = frame_color_;
+  if (fac->getTopology() == "ABS")
+      color = factor_abs_color_;
+  if (fac->getTopology() == "MOTION")
+      color = factor_motion_color_;
+  if (fac->getTopology() == "LOOP")
+      color = factor_loop_color_;
+  if (fac->getTopology() == "LMK")
+      color = factor_lmk_color_;
+  if (fac->getTopology() == "GEOM")
+      color = factor_geom_color_;
+
+  // more transparent if inactive
+  if (fac->getStatus() == FAC_ACTIVE)
+      color.a *= 0.5;
 
   fac_marker.colors.push_back(color);
   fac_marker.colors.push_back(color);
@@ -441,8 +444,8 @@ void Visualizer::fillFactorMarker(FactorBaseConstPtr fac,
 }
 
 void Visualizer::fillFrameMarker(FrameBaseConstPtr frm,
-                                        visualization_msgs::Marker &frm_marker,
-                                        visualization_msgs::Marker &frm_text_marker)
+                                 visualization_msgs::Marker &frm_marker,
+                                 visualization_msgs::Marker &frm_text_marker)
 {
   // SHAPE ------------------------------------------------------
   // Position-> SPHERE
