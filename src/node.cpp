@@ -31,9 +31,11 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
     server.print();
 
     // PROBLEM
+    ROS_INFO("Creating problem...");
     problem_ptr_ = Problem::autoSetup(server);
 
     // SOLVER
+    ROS_INFO("Creating solver...");
     solver_manager_ptr_ = std::static_pointer_cast<CeresManager>(FactorySolver::get().create("CeresManager", problem_ptr_, server));
     int solver_verbose_int;
     solver_period_ = server.getParam<double>("solver/period");
@@ -41,6 +43,7 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
     solver_verbose_ = static_cast<SolverManager::ReportVerbosity>(solver_verbose_int);
 
     // ROS SUBSCRIBERS
+    ROS_INFO("Creating subscribers...");
     for (auto it : server.getParam<std::vector<std::map<std::string, std::string>>>("ROS subscriber"))
     {
         std::string subscriber = it["type"];
@@ -53,6 +56,7 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
     }
 
     // // ROS VISUALIZER
+    ROS_INFO("Creating visualizer...");
     // auto visualizer = server.getParam<std::string>("visualizer/type");
     // viz_ = VisualizerFactory::get().create(visualizer);
 
@@ -61,6 +65,7 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
     viz_period_ = server.getParam<int>("visualizer/period");
 
     // ROS PUBLISHERS
+    ROS_INFO("Creating publishers...");
     try
     {
         for (auto it : server.getParam<std::vector<std::map<std::string, std::string>>>("ROS publisher"))
@@ -80,8 +85,11 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
     }
 
     // TF INIT
+    ROS_INFO("Initializing TF...");
     updateTf();
     broadcastTf();
+
+    ROS_INFO("Ready!");
 }
 
 void WolfRosNode::solve()
