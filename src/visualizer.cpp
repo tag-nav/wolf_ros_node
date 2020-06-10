@@ -178,16 +178,22 @@ void Visualizer::publishLandmarks(const ProblemPtr problem)
 
 void Visualizer::publishFactors(const ProblemPtr problem)
 {
+    // delete all
+    factors_marker_array_.markers.clear();
+    factors_marker_array_.markers.push_back(factor_marker_);
+    factors_marker_array_.markers.front().action = visualization_msgs::Marker::DELETEALL;
+    factors_publisher_.publish(factors_marker_array_);
+
     // Get a list of factors of the trajectory (discarded all prior factors for extrinsics/intrinsics..)
     FactorBasePtrList fac_list;
     problem->getTrajectory()->getFactorList(fac_list);
 
     // Iterate over the list of factors
     int marker_i = 0;
-    auto factor_marker = factor_marker_;
-    auto factor_text_marker = factor_text_marker_;
     for (auto fac : fac_list)
     {
+        auto factor_marker = factor_marker_;
+        auto factor_text_marker = factor_text_marker_;
         // fill marker
         fillFactorMarker(fac, factor_marker, factor_text_marker);
 
@@ -349,8 +355,8 @@ void Visualizer::fillLandmarkMarkers(LandmarkBaseConstPtr lmk,
 }
 
 void Visualizer::fillFactorMarker(FactorBaseConstPtr fac,
-                                         visualization_msgs::Marker &fac_marker,
-                                         visualization_msgs::Marker &fac_text_marker)
+                                  visualization_msgs::Marker &fac_marker,
+                                  visualization_msgs::Marker &fac_text_marker)
 {
   geometry_msgs::Point point1, point2;
 
@@ -434,7 +440,8 @@ void Visualizer::fillFactorMarker(FactorBaseConstPtr fac,
       color.a *= 0.5;
 
   fac_marker.colors.push_back(color);
-  fac_marker.colors.push_back(color);
+  fac_marker.colors.push_back(color);// 2 times because of 2 points
+  fac_marker.ns = std::string("factor_"+fac->getTopology());
 
   // TEXT MARKER --------------------------------------------------------
   fac_text_marker.text = std::to_string(fac->id());
