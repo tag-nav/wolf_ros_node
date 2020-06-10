@@ -117,10 +117,9 @@ bool WolfRosNode::updateTf()
     ROS_DEBUG("================updateTf==================");
 
     // get current vehicle pose
-
     bool result = true;
 
-    VectorComposite current_state;// = problem_ptr_->getState("PO");
+    VectorComposite current_state = problem_ptr_->getState("PO");
     TimeStamp loc_ts = problem_ptr_->getTimeStamp();
     //problem_ptr_->getCurrentStateAndStamp(current_pose, loc_ts);
     ros::Time loc_stamp(loc_ts.getSeconds(), loc_ts.getNanoSeconds());
