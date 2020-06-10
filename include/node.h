@@ -79,6 +79,8 @@ class WolfRosNode
         std::string base_frame_id_, map_frame_id_, odom_frame_id_;
         tf::Transform T_map2odom;
 
+        // other attributes
+        bool state_available_; // used to handle warnings regarding availability of state
 
       public:
         WolfRosNode();

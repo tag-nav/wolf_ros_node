@@ -8,7 +8,9 @@
 #include <iostream>
 #include <string>
 
-WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
+WolfRosNode::WolfRosNode()
+    : nh_(ros::this_node::getName())
+    , state_available_(true)
 {
     // ROS PARAMS
     std::string yaml_file, plugins_path, subscribers_path;
@@ -121,31 +123,38 @@ bool WolfRosNode::updateTf()
 
     VectorComposite current_state = problem_ptr_->getState("PO");
     TimeStamp loc_ts = problem_ptr_->getTimeStamp();
-    //problem_ptr_->getCurrentStateAndStamp(current_pose, loc_ts);
     ros::Time loc_stamp(loc_ts.getSeconds(), loc_ts.getNanoSeconds());
-    //loc_stamp.nsec = loc_ts.getNanoSeconds();
-    //loc_stamp.sec = loc_ts.getSeconds();
-
-    // loc_stamp = ros::Time::now();
 
     //Get map2base from Wolf result, and builds base2map pose
     tf::Transform T_map2base;
-    if (current_state.count("P") == 0 or current_state.count("O") == 0)
+    if (current_state.size() != 2 or loc_ts == TimeStamp(0))
     {
-        ROS_WARN("P and/or O are not ready.");
+        if (state_available_)
+        {
+            ROS_WARN("State not available...");
+            state_available_ = false; // warning won't be displayed again
+        }
         T_map2base.setIdentity();
-    }
-    else if (problem_ptr_->getDim() == 2)
-    {
-        T_map2base = tf::Transform (tf::createQuaternionFromYaw(current_state["O"](0)),
-                                    tf::Vector3(current_state["P"](0), current_state["P"](1), 0) );
-        //T_map2base.setOrigin( tf::Vector3(current_pose(0), current_pose(1), 0) );
-        //T_map2base.setRotation( tf::createQuaternionFromYaw(current_pose(2)) );
     }
     else
     {
-        T_map2base = tf::Transform (tf::Quaternion(current_state["O"](0), current_state["O"](1), current_state["O"](2), current_state["O"](3)),
-                                    tf::Vector3(current_state["P"](0), current_state["P"](1), current_state["P"](2)) );
+        if (not state_available_)
+        {
+            ROS_INFO("State available!");
+            state_available_ = true; // warning won't be displayed again
+        }
+        // 2D
+        if (problem_ptr_->getDim() == 2)
+        {
+            T_map2base = tf::Transform (tf::createQuaternionFromYaw(current_state["O"](0)),
+                                        tf::Vector3(current_state["P"](0), current_state["P"](1), 0) );
+        }
+        // 3D
+        else
+        {
+            T_map2base = tf::Transform (tf::Quaternion(current_state["O"](0), current_state["O"](1), current_state["O"](2), current_state["O"](3)),
+                                        tf::Vector3(current_state["P"](0), current_state["P"](1), current_state["P"](2)) );
+        }
     }
 
     //gets T_map2odom_ (odom wrt map), by using tf listener, and assuming an odometry node is broadcasting odom2base
