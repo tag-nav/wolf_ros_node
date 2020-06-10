@@ -170,7 +170,7 @@ inline std::string FactorySubscriber::getClass() const
 
 #define WOLF_REGISTER_SUBSCRIBER(SubscriberType)                        \
     namespace{ const bool WOLF_UNUSED SubscriberType##Registered =      \
-            wolf::FactorySubscriber::get().registerCreator(#SubscriberType, SubscriberType::create); } \
+            wolf::FactorySubscriber::registerCreator(#SubscriberType, SubscriberType::create); } \
 
 } /* namespace wolf */
 #endif /* FACTORY_SUBSCRIBER_H_ */

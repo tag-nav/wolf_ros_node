@@ -167,7 +167,7 @@ inline std::string FactoryPublisher::getClass() const
 
 #define WOLF_REGISTER_PUBLISHER(PublisherType)                        \
     namespace{ const bool WOLF_UNUSED PublisherType##Registered =      \
-            wolf::FactoryPublisher::get().registerCreator(#PublisherType, PublisherType::create); } \
+            wolf::FactoryPublisher::registerCreator(#PublisherType, PublisherType::create); } \
 
 } /* namespace wolf */
 #endif /* FACTORY_PUBLISHER_H_ */
