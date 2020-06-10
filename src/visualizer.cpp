@@ -178,58 +178,36 @@ void Visualizer::publishLandmarks(const ProblemPtr problem)
 
 void Visualizer::publishFactors(const ProblemPtr problem)
 {
-    // delete all
+    // first marker: DELETEALL
     factors_marker_array_.markers.clear();
     factors_marker_array_.markers.push_back(factor_marker_);
     factors_marker_array_.markers.front().action = visualization_msgs::Marker::DELETEALL;
-    factors_publisher_.publish(factors_marker_array_);
 
     // Get a list of factors of the trajectory (discarded all prior factors for extrinsics/intrinsics..)
     FactorBasePtrList fac_list;
     problem->getTrajectory()->getFactorList(fac_list);
 
     // Iterate over the list of factors
-    int marker_i = 0;
     for (auto fac : fac_list)
     {
         auto factor_marker = factor_marker_;
         auto factor_text_marker = factor_text_marker_;
+
         // fill marker
         fillFactorMarker(fac, factor_marker, factor_text_marker);
 
         // Store marker in marker array
-        factor_marker.id = marker_i;
+        factor_marker.id = factors_marker_array_.markers.size();
         factor_marker.header.stamp = ros::Time::now();
-
-        if (factors_marker_array_.markers.size() < marker_i+1)
-        {
-            factor_marker.action = visualization_msgs::Marker::ADD;
-            factors_marker_array_.markers.push_back(factor_marker);
-        }
-        else
-        {
-            factor_marker.action = visualization_msgs::Marker::MODIFY;
-            factors_marker_array_.markers[marker_i] = factor_marker;
-        }
-        marker_i++;
+        factor_marker.action = visualization_msgs::Marker::ADD;
+        factors_marker_array_.markers.push_back(factor_marker);
 
         // Store text marker in marker array
-        factor_text_marker.id = marker_i;
+        factor_text_marker.id = factor_marker.id;
         factor_text_marker.header.stamp = ros::Time::now();
-
-        if (factors_marker_array_.markers.size() < marker_i + 1) {
-          factor_text_marker.action = visualization_msgs::Marker::ADD;
-          factors_marker_array_.markers.push_back(factor_text_marker);
-        } else {
-          factor_text_marker.action = visualization_msgs::Marker::MODIFY;
-          factors_marker_array_.markers[marker_i] = factor_text_marker;
-        }
-        marker_i++;
+        factor_text_marker.action = visualization_msgs::Marker::ADD;
+        factors_marker_array_.markers.push_back(factor_text_marker);
     }
-
-    // rest of markers (if any) action: DELETE
-    for (auto i = marker_i; i < factors_marker_array_.markers.size(); i++)
-        factors_marker_array_.markers[i].action = visualization_msgs::Marker::DELETE;
 
     // publish marker array
     factors_publisher_.publish(factors_marker_array_);

@@ -127,7 +127,9 @@ bool WolfRosNode::updateTf()
 
     //Get map2base from Wolf result, and builds base2map pose
     tf::Transform T_map2base;
-    if (current_state.size() != 2 or loc_ts == TimeStamp(0))
+    if (current_state.count("P") == 0 or
+        current_state.count("O") == 0 or
+        loc_ts == TimeStamp(0))
     {
         if (state_available_)
         {
