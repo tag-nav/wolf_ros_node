@@ -36,7 +36,7 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
 
     // SOLVER
     ROS_INFO("Creating solver...");
-    solver_manager_ptr_ = std::static_pointer_cast<CeresManager>(FactorySolver::get().create("CeresManager", problem_ptr_, server));
+    solver_manager_ptr_ = std::static_pointer_cast<CeresManager>(FactorySolver::create("CeresManager", problem_ptr_, server));
     int solver_verbose_int;
     solver_period_ = server.getParam<double>("solver/period");
     solver_verbose_int = server.getParam<int>("solver/verbose");
@@ -50,7 +50,7 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
         std::string topic      = it["topic"];
         std::string sensor     = it["sensor_name"];
         WOLF_TRACE("From sensor {" + sensor + "} subscribing {" + subscriber + "} to {" + topic + "} topic");
-        auto subscriber_wrapper = FactorySubscriber::get().create(subscriber, topic, server, problem_ptr_->getSensor(sensor));
+        auto subscriber_wrapper = FactorySubscriber::create(subscriber, topic, server, problem_ptr_->getSensor(sensor));
         subscribers_.push_back(subscriber_wrapper);
         subscribers_.back()->initSubscriber(nh_, topic);
     }
@@ -58,7 +58,7 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
     // // ROS VISUALIZER
     ROS_INFO("Creating visualizer...");
     // auto visualizer = server.getParam<std::string>("visualizer/type");
-    // viz_ = VisualizerFactory::get().create(visualizer);
+    // viz_ = VisualizerFactory::create(visualizer);
 
     viz_ = std::make_shared<Visualizer>();
     viz_->initialize(nh_);
@@ -72,7 +72,7 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
         {
             std::string pub = it["type"];
             WOLF_INFO("Pub: ", pub);
-            auto publisher = FactoryPublisher::get().create(pub);
+            auto publisher = FactoryPublisher::create(pub);
             publisher->period_ = converter<double>::convert(it["period"]);
             publishers_.push_back(publisher);
             publishers_.back()->initialize(nh_,it["topic"]);
@@ -121,7 +121,10 @@ bool WolfRosNode::updateTf()
     TimeStamp loc_ts;
     Eigen::VectorXd current_pose;
     bool result = true;
-    problem_ptr_->getCurrentStateAndStamp(current_pose, loc_ts);
+    // problem_ptr_->getCurrentStateAndStamp(current_pose, loc_ts);
+
+    auto state = problem_ptr_->getState(loc_ts);
+    current_pose = state.vector("PO");
 
     loc_stamp.nsec = loc_ts.getNanoSeconds();
     loc_stamp.sec = loc_ts.getSeconds();
