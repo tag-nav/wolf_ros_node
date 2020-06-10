@@ -36,7 +36,7 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
 
     // SOLVER
     ROS_INFO("Creating solver...");
-    solver_manager_ptr_ = std::static_pointer_cast<CeresManager>(FactorySolver::get().create("CeresManager", problem_ptr_, server));
+    solver_manager_ptr_ = std::static_pointer_cast<CeresManager>(FactorySolver::create("CeresManager", problem_ptr_, server));
     int solver_verbose_int;
     solver_period_ = server.getParam<double>("solver/period");
     solver_verbose_int = server.getParam<int>("solver/verbose");
@@ -50,7 +50,7 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
         std::string topic      = it["topic"];
         std::string sensor     = it["sensor_name"];
         WOLF_TRACE("From sensor {" + sensor + "} subscribing {" + subscriber + "} to {" + topic + "} topic");
-        auto subscriber_wrapper = FactorySubscriber::get().create(subscriber, topic, server, problem_ptr_->getSensor(sensor));
+        auto subscriber_wrapper = FactorySubscriber::create(subscriber, topic, server, problem_ptr_->getSensor(sensor));
         subscribers_.push_back(subscriber_wrapper);
         subscribers_.back()->initSubscriber(nh_, topic);
     }
@@ -58,7 +58,7 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
     // // ROS VISUALIZER
     ROS_INFO("Creating visualizer...");
     // auto visualizer = server.getParam<std::string>("visualizer/type");
-    // viz_ = VisualizerFactory::get().create(visualizer);
+    // viz_ = VisualizerFactory::create(visualizer);
 
     viz_ = std::make_shared<Visualizer>();
     viz_->initialize(nh_);
@@ -72,7 +72,7 @@ WolfRosNode::WolfRosNode() : nh_(ros::this_node::getName())
         {
             std::string pub = it["type"];
             WOLF_INFO("Pub: ", pub);
-            auto publisher = FactoryPublisher::get().create(pub);
+            auto publisher = FactoryPublisher::create(pub);
             publisher->period_ = converter<double>::convert(it["period"]);
             publishers_.push_back(publisher);
             publishers_.back()->initialize(nh_,it["topic"]);
@@ -117,32 +117,37 @@ bool WolfRosNode::updateTf()
     ROS_DEBUG("================updateTf==================");
 
     // get current vehicle pose
-    ros::Time loc_stamp;
-    TimeStamp loc_ts;
-    Eigen::VectorXd current_pose;
-    bool result = true;
-    problem_ptr_->getCurrentStateAndStamp(current_pose, loc_ts);
 
-    loc_stamp.nsec = loc_ts.getNanoSeconds();
-    loc_stamp.sec = loc_ts.getSeconds();
+    bool result = true;
+
+    VectorComposite current_state;// = problem_ptr_->getState("PO");
+    TimeStamp loc_ts = problem_ptr_->getTimeStamp();
+    //problem_ptr_->getCurrentStateAndStamp(current_pose, loc_ts);
+    ros::Time loc_stamp(loc_ts.getSeconds(), loc_ts.getNanoSeconds());
+    //loc_stamp.nsec = loc_ts.getNanoSeconds();
+    //loc_stamp.sec = loc_ts.getSeconds();
+
     // loc_stamp = ros::Time::now();
 
     //Get map2base from Wolf result, and builds base2map pose
     tf::Transform T_map2base;
-    if (problem_ptr_->getDim() == 2)
+    if (current_state.count("P") == 0 or current_state.count("O") == 0)
     {
-        T_map2base = tf::Transform (tf::createQuaternionFromYaw(current_pose(2)),
-                                    tf::Vector3(current_pose(0), current_pose(1), 0) );
+        ROS_WARN("P and/or O are not ready.");
+        T_map2base.setIdentity();
+    }
+    else if (problem_ptr_->getDim() == 2)
+    {
+        T_map2base = tf::Transform (tf::createQuaternionFromYaw(current_state["O"](0)),
+                                    tf::Vector3(current_state["P"](0), current_state["P"](1), 0) );
         //T_map2base.setOrigin( tf::Vector3(current_pose(0), current_pose(1), 0) );
         //T_map2base.setRotation( tf::createQuaternionFromYaw(current_pose(2)) );
     }
     else
     {
-        T_map2base = tf::Transform (tf::Quaternion(current_pose(3), current_pose(4), current_pose(5), current_pose(6)),
-                                    tf::Vector3(current_pose(0), current_pose(1), current_pose(2)) );
+        T_map2base = tf::Transform (tf::Quaternion(current_state["O"](0), current_state["O"](1), current_state["O"](2), current_state["O"](3)),
+                                    tf::Vector3(current_state["P"](0), current_state["P"](1), current_state["P"](2)) );
     }
-
-    //std::cout << "Current pose: " << current_pose.transpose() << std::endl;
 
     //gets T_map2odom_ (odom wrt map), by using tf listener, and assuming an odometry node is broadcasting odom2base
     tf::StampedTransform T_base2odom;
