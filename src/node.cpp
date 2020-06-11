@@ -24,7 +24,7 @@ WolfRosNode::WolfRosNode()
     std::cout <<"yaml: " << yaml_file << std::endl;
     int found = yaml_file.find_last_of("\\/");
     std::string yaml_dir = yaml_file.substr(0, found);
-    ParserYAML parser = ParserYAML(yaml_file, yaml_dir);
+    ParserYaml parser = ParserYaml(yaml_file, yaml_dir);
     ParamsServer server = ParamsServer(parser.getParams());
 
     server.addParam("plugins_path", plugins_path);
