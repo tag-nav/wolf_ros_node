@@ -26,13 +26,14 @@ class SubscriberDiffdrive : public Subscriber
 
    public:
 
-    SubscriberDiffdrive(const SensorBasePtr& sensor_ptr);
+    SubscriberDiffdrive(const std::string& _unique_name,
+                        const ParamsServer& _server,
+                        const SensorBasePtr _sensor_ptr);
+    WOLF_SUBSCRIBER_CREATE(SubscriberDiffdrive);
 
     virtual void initSubscriber(ros::NodeHandle& nh, const std::string& topic);
 
     void callback(const sensor_msgs::JointState::ConstPtr& msg);
-
-    static std::shared_ptr<Subscriber> create(const std::string& _unique_name, const ParamsServer& _params, const SensorBasePtr _sensor_ptr);
 };
 
 WOLF_REGISTER_SUBSCRIBER(SubscriberDiffdrive)

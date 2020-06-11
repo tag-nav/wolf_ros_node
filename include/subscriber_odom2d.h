@@ -22,13 +22,14 @@ class SubscriberOdom2d : public Subscriber
 
    public:
 
-    SubscriberOdom2d(const SensorBasePtr& sensor_ptr);
+    SubscriberOdom2d(const std::string& _unique_name,
+                     const ParamsServer& _server,
+                     const SensorBasePtr _sensor_ptr);
+    WOLF_SUBSCRIBER_CREATE(SubscriberOdom2d);
 
     virtual void initSubscriber(ros::NodeHandle& nh, const std::string& topic);
 
     void callback(const nav_msgs::Odometry::ConstPtr& msg);
-
-    static std::shared_ptr<Subscriber> create(const std::string& _unique_name, const ParamsServer& _params, const SensorBasePtr _sensor_ptr);
 };
 
 WOLF_REGISTER_SUBSCRIBER(SubscriberOdom2d)

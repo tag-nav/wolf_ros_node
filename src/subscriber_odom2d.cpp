@@ -23,11 +23,13 @@
 
 namespace wolf
 {
-SubscriberOdom2d::SubscriberOdom2d(const SensorBasePtr& sensor_ptr)
-  : Subscriber(sensor_ptr)
+SubscriberOdom2d::SubscriberOdom2d(const std::string& _unique_name,
+                                   const ParamsServer& _server,
+                                   const SensorBasePtr _sensor_ptr)
+  : Subscriber(_unique_name, _server, _sensor_ptr)
   , last_odom_stamp_(ros::Time(0))
-  , odometry_translational_cov_factor_(std::static_pointer_cast<SensorOdom2d>(sensor_ptr)->getDispVarToDispNoiseFactor())
-  , odometry_rotational_cov_factor_(std::static_pointer_cast<SensorOdom2d>(sensor_ptr)->getRotVarToRotNoiseFactor())
+  , odometry_translational_cov_factor_(std::static_pointer_cast<SensorOdom2d>(_sensor_ptr)->getDispVarToDispNoiseFactor())
+  , odometry_rotational_cov_factor_(std::static_pointer_cast<SensorOdom2d>(_sensor_ptr)->getRotVarToRotNoiseFactor())
 {
 }
 
@@ -58,10 +60,4 @@ void SubscriberOdom2d::callback(const nav_msgs::Odometry::ConstPtr& msg)
     ROS_DEBUG("WolfNodePolyline::odomCallback: end");
 }
 
-std::shared_ptr<Subscriber> SubscriberOdom2d::create(const std::string&  _unique_name,
-                                                     const ParamsServer& _params,
-                                                     const SensorBasePtr _sensor_ptr)
-{
-    return std::make_shared<SubscriberOdom2d>(_sensor_ptr);
-};
 }  // namespace wolf
