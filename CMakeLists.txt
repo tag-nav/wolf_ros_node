@@ -151,6 +151,8 @@ add_executable(${PROJECT_NAME} src/node.cpp)
 add_library(subscriber_${PROJECT_NAME}
   src/subscriber_odom2d.cpp
   src/subscriber_diffdrive.cpp)
+add_library(publisher_${PROJECT_NAME}
+  src/publisher_pose.cpp)
 add_library(visualizer src/visualizer.cpp)
 
 ## Rename C++ executable without prefix
