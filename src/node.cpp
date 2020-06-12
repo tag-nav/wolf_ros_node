@@ -52,9 +52,7 @@ WolfRosNode::WolfRosNode()
         std::string topic      = it["topic"];
         std::string sensor     = it["sensor_name"];
         WOLF_TRACE("From sensor {" + sensor + "} subscribing {" + subscriber + "} to {" + topic + "} topic");
-        auto subscriber_wrapper = FactorySubscriber::create(subscriber, topic, server, problem_ptr_->getSensor(sensor));
-        subscribers_.push_back(subscriber_wrapper);
-        subscribers_.back()->initSubscriber(nh_, topic);
+        subscribers_.push_back(FactorySubscriber::create(subscriber, topic, server, problem_ptr_->getSensor(sensor), nh_));
     }
 
     // // ROS VISUALIZER
@@ -72,12 +70,8 @@ WolfRosNode::WolfRosNode()
     {
         for (auto it : server.getParam<std::vector<std::map<std::string, std::string>>>("ROS publisher"))
         {
-            std::string pub = it["type"];
-            WOLF_INFO("Pub: ", pub);
-            auto publisher = FactoryPublisher::create(pub);
-            publisher->period_ = converter<double>::convert(it["period"]);
-            publishers_.push_back(publisher);
-            publishers_.back()->initialize(nh_,it["topic"]);
+            WOLF_INFO("Pub: ", it["type"]);
+            publishers_.push_back(FactoryPublisher::create(it["type"], it["topic"], server, problem_ptr_, nh_));
         }
     }
     catch (MissingValueException& e)
@@ -240,11 +234,8 @@ int main(int argc, char **argv)
 
         // publish periodically
         for(auto pub : wolf_node.publishers_)
-            if ((ros::Time::now() - pub->last_publish_time_).toSec() >= pub->period_)
-            {
-                pub->publish(wolf_node.problem_ptr_);
-                pub->last_publish_time_ = ros::Time::now();
-            }
+            if (pub->ready())
+                pub->publish();
 
         // execute pending callbacks
         ros::spinOnce();

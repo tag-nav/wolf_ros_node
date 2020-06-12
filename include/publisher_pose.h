@@ -6,7 +6,6 @@
  **************************/
 #include "core/problem/problem.h"
 
-#include "factory_publisher.h"
 #include "publisher.h"
 
 namespace wolf
@@ -18,12 +17,15 @@ class PublisherPose: public Publisher
 
     public:
         PublisherPose(const std::string& _unique_name,
-                      const ParamsServer& _server);
+                      const ParamsServer& _server,
+                      const ProblemPtr _problem);
         WOLF_PUBLISHER_CREATE(PublisherPose);
+
         virtual ~PublisherPose(){};
+
         void initialize(ros::NodeHandle &nh, const std::string& topic) override;
-        void publish(const ProblemPtr problem) override;
-        static std::shared_ptr<Publisher> create();
+
+        void publishDerived() override;
 };
 
 WOLF_REGISTER_PUBLISHER(PublisherPose)

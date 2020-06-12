@@ -33,7 +33,7 @@ SubscriberOdom2d::SubscriberOdom2d(const std::string& _unique_name,
 {
 }
 
-void SubscriberOdom2d::initSubscriber(ros::NodeHandle& nh, const std::string& topic)
+void SubscriberOdom2d::initialize(ros::NodeHandle& nh, const std::string& topic)
 {
     sub_ = nh.subscribe(topic, 100, &SubscriberOdom2d::callback, this);
 }

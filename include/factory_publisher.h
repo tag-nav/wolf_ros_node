@@ -156,14 +156,18 @@ namespace wolf
  *
  * You can also check the code in the example file ````src/examples/test_wolf_factories.cpp````.
  */
-    class Publisher;
-    typedef Factory<Publisher> FactoryPublisher;
+class Publisher;
+typedef Factory<Publisher,
+                const std::string&,
+                const ParamsServer&,
+                const ProblemPtr,
+                ros::NodeHandle&> FactoryPublisher;
+
 template<>
 inline std::string FactoryPublisher::getClass() const
 {
   return "FactoryPublisher";
 }
-
 
 #define WOLF_REGISTER_PUBLISHER(PublisherType)                        \
     namespace{ const bool WOLF_UNUSED PublisherType##Registered =      \

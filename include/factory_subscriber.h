@@ -160,7 +160,8 @@ namespace wolf
     typedef Factory<Subscriber,
                     const std::string&,
                     const ParamsServer&,
-                    const SensorBasePtr> FactorySubscriber;
+                    const SensorBasePtr,
+                    ros::NodeHandle&> FactorySubscriber;
 template<>
 inline std::string FactorySubscriber::getClass() const
 {

@@ -2,11 +2,8 @@
  *      WOLF includes     *
  **************************/
 #include <core/capture/capture_diff_drive.h>
-//#include <core/processor/processor_diff_drive.h>
-//#include <core/processor/processor_motion.h>
 #include <core/sensor/sensor_diff_drive.h>
 
-// #include "Eigen/src/Core/Matrix.h"
 #include "core/math/rotations.h"
 #include "subscriber_diffdrive.h"
 
@@ -23,7 +20,7 @@ SubscriberDiffdrive::SubscriberDiffdrive(const std::string& _unique_name,
   ticks_cov_factor_ = std::static_pointer_cast<SensorDiffDrive>(_sensor_ptr)->getParams()->ticks_cov_factor;
 }
 
-void SubscriberDiffdrive::initSubscriber(ros::NodeHandle& nh, const std::string& topic)
+void SubscriberDiffdrive::initialize(ros::NodeHandle& nh, const std::string& topic)
 {
     sub_ = nh.subscribe(topic, 100, &SubscriberDiffdrive::callback, this);
 }

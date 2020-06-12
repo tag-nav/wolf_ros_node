@@ -27,7 +27,7 @@ class SubscriberOdom2d : public Subscriber
                      const SensorBasePtr _sensor_ptr);
     WOLF_SUBSCRIBER_CREATE(SubscriberOdom2d);
 
-    virtual void initSubscriber(ros::NodeHandle& nh, const std::string& topic);
+    virtual void initialize(ros::NodeHandle& nh, const std::string& topic);
 
     void callback(const nav_msgs::Odometry::ConstPtr& msg);
 };

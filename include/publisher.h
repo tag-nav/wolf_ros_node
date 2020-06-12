@@ -10,53 +10,88 @@
  **************************/
 #include "core/common/wolf.h"
 #include "core/problem/problem.h"
+#include "factory_publisher.h"
 
 namespace wolf
 {
 WOLF_PTR_TYPEDEFS(Publisher);
 
 /*
- * Macro for defining Autoconf subscriber creator for WOLF's high level API.
+ * Macro for defining Autoconf publisher creator for WOLF's high level API.
  *
- * Place a call to this macro inside your class declaration (in the subscriber_class.h file),
+ * Place a call to this macro inside your class declaration (in the publisher_class.h file),
  * preferably just after the constructors.
  *
- * In order to use this macro, the derived subscriber class, PublisherClass,
+ * In order to use this macro, the derived publisher class, PublisherClass,
  * must have a constructor available with the API:
  *
  *   PublisherClass(const std::string& _unique_name,
- *                   const ParamsServer& _server,
- *                   const SensorBasePtr _sensor_ptr);
+ *                  const ParamsServer& _server,
+ *                  const ProblemPtr _problem);
  */
-#define WOLF_PUBLISHER_CREATE(PublisherClass)                                    \
-static PublisherPtr create(const std::string& _unique_name,                      \
-                            const ParamsServer& _server)                         \
-{                                                                                \
-    return std::make_shared<PublisherClass>(_unique_name, _server); \
-}                                                                                \
+#define WOLF_PUBLISHER_CREATE(PublisherClass)                                               \
+        static PublisherPtr create(const std::string& _unique_name,                         \
+                                   const ParamsServer& _server,                             \
+                                   const ProblemPtr _problem,                               \
+                                   ros::NodeHandle& _nh)                                    \
+                                   {                                                        \
+    PublisherPtr pub = std::make_shared<PublisherClass>(_unique_name, _server, _problem);   \
+    pub->initialize(_nh, pub->getTopic());                                                  \
+    return pub;                                                                             \
+}                                                                                           \
 
 class Publisher
 {
-  public:
+    public:
 
-    Publisher(const std::string& _unique_name,
-              const ParamsServer& _server)
-      : period_(1)
-      , last_publish_time_(ros::Time(0))
-    {};
+        Publisher(const std::string& _unique_name,
+                  const ParamsServer& _server,
+                  const ProblemPtr _problem) :
+                      problem_(_problem),
+                      last_publish_time_(ros::Time(0)),
+                      prefix_("ROS publisher/" + _unique_name)
+        {
+            period_ = _server.getParam<double>(prefix_ + "/period");
+            topic_  = _server.getParam<std::string>(prefix_ + "/topic");
+        };
 
-    virtual ~Publisher(){};
+        virtual ~Publisher(){};
 
-    virtual void initialize(ros::NodeHandle& nh, const std::string& topic) = 0;
+        virtual void initialize(ros::NodeHandle& nh, const std::string& topic) = 0;
 
-    virtual void publish(const ProblemPtr problem) = 0;
+        virtual void publish() final;
 
-    double period_;
-    ros::Time last_publish_time_;
+        virtual void publishDerived() = 0;
 
-  protected:
+        virtual bool ready();
 
-    ros::Publisher publisher_;
+        std::string getTopic() const;
+
+    protected:
+
+        ProblemPtr problem_;
+        ros::Publisher publisher_;
+        double period_;
+        ros::Time last_publish_time_;
+        std::string prefix_;
+        std::string topic_;
 };
+
+inline void Publisher::publish()
+{
+    last_publish_time_ = ros::Time::now();
+    publishDerived();
+}
+
+inline bool Publisher::ready()
+{
+    return (ros::Time::now() - last_publish_time_).toSec() > period_;
+}
+
+inline std::string Publisher::getTopic() const
+{
+    return topic_;
+}
+
 }  // namespace wolf
 #endif

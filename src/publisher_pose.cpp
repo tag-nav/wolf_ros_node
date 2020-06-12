@@ -10,9 +10,10 @@
 namespace wolf
 {
 
-    PublisherPose::PublisherPose(const std::string& _unique_name,
-                                 const ParamsServer& _server) :
-    Publisher(_unique_name, _server)
+PublisherPose::PublisherPose(const std::string& _unique_name,
+                             const ParamsServer& _server,
+                             const ProblemPtr _problem) :
+        Publisher(_unique_name, _server, _problem)
 {
 }
 
@@ -22,10 +23,10 @@ void PublisherPose::initialize(ros::NodeHandle& nh, const std::string& topic)
     nh.param<std::string>("map_frame_id", map_frame_id_, "map");
 }
 
-void PublisherPose::publish(const ProblemPtr _problem)
+void PublisherPose::publishDerived()
 {
-    VectorComposite current_state = _problem->getState("PO");
-    TimeStamp loc_ts = _problem->getTimeStamp();
+    VectorComposite current_state = problem_->getState("PO");
+    TimeStamp loc_ts = problem_->getTimeStamp();
 
     // state not ready
     if (current_state.count("P") == 0 or
@@ -41,7 +42,7 @@ void PublisherPose::publish(const ProblemPtr _problem)
     msg.header.stamp = ros::Time(loc_ts.getSeconds(), loc_ts.getNanoSeconds());
 
     // 2D
-    if (_problem->getDim() == 2)
+    if (problem_->getDim() == 2)
     {
         msg.pose.pose.position.x = current_state["P"](0);
         msg.pose.pose.position.y = current_state["P"](1);

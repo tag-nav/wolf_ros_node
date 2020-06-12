@@ -11,7 +11,6 @@
  *      ROS includes      *
  **************************/
 #include <ros/ros.h>
-#include <nav_msgs/Odometry.h>
 
 namespace wolf {
 WOLF_PTR_TYPEDEFS(Subscriber);
@@ -29,13 +28,16 @@ WOLF_PTR_TYPEDEFS(Subscriber);
  *                   const ParamsServer& _server,
  *                   const SensorBasePtr _sensor_ptr);
  */
-#define WOLF_SUBSCRIBER_CREATE(SubscriberClass)                                     \
-static SubscriberPtr create(const std::string& _unique_name,                        \
-                            const ParamsServer& _server,                            \
-                            const SensorBasePtr _sensor_ptr)                        \
-{                                                                                   \
-    return std::make_shared<SubscriberClass>(_unique_name, _server, _sensor_ptr);   \
-}                                                                                   \
+#define WOLF_SUBSCRIBER_CREATE(SubscriberClass)                                                 \
+static SubscriberPtr create(const std::string& _unique_name,                                    \
+                            const ParamsServer& _server,                                        \
+                            const SensorBasePtr _sensor_ptr,                                    \
+                            ros::NodeHandle& _nh)                                               \
+{                                                                                               \
+    SubscriberPtr sub = std::make_shared<SubscriberClass>(_unique_name, _server, _sensor_ptr);  \
+    sub->initialize(_nh, sub->getTopic());                                                      \
+    return sub;                                                                                 \
+}                                                                                               \
 
 class Subscriber
 {
@@ -43,6 +45,7 @@ class Subscriber
         //wolf
         SensorBasePtr sensor_ptr_;
         std::string prefix_;
+        std::string topic_;
 
         // ros
         ros::Subscriber sub_;
@@ -54,10 +57,20 @@ class Subscriber
             sensor_ptr_(_sensor_ptr),
             prefix_("ROS subscriber/" + _unique_name)
         {
+            topic_  = _server.getParam<std::string>(prefix_ + "/topic");
         }
+
         virtual ~Subscriber(){};
 
-        virtual void initSubscriber(ros::NodeHandle& nh, const std::string& topic) = 0;
+        virtual void initialize(ros::NodeHandle& nh, const std::string& topic) = 0;
+
+        std::string getTopic() const;
 };
+
+inline std::string Subscriber::getTopic() const
+{
+    return topic_;
+}
+
 }
 #endif

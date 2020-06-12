@@ -2,7 +2,7 @@
  *      WOLF includes     *
  **************************/
 #include <core/common/wolf.h>
-#include <core/utils/params_server.h>
+#include "subscriber.h"
 
 /**************************
  *      ROS includes      *
@@ -10,8 +10,6 @@
 #include <ros/ros.h>
 #include <nav_msgs/Odometry.h>
 #include "sensor_msgs/JointState.h"
-
-#include "subscriber.h"
 
 namespace wolf
 {
@@ -31,7 +29,7 @@ class SubscriberDiffdrive : public Subscriber
                         const SensorBasePtr _sensor_ptr);
     WOLF_SUBSCRIBER_CREATE(SubscriberDiffdrive);
 
-    virtual void initSubscriber(ros::NodeHandle& nh, const std::string& topic);
+    virtual void initialize(ros::NodeHandle& nh, const std::string& topic);
 
     void callback(const sensor_msgs::JointState::ConstPtr& msg);
 };
