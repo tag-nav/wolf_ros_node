@@ -219,7 +219,7 @@ void Visualizer::publishTrajectory(const ProblemPtr problem)
     int marker_i = 0;
     auto frame_marker = frame_marker_;
     auto frame_text_marker = frame_text_marker_;
-    for (auto frm : problem->getTrajectory()->getFrameList())
+    for (auto frm : *problem->getTrajectory())
         if (frm->isKey())
         {
             // fill marker
