@@ -10,8 +10,9 @@
 namespace wolf
 {
 
-PublisherPose::PublisherPose() :
-    Publisher()
+    PublisherPose::PublisherPose(const std::string& _unique_name,
+                                 const ParamsServer& _server) :
+    Publisher(_unique_name, _server)
 {
 }
 
@@ -62,11 +63,6 @@ void PublisherPose::publish(const ProblemPtr _problem)
     }
 
     publisher_.publish(msg);
-}
-
-std::shared_ptr<Publisher> PublisherPose::create()
-{
-    return std::make_shared<PublisherPose>();
 }
 
 }

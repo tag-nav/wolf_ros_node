@@ -17,7 +17,9 @@ class PublisherPose: public Publisher
         std::string map_frame_id_;
 
     public:
-        PublisherPose();
+        PublisherPose(const std::string& _unique_name,
+                      const ParamsServer& _server);
+        WOLF_PUBLISHER_CREATE(PublisherPose);
         virtual ~PublisherPose(){};
         void initialize(ros::NodeHandle &nh, const std::string& topic) override;
         void publish(const ProblemPtr problem) override;

@@ -14,11 +14,33 @@
 namespace wolf
 {
 WOLF_PTR_TYPEDEFS(Publisher);
+
+/*
+ * Macro for defining Autoconf subscriber creator for WOLF's high level API.
+ *
+ * Place a call to this macro inside your class declaration (in the subscriber_class.h file),
+ * preferably just after the constructors.
+ *
+ * In order to use this macro, the derived subscriber class, PublisherClass,
+ * must have a constructor available with the API:
+ *
+ *   PublisherClass(const std::string& _unique_name,
+ *                   const ParamsServer& _server,
+ *                   const SensorBasePtr _sensor_ptr);
+ */
+#define WOLF_PUBLISHER_CREATE(PublisherClass)                                    \
+static PublisherPtr create(const std::string& _unique_name,                      \
+                            const ParamsServer& _server)                         \
+{                                                                                \
+    return std::make_shared<PublisherClass>(_unique_name, _server); \
+}                                                                                \
+
 class Publisher
 {
   public:
 
-    Publisher()
+    Publisher(const std::string& _unique_name,
+              const ParamsServer& _server)
       : period_(1)
       , last_publish_time_(ros::Time(0))
     {};
