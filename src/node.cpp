@@ -117,13 +117,12 @@ bool WolfRosNode::updateTf()
 
     VectorComposite current_state = problem_ptr_->getState("PO");
     TimeStamp loc_ts = problem_ptr_->getTimeStamp();
-    ros::Time loc_stamp(loc_ts.getSeconds(), loc_ts.getNanoSeconds());
 
     //Get map2base from Wolf result, and builds base2map pose
     tf::Transform T_map2base;
     if (current_state.count("P") == 0 or
         current_state.count("O") == 0 or
-        loc_ts == TimeStamp(0))
+        loc_ts.ok())
     {
         if (state_available_)
         {
@@ -155,6 +154,7 @@ bool WolfRosNode::updateTf()
 
     //gets T_map2odom_ (odom wrt map), by using tf listener, and assuming an odometry node is broadcasting odom2base
     tf::StampedTransform T_base2odom;
+    ros::Time loc_stamp(loc_ts.getSeconds(), loc_ts.getNanoSeconds());
     if ( tfl_.waitForTransform(base_frame_id_, odom_frame_id_, ros::Time(0), ros::Duration(0.2)) )
     {
         // tfl_.lookupTransform(base_frame_id_, odom_frame_id_, loc_stamp, T_base2odom);
