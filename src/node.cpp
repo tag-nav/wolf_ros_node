@@ -122,7 +122,7 @@ bool WolfRosNode::updateTf()
     tf::Transform T_map2base;
     if (current_state.count("P") == 0 or
         current_state.count("O") == 0 or
-        loc_ts.ok())
+        !loc_ts.ok())
     {
         if (state_available_)
         {
