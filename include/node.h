@@ -4,6 +4,7 @@
 #include <core/common/node_base.h>
 #include <core/common/wolf.h>
 #include <core/capture/capture_odom_2d.h>
+#include <core/ceres_wrapper/solver_ceres.h>
 #include <core/sensor/sensor_odom_2d.h>
 #include <core/processor/processor_odom_2d.h>
 #include <core/problem/problem.h>
@@ -14,12 +15,6 @@
 
 /**************************
  *     CERES includes     *
- **************************/
-#include "core/ceres_wrapper/ceres_manager.h"
-//#include "glog/logging.h"
-
-/**************************
- *      ROS includes      *
  **************************/
 #include <ros/ros.h>
 #include <ros/package.h>
@@ -70,7 +65,7 @@ class WolfRosNode
 
     protected:
         // solver
-        SolverManagerPtr solver_manager_ptr_;
+        SolverManagerPtr solver_;
         SolverManager::ReportVerbosity solver_verbose_;
 
         // transforms

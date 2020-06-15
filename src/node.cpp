@@ -38,7 +38,7 @@ WolfRosNode::WolfRosNode()
 
     // SOLVER
     ROS_INFO("Creating solver...");
-    solver_manager_ptr_ = std::static_pointer_cast<CeresManager>(FactorySolver::create("CeresManager", problem_ptr_, server));
+    solver_ = std::static_pointer_cast<SolverCeres>(FactorySolver::create("SolverCeres", problem_ptr_, server));
     int solver_verbose_int;
     solver_period_ = server.getParam<double>("solver/period");
     solver_verbose_int = server.getParam<int>("solver/verbose");
@@ -93,7 +93,7 @@ void WolfRosNode::solve()
     if (solver_verbose_ != SolverManager::ReportVerbosity::QUIET)
         ROS_INFO("================ solve ==================");
 
-    std::string report = solver_manager_ptr_->solve(solver_verbose_);
+    std::string report = solver_->solve(solver_verbose_);
     if (!report.empty())
         std::cout << report << std::endl;
 }
