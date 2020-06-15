@@ -38,11 +38,7 @@ WolfRosNode::WolfRosNode()
 
     // SOLVER
     ROS_INFO("Creating solver...");
-    solver_ = std::static_pointer_cast<SolverCeres>(FactorySolver::create("SolverCeres", problem_ptr_, server));
-    int solver_verbose_int;
-    solver_period_ = server.getParam<double>("solver/period");
-    solver_verbose_int = server.getParam<int>("solver/verbose");
-    solver_verbose_ = static_cast<SolverManager::ReportVerbosity>(solver_verbose_int);
+    solver_ = FactorySolver::create("SolverCeres", problem_ptr_, server);
 
     // ROS SUBSCRIBERS
     ROS_INFO("Creating subscribers...");
@@ -90,10 +86,10 @@ WolfRosNode::WolfRosNode()
 
 void WolfRosNode::solve()
 {
-    if (solver_verbose_ != SolverManager::ReportVerbosity::QUIET)
+    if (solver_->getVerbosity() != SolverManager::ReportVerbosity::QUIET)
         ROS_INFO("================ solve ==================");
 
-    std::string report = solver_->solve(solver_verbose_);
+    std::string report = solver_->solve();
     if (!report.empty())
         std::cout << report << std::endl;
 }
@@ -189,12 +185,11 @@ void WolfRosNode::broadcastTf()
 void WolfRosNode::solveLoop()
 {
     WOLF_DEBUG("Started solver loop");
-    ros::Rate solverRate(1/solver_period_);
 
     while (ros::ok())
     {
-        solve();
-        solverRate.sleep();
+        if (solver_->ready())
+            solve();
 
         if(ros::isShuttingDown())
             break;

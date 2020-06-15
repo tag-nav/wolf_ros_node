@@ -51,9 +51,7 @@ class WolfRosNode
         // ROS node handle
         ros::NodeHandle nh_;
 
-        double solver_period_;
         double viz_period_;
-        double publisher_period_;
 
         // visualizer
         std::shared_ptr<Visualizer> viz_;
@@ -66,7 +64,6 @@ class WolfRosNode
     protected:
         // solver
         SolverManagerPtr solver_;
-        SolverManager::ReportVerbosity solver_verbose_;
 
         // transforms
         tf::TransformBroadcaster tfb_;
