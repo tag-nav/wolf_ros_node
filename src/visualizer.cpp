@@ -17,6 +17,7 @@ void Visualizer::initialize(ros::NodeHandle& nh)
 
     // Load options ---------------------------------------------------
     nh.param<bool>(         "viz_factors",              viz_factors_,               true);
+    nh.param<bool>(         "viz_overlapped_factors",   viz_overlapped_factors_,    false);
     nh.param<bool>(         "viz_landmarks",            viz_landmarks_,             true);
     nh.param<bool>(         "viz_trajectory",           viz_trajectory_,            true);
     // viz parameters
@@ -62,16 +63,17 @@ void Visualizer::initialize(ros::NodeHandle& nh)
     // init markers ---------------------------------------------------
     // factor markers message
     factor_marker_.type = visualization_msgs::Marker::LINE_LIST;
+    factor_marker_.action = visualization_msgs::Marker::ADD;
     factor_marker_.header.frame_id = map_frame_id_;
-    factor_marker_.ns = "/factors";
+    factor_marker_.ns = "factors";
     factor_marker_.scale.x = viz_scale_*factors_width_;
     factor_text_marker_ = factor_marker_;
     factor_text_marker_.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
-    factor_text_marker_.ns = "/factors_text";
+    factor_text_marker_.ns = "factors_text";
     factor_text_marker_.color.r = 1;
     factor_text_marker_.color.g = 1;
     factor_text_marker_.color.b = 1;
-    factor_text_marker_.color.a = 0.5;
+    factor_text_marker_.color.a = 1;
     factor_text_marker_.scale.x = viz_scale_*0.3;
     factor_text_marker_.scale.y = viz_scale_*0.3;
     factor_text_marker_.scale.z = viz_scale_*0.3;
@@ -79,18 +81,18 @@ void Visualizer::initialize(ros::NodeHandle& nh)
     // frame markers
     frame_marker_.type = visualization_msgs::Marker::ARROW;
     frame_marker_.header.frame_id = map_frame_id_;
-    frame_marker_.ns = "/frames";
+    frame_marker_.ns = "frames";
     frame_marker_.scale.x = viz_scale_*frame_length_;
     frame_marker_.scale.y = viz_scale_*frame_width_;
     frame_marker_.scale.z = viz_scale_*frame_width_;
     frame_marker_.color = frame_color_;
     frame_text_marker_ = frame_marker_;
     frame_text_marker_.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
-    frame_text_marker_.ns = "/frames_text";
+    frame_text_marker_.ns = "frames_text";
     frame_text_marker_.color.r = 1;
     frame_text_marker_.color.g = 1;
     frame_text_marker_.color.b = 1;
-    frame_text_marker_.color.a = 0.5;
+    frame_text_marker_.color.a = 1;
     frame_text_marker_.scale.x = viz_scale_*0.3;
     frame_text_marker_.scale.y = viz_scale_*0.3;
     frame_text_marker_.scale.z = viz_scale_*0.3;
@@ -98,18 +100,18 @@ void Visualizer::initialize(ros::NodeHandle& nh)
     // landmark markers
     landmark_marker_.type = visualization_msgs::Marker::ARROW;
     landmark_marker_.header.frame_id = map_frame_id_;
-    landmark_marker_.ns = "/landmarks";
+    landmark_marker_.ns = "landmarks";
     landmark_marker_.scale.x = viz_scale_*landmark_length_;
     landmark_marker_.scale.y = viz_scale_*landmark_width_;
     landmark_marker_.scale.z = viz_scale_*landmark_width_;
     landmark_marker_.color.a = 0.5;
     landmark_text_marker_ = landmark_marker_;
     landmark_text_marker_.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
-    landmark_text_marker_.ns = "/landmarks_text";
+    landmark_text_marker_.ns = "landmarks_text";
     landmark_text_marker_.color.r = 1;
     landmark_text_marker_.color.g = 1;
     landmark_text_marker_.color.b = 1;
-    landmark_text_marker_.color.a = 0.5;
+    landmark_text_marker_.color.a = 1;
     landmark_text_marker_.scale.z = viz_scale_*3;
 }
 
@@ -178,6 +180,10 @@ void Visualizer::publishLandmarks(const ProblemPtr problem)
 
 void Visualizer::publishFactors(const ProblemPtr problem)
 {
+    // update stamps of generic messages
+    factor_marker_.header.stamp = ros::Time::now();
+    factor_text_marker_.header.stamp = ros::Time::now();
+
     // first marker: DELETEALL
     factors_marker_array_.markers.clear();
     factors_marker_array_.markers.push_back(factor_marker_);
@@ -187,26 +193,38 @@ void Visualizer::publishFactors(const ProblemPtr problem)
     FactorBasePtrList fac_list;
     problem->getTrajectory()->getFactorList(fac_list);
 
+    // reset previously drawn factors
+    factors_drawn_.clear();
+
     // Iterate over the list of factors
     for (auto fac : fac_list)
     {
+
         auto factor_marker = factor_marker_;
         auto factor_text_marker = factor_text_marker_;
 
         // fill marker
         fillFactorMarker(fac, factor_marker, factor_text_marker);
 
-        // Store marker in marker array
+        // markers id
         factor_marker.id = factors_marker_array_.markers.size();
-        factor_marker.header.stamp = ros::Time::now();
-        factor_marker.action = visualization_msgs::Marker::ADD;
-        factors_marker_array_.markers.push_back(factor_marker);
+        factor_text_marker.id = factors_marker_array_.markers.size()+1;
 
-        // Store text marker in marker array
-        factor_text_marker.id = factor_marker.id;
-        factor_text_marker.header.stamp = ros::Time::now();
-        factor_text_marker.action = visualization_msgs::Marker::ADD;
+        // Store markers in marker array
         factors_marker_array_.markers.push_back(factor_text_marker);
+        // avoid drawing overlapped factors markers
+        if (not viz_overlapped_factors_)
+        {
+            std::string fac_str = factorString(fac);
+
+            if (factors_drawn_.count(fac_str) == 0)
+            {
+                factors_marker_array_.markers.push_back(factor_marker);
+                factors_drawn_.emplace(fac_str);
+            }
+        }
+        else
+            factors_marker_array_.markers.push_back(factor_marker);
     }
 
     // publish marker array
@@ -300,7 +318,6 @@ void Visualizer::fillLandmarkMarkers(LandmarkBaseConstPtr lmk,
     lmk_marker.color.r = (double)lmk->getHits()/landmark_max_hits_;
     lmk_marker.color.g = 0;
     lmk_marker.color.b = 1 - (double)lmk->getHits()/landmark_max_hits_;
-    lmk_marker.color.a = 0.5;
 
     // POSITION & ORIENTATION ------------------------------------------------------
     // position
@@ -330,6 +347,35 @@ void Visualizer::fillLandmarkMarkers(LandmarkBaseConstPtr lmk,
     lmk_text_marker.pose.position.x = lmk_marker.pose.position.x;
     lmk_text_marker.pose.position.y = lmk_marker.pose.position.y;
     lmk_text_marker.pose.position.z = lmk_marker.pose.position.z + viz_scale_*landmark_text_z_offset_;
+}
+
+std::string Visualizer::factorString(FactorBaseConstPtr fac) const
+{
+    std::string factor_string;
+    factor_string = "F" + fac->getCapture()->getFrame()->id();
+
+    // FRAME
+    if (fac->getFrameOther() != nullptr)
+        factor_string += "_F" + fac->getFrameOther()->id();
+    // CAPTURE (with Frame)
+    else if (fac->getCaptureOther() != nullptr &&
+             fac->getCaptureOther()->getFrame() != nullptr)
+        factor_string += "_C" + fac->getCaptureOther()->id();
+    // FEATURE (with Frame)
+    else if (fac->getFeatureOther() != nullptr &&
+            fac->getFeatureOther()->getCapture() != nullptr &&
+            fac->getFeatureOther()->getCapture()->getFrame() != nullptr)
+        factor_string += "_f" + fac->getFeatureOther()->id();
+    // LANDMARK
+    else if (fac->getLandmarkOther() != nullptr)
+        factor_string += "_L" + fac->getLandmarkOther()->id();
+
+    // ABSOLUTE (nothing
+
+    // Topology
+    factor_string += fac->getTopology();
+
+    return factor_string;
 }
 
 void Visualizer::fillFactorMarker(FactorBaseConstPtr fac,
@@ -414,12 +460,12 @@ void Visualizer::fillFactorMarker(FactorBaseConstPtr fac,
       color = factor_geom_color_;
 
   // more transparent if inactive
-  if (fac->getStatus() == FAC_ACTIVE)
+  if (fac->getStatus() == FAC_INACTIVE)
       color.a *= 0.5;
 
   fac_marker.colors.push_back(color);
   fac_marker.colors.push_back(color);// 2 times because of 2 points
-  fac_marker.ns = std::string("factor_"+fac->getTopology());
+  fac_marker.ns = std::string("factors_"+fac->getTopology());
 
   // TEXT MARKER --------------------------------------------------------
   fac_text_marker.text = std::to_string(fac->id());
