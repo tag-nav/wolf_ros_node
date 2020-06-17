@@ -116,8 +116,8 @@ bool WolfRosNode::updateTf()
 
     //Get map2base from Wolf result, and builds base2map pose
     tf::Transform T_map2base;
-    if (current_state.count("P") == 0 or
-        current_state.count("O") == 0 or
+    if (current_state.count('P') == 0 or
+        current_state.count('O') == 0 or
         !loc_ts.ok())
     {
         if (state_available_)
@@ -137,14 +137,14 @@ bool WolfRosNode::updateTf()
         // 2D
         if (problem_ptr_->getDim() == 2)
         {
-            T_map2base = tf::Transform (tf::createQuaternionFromYaw(current_state["O"](0)),
-                                        tf::Vector3(current_state["P"](0), current_state["P"](1), 0) );
+            T_map2base = tf::Transform (tf::createQuaternionFromYaw(current_state['O'](0)),
+                                        tf::Vector3(current_state['P'](0), current_state['P'](1), 0) );
         }
         // 3D
         else
         {
-            T_map2base = tf::Transform (tf::Quaternion(current_state["O"](0), current_state["O"](1), current_state["O"](2), current_state["O"](3)),
-                                        tf::Vector3(current_state["P"](0), current_state["P"](1), current_state["P"](2)) );
+            T_map2base = tf::Transform (tf::Quaternion(current_state['O'](0), current_state['O'](1), current_state['O'](2), current_state['O'](3)),
+                                        tf::Vector3(current_state['P'](0), current_state['P'](1), current_state['P'](2)) );
         }
     }
 

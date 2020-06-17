@@ -29,8 +29,8 @@ void PublisherPose::publishDerived()
     TimeStamp loc_ts = problem_->getTimeStamp();
 
     // state not ready
-    if (current_state.count("P") == 0 or
-        current_state.count("O") == 0 or
+    if (current_state.count('P') == 0 or
+        current_state.count('O') == 0 or
         loc_ts == TimeStamp(0))
     {
         return;
@@ -44,23 +44,23 @@ void PublisherPose::publishDerived()
     // 2D
     if (problem_->getDim() == 2)
     {
-        msg.pose.pose.position.x = current_state["P"](0);
-        msg.pose.pose.position.y = current_state["P"](1);
+        msg.pose.pose.position.x = current_state['P'](0);
+        msg.pose.pose.position.y = current_state['P'](1);
         msg.pose.pose.position.z = 0;
 
-        msg.pose.pose.orientation = tf::createQuaternionMsgFromYaw(current_state["O"](0));
+        msg.pose.pose.orientation = tf::createQuaternionMsgFromYaw(current_state['O'](0));
     }
     // 3D
     else
     {
-        msg.pose.pose.position.x = current_state["P"](0);
-        msg.pose.pose.position.y = current_state["P"](1);
-        msg.pose.pose.position.z = current_state["P"](2);
+        msg.pose.pose.position.x = current_state['P'](0);
+        msg.pose.pose.position.y = current_state['P'](1);
+        msg.pose.pose.position.z = current_state['P'](2);
 
-        msg.pose.pose.orientation.x = current_state["O"](0);
-        msg.pose.pose.orientation.y = current_state["O"](1);
-        msg.pose.pose.orientation.z = current_state["O"](2);
-        msg.pose.pose.orientation.w = current_state["O"](3);
+        msg.pose.pose.orientation.x = current_state['O'](0);
+        msg.pose.pose.orientation.y = current_state['O'](1);
+        msg.pose.pose.orientation.z = current_state['O'](2);
+        msg.pose.pose.orientation.w = current_state['O'](3);
     }
 
     publisher_.publish(msg);

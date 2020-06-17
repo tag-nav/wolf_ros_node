@@ -32,32 +32,32 @@ void Visualizer::initialize(ros::NodeHandle& nh)
     nh.param<float>(        "frame_color_r",            frame_color_.r,             1.0);
     nh.param<float>(        "frame_color_g",            frame_color_.g,             0.8);
     nh.param<float>(        "frame_color_b",            frame_color_.b,             0.0);
-    nh.param<float>(        "frame_color_a",            frame_color_.a,             0.5);
+    nh.param<float>(        "frame_color_a",            frame_color_.a,             1);
 
     nh.param<float>(        "factor_abs_color_r",       factor_abs_color_.r,        0.92);
     nh.param<float>(        "factor_abs_color_g",       factor_abs_color_.g,        0.19);
     nh.param<float>(        "factor_abs_color_b",       factor_abs_color_.b,        0.6);
-    nh.param<float>(        "factor_abs_color_a",       factor_abs_color_.a,        0.5);
+    nh.param<float>(        "factor_abs_color_a",       factor_abs_color_.a,        1);
 
     nh.param<float>(        "factor_motion_color_r",    factor_motion_color_.r,     1.0);
     nh.param<float>(        "factor_motion_color_g",    factor_motion_color_.g,     1.0);
     nh.param<float>(        "factor_motion_color_b",    factor_motion_color_.b,     0.0);
-    nh.param<float>(        "factor_motion_color_a",    factor_motion_color_.a,     0.5);
+    nh.param<float>(        "factor_motion_color_a",    factor_motion_color_.a,     1);
 
     nh.param<float>(        "factor_loop_color_r",      factor_loop_color_.r,       1.0);
     nh.param<float>(        "factor_loop_color_g",      factor_loop_color_.g,       0.0);
     nh.param<float>(        "factor_loop_color_b",      factor_loop_color_.b,       0.0);
-    nh.param<float>(        "factor_loop_color_a",      factor_loop_color_.a,       0.5);
+    nh.param<float>(        "factor_loop_color_a",      factor_loop_color_.a,       1);
 
     nh.param<float>(        "factor_lmk_color_r",       factor_lmk_color_.r,        0.0);
     nh.param<float>(        "factor_lmk_color_g",       factor_lmk_color_.g,        0.0);
     nh.param<float>(        "factor_lmk_color_b",       factor_lmk_color_.b,        1.0);
-    nh.param<float>(        "factor_lmk_color_a",       factor_lmk_color_.a,        0.5);
+    nh.param<float>(        "factor_lmk_color_a",       factor_lmk_color_.a,        1);
 
     nh.param<float>(        "factor_geom_color_r",      factor_geom_color_.r,       0.0);
     nh.param<float>(        "factor_geom_color_g",      factor_geom_color_.g,       1.0);
     nh.param<float>(        "factor_geom_color_b",      factor_geom_color_.b,       1.0);
-    nh.param<float>(        "factor_geom_color_a",      factor_geom_color_.a,       0.5);
+    nh.param<float>(        "factor_geom_color_a",      factor_geom_color_.a,       1);
 
     // init markers ---------------------------------------------------
     // factor markers message
