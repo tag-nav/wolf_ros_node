@@ -1,4 +1,5 @@
 #include "visualizer.h"
+#include "core/processor/processor_motion.h"
 
 
 Visualizer::Visualizer() :
@@ -387,7 +388,7 @@ void Visualizer::fillFactorMarker(FactorBaseConstPtr fac,
   // point1 -> frame ------------------------------------------------------
   point1.x = fac->getCapture()->getFrame()->getP()->getState()(0);
   point1.y = fac->getCapture()->getFrame()->getP()->getState()(1);
-  if (fac->getCapture()->getFrame()->getP()->getSize() > 2)
+  if (fac->getProblem()->getDim() == 3)
     point1.z = fac->getCapture()->getFrame()->getP()->getState()(2);
   else
     point1.z = 0;
@@ -395,19 +396,80 @@ void Visualizer::fillFactorMarker(FactorBaseConstPtr fac,
   // point2 -> other ------------------------------------------------------
   // FRAME
   if (fac->getFrameOther() != nullptr) {
-    point2.x = fac->getFrameOther()->getP()->getState()(0);
-    point2.y = fac->getFrameOther()->getP()->getState()(1);
-    if (fac->getFrameOther()->getP()->getSize() > 2)
-      point2.z = fac->getFrameOther()->getP()->getState()(2);
+
+    // special case: Motion from ProcessorImu
+    auto proc_motion = std::dynamic_pointer_cast<ProcessorMotion>(fac->getProcessor());
+    if (proc_motion)
+    {
+        // Get state of other
+        const auto& x_other = fac->getFrameOther()->getState(proc_motion->getStateStructure());
+
+        // Get most recent motion
+        const auto& cap_own = std::static_pointer_cast<CaptureMotion>(fac->getFeature()->getCapture());
+        const auto& motion = cap_own->getBuffer().back();
+
+        // Get delta preintegrated up to now
+        const auto& delta_preint = motion.delta_integr_;
+
+        // Get calibration preint -- stored in last capture
+        const auto& calib_preint = cap_own->getCalibrationPreint();
+
+        VectorComposite state_integrated;
+        if ( proc_motion->hasCalibration())
+        {
+            // Get current calibration -- from other capture
+            const auto& calib = proc_motion->getCalibration(fac->getCaptureOther());
+
+            // get Jacobian of delta wrt calibration
+            const auto& J_delta_calib = motion.jacobian_calib_;
+
+            // compute delta change
+            const auto& delta_step = J_delta_calib * (calib - calib_preint);
+
+            // correct delta // this is (+)
+            const auto& delta_corrected = proc_motion->correctDelta(delta_preint, delta_step);
+
+            // compute current state // this is [+]
+            proc_motion->statePlusDelta(x_other, delta_corrected, cap_own->getTimeStamp() - fac->getCaptureOther()->getTimeStamp(), state_integrated);
+
+        }
+        else
+        {
+            proc_motion->statePlusDelta(x_other, delta_preint, cap_own->getTimeStamp() - fac->getCaptureOther()->getTimeStamp(), state_integrated);
+        }
+
+        // FILL POINTS
+        // 1=origin (other)
+        point1.x = fac->getFrameOther()->getP()->getState()(0);
+        point1.y = fac->getFrameOther()->getP()->getState()(1);
+        if (fac->getProblem()->getDim() == 3)
+          point1.z = fac->getFrameOther()->getP()->getState()(2);
+        else
+          point1.z = 0;
+        // 2=own
+        point2.x = state_integrated.at('P')(0);
+        point2.y = state_integrated.at('P')(1);
+        if (fac->getProblem()->getDim() == 3)
+          point2.z = state_integrated.at('P')(2);
+        else
+          point2.z = 0;
+    }
     else
-      point2.z = 0;
+    {
+        point2.x = fac->getFrameOther()->getP()->getState()(0);
+        point2.y = fac->getFrameOther()->getP()->getState()(1);
+        if (fac->getProblem()->getDim() == 3)
+          point2.z = fac->getFrameOther()->getP()->getState()(2);
+        else
+          point2.z = 0;
+    }
   }
   // CAPTURE (with Frame)
   else if (fac->getCaptureOther() != nullptr &&
            fac->getCaptureOther()->getFrame() != nullptr) {
     point2.x = fac->getCaptureOther()->getFrame()->getP()->getState()(0);
     point2.y = fac->getCaptureOther()->getFrame()->getP()->getState()(1);
-    if (fac->getCaptureOther()->getFrame()->getP()->getSize() > 2)
+    if (fac->getProblem()->getDim() == 3)
       point2.z = fac->getCaptureOther()->getFrame()->getP()->getState()(2);
     else
       point2.z = 0;
@@ -420,7 +482,7 @@ void Visualizer::fillFactorMarker(FactorBaseConstPtr fac,
         fac->getFeatureOther()->getCapture()->getFrame()->getP()->getState()(0);
     point2.y =
         fac->getFeatureOther()->getCapture()->getFrame()->getP()->getState()(1);
-    if (fac->getFeatureOther()->getCapture()->getFrame()->getP()->getSize() > 2)
+    if (fac->getProblem()->getDim() == 3)
       point2.z =
           fac->getFeatureOther()->getCapture()->getFrame()->getP()->getState()(
               2);
@@ -431,7 +493,7 @@ void Visualizer::fillFactorMarker(FactorBaseConstPtr fac,
   else if (fac->getLandmarkOther() != nullptr) {
     point2.x = fac->getLandmarkOther()->getP()->getState()(0);
     point2.y = fac->getLandmarkOther()->getP()->getState()(1);
-    if (fac->getLandmarkOther()->getP()->getSize() > 2)
+    if (fac->getProblem()->getDim() == 3)
       point2.z = fac->getLandmarkOther()->getP()->getState()(2);
     else
       point2.z = 0;
