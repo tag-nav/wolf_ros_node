@@ -185,7 +185,7 @@ void Visualizer::publishFactors(const ProblemPtr problem)
     factor_marker_.header.stamp = ros::Time::now();
     factor_text_marker_.header.stamp = ros::Time::now();
 
-    // first marker: DELETEALL
+    // previous
     factors_marker_array_.markers.clear();
     factors_marker_array_.markers.push_back(factor_marker_);
     factors_marker_array_.markers.front().action = visualization_msgs::Marker::DELETEALL;
@@ -204,15 +204,16 @@ void Visualizer::publishFactors(const ProblemPtr problem)
         auto factor_marker = factor_marker_;
         auto factor_text_marker = factor_text_marker_;
 
+        // markers id
+        factor_marker.id = fac->id();
+        factor_text_marker.id = fac->id();
+
         // fill marker
         fillFactorMarker(fac, factor_marker, factor_text_marker);
 
-        // markers id
-        factor_marker.id = factors_marker_array_.markers.size();
-        factor_text_marker.id = factors_marker_array_.markers.size()+1;
-
-        // Store markers in marker array
+        // Store marker text in marker array
         factors_marker_array_.markers.push_back(factor_text_marker);
+
         // avoid drawing overlapped factors markers
         if (not viz_overlapped_factors_)
         {
@@ -353,28 +354,27 @@ void Visualizer::fillLandmarkMarkers(LandmarkBaseConstPtr lmk,
 std::string Visualizer::factorString(FactorBaseConstPtr fac) const
 {
     std::string factor_string;
-    factor_string = "F" + fac->getCapture()->getFrame()->id();
+    factor_string = "F" + std::to_string(fac->getCapture()->getFrame()->id());
 
     // FRAME
     if (fac->getFrameOther() != nullptr)
-        factor_string += "_F" + fac->getFrameOther()->id();
+        factor_string += "_F" + std::to_string(fac->getFrameOther()->id());
     // CAPTURE (with Frame)
     else if (fac->getCaptureOther() != nullptr &&
              fac->getCaptureOther()->getFrame() != nullptr)
-        factor_string += "_C" + fac->getCaptureOther()->id();
+        factor_string += "_C" + std::to_string(fac->getCaptureOther()->id());
     // FEATURE (with Frame)
     else if (fac->getFeatureOther() != nullptr &&
             fac->getFeatureOther()->getCapture() != nullptr &&
             fac->getFeatureOther()->getCapture()->getFrame() != nullptr)
-        factor_string += "_f" + fac->getFeatureOther()->id();
+        factor_string += "_f" + std::to_string(fac->getFeatureOther()->id());
     // LANDMARK
     else if (fac->getLandmarkOther() != nullptr)
-        factor_string += "_L" + fac->getLandmarkOther()->id();
-
+        factor_string += "_L" + std::to_string(fac->getLandmarkOther()->id());
     // ABSOLUTE (nothing
 
     // Topology
-    factor_string += fac->getTopology();
+    factor_string += "_" + fac->getTopology();
 
     return factor_string;
 }
@@ -534,6 +534,7 @@ void Visualizer::fillFactorMarker(FactorBaseConstPtr fac,
   fac_text_marker.pose.position.x = (point1.x + point2.x)/(double) 2;
   fac_text_marker.pose.position.y = (point1.y + point2.y)/(double) 2;
   fac_text_marker.pose.position.z = fac_marker.pose.position.z;
+  fac_text_marker.ns = "factors_text";
 }
 
 void Visualizer::fillFrameMarker(FrameBaseConstPtr frm,

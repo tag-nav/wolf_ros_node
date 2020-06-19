@@ -184,15 +184,18 @@ void WolfRosNode::broadcastTf()
 
 void WolfRosNode::solveLoop()
 {
+    ros::Rate solverRate(1/solver_->getPeriod());
     WOLF_DEBUG("Started solver loop");
 
     while (ros::ok())
     {
-        if (solver_->ready())
-            solve();
+        solve();
 
         if(ros::isShuttingDown())
             break;
+
+        // relax to fit output rate
+        solverRate.sleep();
     }
     WOLF_DEBUG("Solver loop finished");
 }
