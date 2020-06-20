@@ -48,7 +48,7 @@ WolfRosNode::WolfRosNode()
         std::string topic      = it["topic"];
         std::string sensor     = it["sensor_name"];
         WOLF_TRACE("From sensor {" + sensor + "} subscribing {" + subscriber + "} to {" + topic + "} topic");
-        subscribers_.push_back(FactorySubscriber::create(subscriber, topic, server, problem_ptr_->getSensor(sensor), nh_));
+        subscribers_.push_back(FactorySubscriber::create(subscriber, subscriber+topic, server, problem_ptr_->getSensor(sensor), nh_));
     }
 
     // // ROS VISUALIZER
@@ -67,7 +67,7 @@ WolfRosNode::WolfRosNode()
         for (auto it : server.getParam<std::vector<std::map<std::string, std::string>>>("ROS publisher"))
         {
             WOLF_INFO("Pub: ", it["type"]);
-            publishers_.push_back(FactoryPublisher::create(it["type"], it["topic"], server, problem_ptr_, nh_));
+            publishers_.push_back(FactoryPublisher::create(it["type"], it["type"]+it["topic"], server, problem_ptr_, nh_));
         }
     }
     catch (MissingValueException& e)
