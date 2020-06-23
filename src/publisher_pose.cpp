@@ -5,6 +5,7 @@
  **************************/
 #include <ros/ros.h>
 #include "tf/transform_datatypes.h"
+#include "tf_conversions/tf_eigen.h"
 
 namespace wolf
 {
@@ -24,23 +25,27 @@ PublisherPose::PublisherPose(const std::string& _unique_name,
         marker_color_.b = col(2);
         marker_color_.a = col(3);
     }
+    extrinsics_     = _server.getParam<bool>(prefix_ + "/extrinsics");
+    if (extrinsics_)
+        sensor_ = _problem->getSensor(_server.getParam<std::string>(prefix_ + "/sensor"));
+    frame_id_ = _server.getParam<std::string>(prefix_ + "/frame_id");
 }
 
 void PublisherPose::initialize(ros::NodeHandle& nh, const std::string& topic)
 {
     std::string map_frame_id;
-    nh.param<std::string>("map_frame_id", map_frame_id, "map");
+    nh.param<std::string>("map_frame_id", map_frame_id_, "map");
 
     // initialize msg and publisher
     if (pose_array_)
     {
-        pose_array_msg_.header.frame_id = map_frame_id;
+        pose_array_msg_.header.frame_id = frame_id_;
 
         pub_pose_array_ = nh.advertise<geometry_msgs::PoseArray>(topic + "_pose_array", 1);
     }
     if (marker_)
     {
-        marker_msg_.header.frame_id = map_frame_id;
+        marker_msg_.header.frame_id = frame_id_;
         marker_msg_.type = visualization_msgs::Marker::LINE_STRIP;
         marker_msg_.action = visualization_msgs::Marker::ADD;
         marker_msg_.ns = "trajectory";
@@ -65,31 +70,65 @@ void PublisherPose::publishDerived()
         return;
     }
 
-    // Fill Pose msg
-    geometry_msgs::Pose pose_msg;
+
+    // fill vector and quaternion
+    Eigen::Vector3d p = Eigen::Vector3d::Zero();
+    Eigen::Quaterniond q;
 
     // 2D
     if (problem_->getDim() == 2)
     {
-        pose_msg.position.x = current_state['P'](0);
-        pose_msg.position.y = current_state['P'](1);
-        pose_msg.position.z = 0;
-
-        pose_msg.orientation = tf::createQuaternionMsgFromYaw(current_state['O'](0));
+        if (extrinsics_)
+        {
+            p.head(2) = current_state['P'] + Eigen::Rotation2Dd(current_state['O'](0)) * sensor_->getP()->getState().head(2);
+            if (sensor_->getO())
+                q = Eigen::Quaterniond(Eigen::AngleAxisd(current_state['O'](0) + sensor_->getO()->getState()(0),
+                                                         Eigen::Vector3d::UnitZ()));
+            else
+                q = Eigen::Quaterniond(Eigen::AngleAxisd(current_state['O'](0),
+                                                         Eigen::Vector3d::UnitZ()));
+        }
+        else
+        {
+            p.head(2) = current_state['P'];
+            q = Eigen::Quaterniond(Eigen::AngleAxisd(current_state['O'](0), Eigen::Vector3d::UnitZ()));
+        }
     }
     // 3D
     else
     {
-        pose_msg.position.x = current_state['P'](0);
-        pose_msg.position.y = current_state['P'](1);
-        pose_msg.position.z = current_state['P'](2);
-
-        pose_msg.orientation.x = current_state['O'](0);
-        pose_msg.orientation.y = current_state['O'](1);
-        pose_msg.orientation.z = current_state['O'](2);
-        pose_msg.orientation.w = current_state['O'](3);
+        if (extrinsics_)
+        {
+            p = current_state['P'] + Eigen::Quaterniond(Eigen::Vector4d(current_state['O'])) * sensor_->getP()->getState();
+            if (sensor_->getO())
+                q = Eigen::Quaterniond(Eigen::Vector4d(current_state['O'])) * Eigen::Quaterniond(Eigen::Vector4d(sensor_->getO()->getState()));
+            else
+                q = Eigen::Quaterniond(Eigen::Vector4d(current_state['O']));
+        }
+        else
+        {
+            p = current_state['P'];
+            q = Eigen::Quaterniond(Eigen::Vector4d(current_state['O']));
+        }
     }
 
+    // Change frame
+    if (frame_id_ != map_frame_id_)
+    {
+        p = t_frame_ + q_frame_ * p;
+        q = q_frame_ * q;
+    }
+
+    // Fill Pose msg
+    geometry_msgs::Pose pose_msg;
+    pose_msg.position.x = p(0);
+    pose_msg.position.y = p(1);
+    pose_msg.position.z = p(2);
+
+    pose_msg.orientation.x = q.x();
+    pose_msg.orientation.y = q.y();
+    pose_msg.orientation.z = q.z();
+    pose_msg.orientation.w = q.w();
     publishPose(pose_msg, ros::Time(loc_ts.getSeconds(), loc_ts.getNanoSeconds()));
 }
 
@@ -110,6 +149,23 @@ void PublisherPose::publishPose(const geometry_msgs::Pose pose, const ros::Time&
 
         pub_marker_.publish(marker_msg_);
     }
+}
+
+bool PublisherPose::listenTf()
+{
+    tf::StampedTransform T;
+    if ( tfl_.waitForTransform(map_frame_id_, frame_id_, ros::Time(0), ros::Duration(0.01)) )
+    {
+        tfl_.lookupTransform(map_frame_id_, frame_id_, ros::Time(0), T);
+
+        Eigen::Matrix3d R;
+        tf::matrixTFToEigen(T.getBasis(), R);
+        tf::vectorTFToEigen(T.getOrigin(), t_frame_);
+        q_frame_ = Eigen::Quaterniond(R);
+
+        return true;
+    }
+    return false;
 }
 
 }

@@ -22,7 +22,7 @@ void Visualizer::initialize(ros::NodeHandle& nh)
     nh.param<bool>(         "viz_landmarks",            viz_landmarks_,             true);
     nh.param<bool>(         "viz_trajectory",           viz_trajectory_,            true);
     // viz parameters
-    nh.param<std::string>(  "map_frame_name",           map_frame_id_,              "map");
+    nh.param<std::string>(  "map_frame_id",             map_frame_id_,              "map");
     nh.param<double>(       "viz_scale",                viz_scale_,                 1);
     nh.param<double>(       "factors_width",            factors_width_,             0.02);
     nh.param<double>(       "factors_absolute_height",  factors_absolute_height_,   20);

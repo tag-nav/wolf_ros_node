@@ -14,6 +14,7 @@
 #include <ros/ros.h>
 #include <geometry_msgs/PoseArray.h>
 #include <visualization_msgs/Marker.h>
+#include <tf/transform_listener.h>
 
 namespace wolf
 {
@@ -25,6 +26,9 @@ class PublisherPose: public Publisher
         geometry_msgs::PoseArray pose_array_msg_;
         visualization_msgs::Marker marker_msg_;
         std_msgs::ColorRGBA marker_color_;
+        bool extrinsics_;
+        SensorBasePtr sensor_;
+        std::string frame_id_, map_frame_id_;
 
         ros::Publisher pub_pose_array_, pub_marker_;
 
@@ -41,6 +45,13 @@ class PublisherPose: public Publisher
         void publishDerived() override;
 
         void publishPose(const geometry_msgs::Pose pose, const ros::Time& stamp);
+
+    protected:
+
+        bool listenTf();
+        Eigen::Quaterniond q_frame_;
+        Eigen::Vector3d t_frame_;
+        tf::TransformListener tfl_;
 };
 
 WOLF_REGISTER_PUBLISHER(PublisherPose)
