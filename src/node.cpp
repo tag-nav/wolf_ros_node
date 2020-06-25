@@ -62,18 +62,10 @@ WolfRosNode::WolfRosNode()
 
     // ROS PUBLISHERS
     ROS_INFO("Creating publishers...");
-    try
+    for (auto it : server.getParam<std::vector<std::map<std::string, std::string>>>("ROS publisher"))
     {
-        for (auto it : server.getParam<std::vector<std::map<std::string, std::string>>>("ROS publisher"))
-        {
-            WOLF_INFO("Pub: ", it["type"]);
-            publishers_.push_back(FactoryPublisher::create(it["type"], it["type"]+it["topic"], server, problem_ptr_, nh_));
-        }
-    }
-    catch (MissingValueException& e)
-    {
-        WOLF_WARN(e.what());
-        WOLF_WARN("No publishers found...");
+        WOLF_INFO("Pub: ", it["type"]);
+        publishers_.push_back(FactoryPublisher::create(it["type"], it["type"]+it["topic"], server, problem_ptr_, nh_));
     }
 
     // TF INIT
