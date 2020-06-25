@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   tf
+  tf_conversions
   dynamic_reconfigure
 
 )
@@ -167,7 +168,21 @@ add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg)
 add_dependencies(visualizer ${PROJECT_NAME}_gencfg)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(visualizer ${wolf_LIBRARIES})
+target_link_libraries(subscriber_${PROJECT_NAME}
+                      ${catkin_LIBRARIES}
+                      ${CERES_LIBRARIES}
+                      ${wolf_LIBRARIES}
+                      yaml-cpp
+                      dl
+                      )
+
+target_link_libraries(publisher_${PROJECT_NAME}
+                      ${catkin_LIBRARIES}
+                      ${CERES_LIBRARIES}
+                      ${wolf_LIBRARIES}
+                      yaml-cpp
+                      dl
+                      )
 
 target_link_libraries(${PROJECT_NAME}
                       visualizer

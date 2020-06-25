@@ -113,7 +113,7 @@ void PublisherPose::publishDerived()
     }
 
     // Change frame
-    if (frame_id_ != map_frame_id_)
+    if (frame_id_ != map_frame_id_ and listenTf())
     {
         p = t_frame_ + q_frame_ * p;
         q = q_frame_ * q;
@@ -154,9 +154,9 @@ void PublisherPose::publishPose(const geometry_msgs::Pose pose, const ros::Time&
 bool PublisherPose::listenTf()
 {
     tf::StampedTransform T;
-    if ( tfl_.waitForTransform(map_frame_id_, frame_id_, ros::Time(0), ros::Duration(0.01)) )
+    if ( tfl_.waitForTransform(frame_id_, map_frame_id_, ros::Time(0), ros::Duration(0.01)) )
     {
-        tfl_.lookupTransform(map_frame_id_, frame_id_, ros::Time(0), T);
+        tfl_.lookupTransform(frame_id_, map_frame_id_, ros::Time(0), T);
 
         Eigen::Matrix3d R;
         tf::matrixTFToEigen(T.getBasis(), R);
