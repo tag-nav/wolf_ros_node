@@ -11,11 +11,6 @@ Visualizer::Visualizer() :
 
 void Visualizer::initialize(ros::NodeHandle& nh)
 {
-    // init publishers ---------------------------------------------------
-    factors_publisher_      = nh.advertise<visualization_msgs::MarkerArray>("factors", 1);
-    landmarks_publisher_    = nh.advertise<visualization_msgs::MarkerArray>("landmarks", 1);
-    trajectory_publisher_   = nh.advertise<visualization_msgs::MarkerArray>("trajectory", 1);
-
     // Load options ---------------------------------------------------
     nh.param<bool>(         "viz_factors",              viz_factors_,               true);
     nh.param<bool>(         "viz_overlapped_factors",   viz_overlapped_factors_,    false);
@@ -60,6 +55,14 @@ void Visualizer::initialize(ros::NodeHandle& nh)
     nh.param<float>(        "factor_geom_color_g",      factor_geom_color_.g,       1.0);
     nh.param<float>(        "factor_geom_color_b",      factor_geom_color_.b,       1.0);
     nh.param<float>(        "factor_geom_color_a",      factor_geom_color_.a,       1);
+
+    // init publishers ---------------------------------------------------
+    if (viz_factors_)
+        factors_publisher_      = nh.advertise<visualization_msgs::MarkerArray>("factors", 1);
+    if (viz_landmarks_)
+        landmarks_publisher_    = nh.advertise<visualization_msgs::MarkerArray>("landmarks", 1);
+    if (viz_trajectory_)
+        trajectory_publisher_   = nh.advertise<visualization_msgs::MarkerArray>("trajectory", 1);
 
     // init markers ---------------------------------------------------
     // factor markers message
