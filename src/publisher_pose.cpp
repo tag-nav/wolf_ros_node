@@ -181,7 +181,7 @@ void PublisherPose::publishPose()
 
         pub_marker_.publish(marker_msg_);
     }
-    if (pose_with_cov_ and pose_with_cov_msg_.pose.covariance[0] > 0)
+    if (pose_with_cov_)
     {
         pub_pose_with_cov_.publish(pose_with_cov_msg_);
     }
