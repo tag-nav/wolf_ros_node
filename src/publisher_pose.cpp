@@ -131,7 +131,6 @@ void PublisherPose::publishDerived()
     // Covariance
     Eigen::MatrixXd cov(6,6);
     auto KF = problem_->getLastKeyFrame();
-    WOLF_INFO("Getting cov of KF ", KF->id());
     bool success(true);
     success = success && problem_->getCovarianceBlock(KF->getP(), KF->getP(), cov, 0, 0);
     success = success && problem_->getCovarianceBlock(KF->getP(), KF->getO(), cov, 0, 3);
@@ -147,7 +146,7 @@ void PublisherPose::publishDerived()
     }
     else
     {
-        WOLF_WARN("Last KF covariance could not be recovered, using the previous one");
+        //WOLF_WARN("Last KF covariance could not be recovered, using the previous one");
         //pose_with_cov_msg_.pose.covariance[0] = -1; // not valid
     }
 
