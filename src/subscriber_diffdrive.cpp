@@ -43,7 +43,7 @@ void SubscriberDiffdrive::callback(const sensor_msgs::JointState::ConstPtr& msg)
           TimeStamp(msg->header.stamp.sec, msg->header.stamp.nsec), sensor_ptr_, angles_inc, cov, nullptr);
       sensor_ptr_->process(cptr);
 
-      auto current_kf = sensor_ptr_->getProblem()->getLastKeyFrame()->id();
+      auto current_kf = sensor_ptr_->getProblem()->getLastFrame()->id();
 
       if(last_kf != current_kf)
       {
