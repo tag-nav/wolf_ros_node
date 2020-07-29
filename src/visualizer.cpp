@@ -27,6 +27,7 @@ void Visualizer::initialize(ros::NodeHandle& nh)
     nh.param<double>(       "factors_width",            factors_width_,             0.02);
     nh.param<double>(       "factors_absolute_height",  factors_absolute_height_,   20);
     nh.param<double>(       "landmark_text_z_offset",   landmark_text_z_offset_,    1);
+    nh.param<double>(       "landmark_width",           landmark_width_,            0.1);
     nh.param<double>(       "landmark_length",          landmark_length_,           1);
     nh.param<double>(       "frame_width",              frame_width_,               0.1);
     nh.param<double>(       "frame_length",             frame_length_,              1);
