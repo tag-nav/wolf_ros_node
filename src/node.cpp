@@ -100,7 +100,7 @@ void WolfRosNode::solve()
     if (!report.empty())
     {
         std::cout << report << std::endl;
-        problem_ptr_->print(4,1,1,1);
+        //problem_ptr_->print(4,1,1,1);
     }
 
     if (compute_cov_ and (ros::Time::now() - last_cov_stamp_).toSec() > cov_period_)
