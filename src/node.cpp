@@ -179,6 +179,7 @@ void WolfRosNode::solveLoop()
 {
     ros::Rate solverRate(1/solver_->getPeriod());
     WOLF_DEBUG("Started solver loop");
+    WOLF_TRACE("HI SOLVER");
 
     while (ros::ok())
     {
@@ -191,6 +192,27 @@ void WolfRosNode::solveLoop()
         solverRate.sleep();
     }
     WOLF_DEBUG("Solver loop finished");
+    WOLF_TRACE("BYE SOLVER");
+}
+
+void WolfRosNode::visualizeLoop()
+{
+    ros::Rate visualizerRate(1/viz_period_);
+    // visualize periodically
+    WOLF_DEBUG("Started visualize loop");
+    WOLF_TRACE("HI VISUALIZE");
+    while (ros::ok())
+    {
+        visualize();
+
+        if(ros::isShuttingDown())
+            break;
+
+        // relax to fit output rate
+        visualizerRate.sleep();
+    }
+    WOLF_DEBUG("Visualize loop finished");
+    WOLF_TRACE("BYE VISUALIZE");
 }
 
 int main(int argc, char **argv)
@@ -208,21 +230,14 @@ int main(int argc, char **argv)
 
     // Solver thread
     std::thread solver_thread(&WolfRosNode::solveLoop, &wolf_node);
+    // Visualizer thread
+    std::thread visualizer_thread(&WolfRosNode::visualizeLoop, &wolf_node);
 
     while (ros::ok())
     {
         // broadcast tf
         wolf_node.updateTf();
         wolf_node.broadcastTf();
-
-        // visualize periodically
-        auto start3 = std::chrono::high_resolution_clock::now();
-        if ((ros::Time::now() - last_viz_time).toSec() >= wolf_node.viz_period_)
-        {
-            std::cout << "Last Viz since/viz_period_ " << (ros::Time::now() - last_viz_time).toSec() << " / " << wolf_node.viz_period_ << std::endl;
-            wolf_node.visualize();
-            last_viz_time = ros::Time::now();
-        }
 
         // publish periodically
         for(auto pub : wolf_node.publishers_)

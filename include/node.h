@@ -82,9 +82,11 @@ class WolfRosNode
         void solve();
         void solveLoop();
 
+
         void broadcastTf();
 
         void visualize();
+        void visualizeLoop();
 
         bool updateTf();
 };
