@@ -66,7 +66,7 @@ class Visualizer
 
     // Options
     std::string map_frame_id_;
-    bool        viz_factors_, viz_landmarks_, viz_trajectory_, viz_overlapped_factors_;
+    bool        viz_overlapped_factors_;
     double      viz_scale_, factors_width_, factors_absolute_height_, landmark_text_z_offset_, landmark_width_, landmark_length_, frame_width_, frame_length_;
     std_msgs::ColorRGBA frame_color_, factor_abs_color_, factor_motion_color_, factor_loop_color_, factor_lmk_color_, factor_geom_color_;
 
