@@ -135,7 +135,7 @@ void PublisherPose::publishDerived()
 
     // Covariance
     Eigen::MatrixXd cov(6,6);
-    auto KF = problem_->getLastKeyFrame();
+    auto KF = problem_->getLastFrame();
     bool success(true);
     success = success && problem_->getCovarianceBlock(KF->getP(), KF->getP(), cov, 0, 0);
     success = success && problem_->getCovarianceBlock(KF->getP(), KF->getO(), cov, 0, 3);
