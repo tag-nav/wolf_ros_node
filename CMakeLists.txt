@@ -23,7 +23,7 @@ find_package(catkin REQUIRED COMPONENTS
 # find_package(Boost REQUIRED COMPONENTS system)
 # find_package(Ceres REQUIRED)
 # find_package(Eigen3 REQUIRED)
-find_package(wolf REQUIRED)
+find_package(wolfcore REQUIRED)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -122,11 +122,11 @@ INCLUDE_DIRS include
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-message("Wolf include path: ${wolf_INCLUDE_DIR}")
+message("Wolf include path: ${wolf_INCLUDE_DIRS}")
 include_directories(
     include
   ${EIGEN_INCLUDE_DIRS}
-  ${wolf_INCLUDE_DIRS}
+  ${wolfcore_INCLUDE_DIRS}
   ${catkin_INCLUDE_DIRS}
   ${CERES_INCLUDE_DIRS}
 )
@@ -171,7 +171,7 @@ add_dependencies(visualizer ${PROJECT_NAME}_gencfg)
 target_link_libraries(subscriber_${PROJECT_NAME}
                       ${catkin_LIBRARIES}
                       ${CERES_LIBRARIES}
-                      ${wolf_LIBRARIES}
+                      ${wolfcore_LIBRARIES}
                       yaml-cpp
                       dl
                       )
@@ -179,7 +179,7 @@ target_link_libraries(subscriber_${PROJECT_NAME}
 target_link_libraries(publisher_${PROJECT_NAME}
                       ${catkin_LIBRARIES}
                       ${CERES_LIBRARIES}
-                      ${wolf_LIBRARIES}
+                      ${wolfcore_LIBRARIES}
                       yaml-cpp
                       dl
                       )
@@ -188,7 +188,7 @@ target_link_libraries(${PROJECT_NAME}
                       visualizer
                       ${catkin_LIBRARIES}
                       ${CERES_LIBRARIES}
-                      ${wolf_LIBRARIES}
+                      ${wolfcore_LIBRARIES}
                       yaml-cpp
                       dl
                       )

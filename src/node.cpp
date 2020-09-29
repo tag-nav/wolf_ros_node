@@ -65,22 +65,14 @@ WolfRosNode::WolfRosNode()
 
     viz_ = std::make_shared<Visualizer>();
     viz_->initialize(nh_);
-    viz_period_ = server.getParam<int>("visualizer/period");
+    viz_period_ = server.getParam<double>("visualizer/period");
 
     // ROS PUBLISHERS
     ROS_INFO("Creating publishers...");
-    try
+    for (auto it : server.getParam<std::vector<std::map<std::string, std::string>>>("ROS publisher"))
     {
-        for (auto it : server.getParam<std::vector<std::map<std::string, std::string>>>("ROS publisher"))
-        {
-            WOLF_INFO("Pub: ", it["type"]);
-            publishers_.push_back(FactoryPublisher::create(it["type"], it["type"]+it["topic"], server, problem_ptr_, nh_));
-        }
-    }
-    catch (MissingValueException& e)
-    {
-        WOLF_WARN(e.what());
-        WOLF_WARN("No publishers found...");
+        WOLF_INFO("Pub: ", it["type"]);
+        publishers_.push_back(FactoryPublisher::create(it["type"], it["type"]+it["topic"], server, problem_ptr_, nh_));
     }
 
     // TF INIT
@@ -97,6 +89,7 @@ void WolfRosNode::solve()
         ROS_INFO("================ solve ==================");
 
     std::string report = solver_->solve();
+
     if (!report.empty())
     {
         std::cout << report << std::endl;
@@ -123,7 +116,7 @@ void WolfRosNode::visualize()
     viz_->visualize(problem_ptr_);
     auto stop     = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-    //std::cout << "Visualize took " << duration.count() << " microseconds" << std::endl;
+    std::cout << "Visualize took " << duration.count() << " microseconds" << std::endl;
 }
 
 bool WolfRosNode::updateTf()
@@ -248,6 +241,7 @@ int main(int argc, char **argv)
         auto start3 = std::chrono::high_resolution_clock::now();
         if ((ros::Time::now() - last_viz_time).toSec() >= wolf_node.viz_period_)
         {
+            std::cout << "Last Viz since/viz_period_ " << (ros::Time::now() - last_viz_time).toSec() << " / " << wolf_node.viz_period_ << std::endl;
             wolf_node.visualize();
             last_viz_time = ros::Time::now();
         }
