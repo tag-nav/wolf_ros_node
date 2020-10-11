@@ -116,7 +116,7 @@ void WolfRosNode::visualize()
     viz_->visualize(problem_ptr_);
     auto stop     = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-    std::cout << "Visualize took " << duration.count() << " microseconds" << std::endl;
+    //std::cout << "Visualize took " << duration.count() << " microseconds" << std::endl;
 }
 
 bool WolfRosNode::updateTf()
@@ -241,7 +241,7 @@ int main(int argc, char **argv)
         auto start3 = std::chrono::high_resolution_clock::now();
         if ((ros::Time::now() - last_viz_time).toSec() >= wolf_node.viz_period_)
         {
-            std::cout << "Last Viz since/viz_period_ " << (ros::Time::now() - last_viz_time).toSec() << " / " << wolf_node.viz_period_ << std::endl;
+            //std::cout << "Last Viz since/viz_period_ " << (ros::Time::now() - last_viz_time).toSec() << " / " << wolf_node.viz_period_ << std::endl;
             wolf_node.visualize();
             last_viz_time = ros::Time::now();
         }
