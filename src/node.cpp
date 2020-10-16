@@ -98,11 +98,13 @@ void WolfRosNode::solve()
 
     if (compute_cov_ and (ros::Time::now() - last_cov_stamp_).toSec() > cov_period_)
     {
+        auto start = std::chrono::high_resolution_clock::now();
         if (solver_->computeCovariances(cov_enum_))
         {
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start);
             last_cov_stamp_ = ros::Time::now();
             if (solver_->getVerbosity() != SolverManager::ReportVerbosity::QUIET)
-                ROS_INFO("Covariances computed successfully!");
+                ROS_INFO("Covariances computed successfully! It took %li microseconds", duration.count());
         }
         else if (solver_->getVerbosity() != SolverManager::ReportVerbosity::QUIET)
             ROS_WARN("Failed to compute covariances");
@@ -230,6 +232,12 @@ int main(int argc, char **argv)
 
     // Solver thread
     std::thread solver_thread(&WolfRosNode::solveLoop, &wolf_node);
+    // set priority
+    struct sched_param Priority_Param; //struct to set priority
+    int priority = 99;
+    Priority_Param.sched_priority = priority;
+    int policy=SCHED_FIFO;
+    pthread_setschedparam(solver_thread.native_handle(), SCHED_FIFO, &Priority_Param);
 
     while (ros::ok())
     {
