@@ -49,7 +49,7 @@ class Publisher
                   const ProblemPtr _problem) :
                       problem_(_problem),
                       first_publish_time_(ros::Time(0)),
-                      n_published_(0),
+                      last_n_period_(0),
                       prefix_("ROS publisher/" + _unique_name)
         {
             period_ = _server.getParam<double>(prefix_ + "/period");
@@ -74,24 +74,29 @@ class Publisher
         ros::Publisher publisher_;
         double period_;
         ros::Time first_publish_time_;
-        long unsigned int n_published_;
+        long unsigned int last_n_period_;
         std::string prefix_;
         std::string topic_;
 };
 
 inline void Publisher::publish()
 {
-    if (n_published_ == 0)
+    if (last_n_period_ == 0)
         first_publish_time_ = ros::Time::now();
 
-    n_published_++;
     publishDerived();
 }
 
 inline bool Publisher::ready()
 {
-    long unsigned int n_pub = (long unsigned int)((ros::Time::now() - first_publish_time_).toSec() / period_);
-    return n_pub > n_published_;
+    long unsigned int n_period = (long unsigned int)((ros::Time::now() - first_publish_time_).toSec() / period_);
+    if (n_period > last_n_period_)
+    {
+        last_n_period_ = n_period;
+        return true;
+    }
+
+    return false;
 }
 
 inline std::string Publisher::getTopic() const
