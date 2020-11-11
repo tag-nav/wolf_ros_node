@@ -11,16 +11,8 @@ Visualizer::Visualizer() :
 
 void Visualizer::initialize(ros::NodeHandle& nh)
 {
-    // init publishers ---------------------------------------------------
-    factors_publisher_      = nh.advertise<visualization_msgs::MarkerArray>("factors", 1);
-    landmarks_publisher_    = nh.advertise<visualization_msgs::MarkerArray>("landmarks", 1);
-    trajectory_publisher_   = nh.advertise<visualization_msgs::MarkerArray>("trajectory", 1);
-
     // Load options ---------------------------------------------------
-    nh.param<bool>(         "viz_factors",              viz_factors_,               true);
     nh.param<bool>(         "viz_overlapped_factors",   viz_overlapped_factors_,    false);
-    nh.param<bool>(         "viz_landmarks",            viz_landmarks_,             true);
-    nh.param<bool>(         "viz_trajectory",           viz_trajectory_,            true);
     // viz parameters
     nh.param<std::string>(  "map_frame_id",             map_frame_id_,              "map");
     nh.param<double>(       "viz_scale",                viz_scale_,                 1);
@@ -61,6 +53,11 @@ void Visualizer::initialize(ros::NodeHandle& nh)
     nh.param<float>(        "factor_geom_color_g",      factor_geom_color_.g,       1.0);
     nh.param<float>(        "factor_geom_color_b",      factor_geom_color_.b,       1.0);
     nh.param<float>(        "factor_geom_color_a",      factor_geom_color_.a,       1);
+
+    // init publishers ---------------------------------------------------
+    factors_publisher_      = nh.advertise<visualization_msgs::MarkerArray>("factors", 1);
+    landmarks_publisher_    = nh.advertise<visualization_msgs::MarkerArray>("landmarks", 1);
+    trajectory_publisher_   = nh.advertise<visualization_msgs::MarkerArray>("trajectory", 1);
 
     // init markers ---------------------------------------------------
     // factor markers message
@@ -119,11 +116,11 @@ void Visualizer::initialize(ros::NodeHandle& nh)
 
 void Visualizer::visualize(const ProblemPtr problem)
 {
-    if (viz_factors_)
+    if (factors_publisher_.getNumSubscribers() != 0)
         publishFactors(problem);
-    if (viz_landmarks_)
+    if (landmarks_publisher_.getNumSubscribers() != 0)
         publishLandmarks(problem);
-    if (viz_trajectory_)
+    if (trajectory_publisher_.getNumSubscribers() != 0)
         publishTrajectory(problem);
 }
 

@@ -15,16 +15,23 @@ PublisherPose::PublisherPose(const std::string& _unique_name,
                              const ProblemPtr _problem) :
         Publisher(_unique_name, _server, _problem)
 {
-    pose_array_ = _server.getParam<bool>(prefix_ + "/pose_array_msg");
-    marker_     = _server.getParam<bool>(prefix_ + "/marker_msg");
-    if (marker_)
-    {
+    try{
+        std::cout << "PublisherPose: taking user defined marker color...\n";
         Eigen::Vector4d col = _server.getParam<Eigen::Vector4d>(prefix_ + "/marker_color");
         marker_color_.r = col(0);
         marker_color_.g = col(1);
         marker_color_.b = col(2);
         marker_color_.a = col(3);
     }
+    catch(...)
+    {
+        std::cout << "PublisherPose: using default marker color: RED\n";
+        marker_color_.r = 1;
+        marker_color_.g = 0;
+        marker_color_.b = 0;
+        marker_color_.a = 1;
+    }
+
     extrinsics_     = _server.getParam<bool>(prefix_ + "/extrinsics");
     if (extrinsics_)
         sensor_ = _problem->getSensor(_server.getParam<std::string>(prefix_ + "/sensor"));
@@ -37,39 +44,46 @@ void PublisherPose::initialize(ros::NodeHandle& nh, const std::string& topic)
     nh.param<std::string>("map_frame_id", map_frame_id_, "map");
 
     // initialize msg and publisher
-    if (pose_array_)
-    {
-        pose_array_msg_.header.frame_id = frame_id_;
 
-        pub_pose_array_ = nh.advertise<geometry_msgs::PoseArray>(topic + "_pose_array", 1);
-    }
-    if (marker_)
-    {
-        marker_msg_.header.frame_id = frame_id_;
-        marker_msg_.type = visualization_msgs::Marker::LINE_STRIP;
-        marker_msg_.action = visualization_msgs::Marker::ADD;
-        marker_msg_.ns = "trajectory";
-        marker_msg_.scale.x = 0.1;
-        marker_msg_.color = marker_color_;
-        marker_msg_.pose.orientation = tf::createQuaternionMsgFromYaw(0);
+    // POSE ARRAY
+    pose_array_msg_.header.frame_id = frame_id_;
 
-        pub_marker_ = nh.advertise<visualization_msgs::Marker>(topic + "_marker", 1);
-    }
+    pub_pose_array_ = nh.advertise<geometry_msgs::PoseArray>(topic + "_pose_array", 1);
+
+    // MARKER
+    marker_msg_.header.frame_id = frame_id_;
+    marker_msg_.type = visualization_msgs::Marker::LINE_STRIP;
+    marker_msg_.action = visualization_msgs::Marker::ADD;
+    marker_msg_.ns = "trajectory";
+    marker_msg_.scale.x = 0.1;
+    marker_msg_.color = marker_color_;
+    marker_msg_.pose.orientation = tf::createQuaternionMsgFromYaw(0);
+
+    pub_marker_ = nh.advertise<visualization_msgs::Marker>(topic + "_marker", 1);
+
+    // POSE WITH COV
+    pose_with_cov_msg_.header.frame_id = frame_id_;
+
+    pub_pose_with_cov_ = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>(topic + "_pose_with_cov", 1);
 }
 
 void PublisherPose::publishDerived()
 {
+    if (pub_pose_array_.getNumSubscribers() == 0 and
+        pub_marker_.getNumSubscribers() == 0 and
+        pub_pose_with_cov_.getNumSubscribers() == 0 )
+        return;
+
     VectorComposite current_state = problem_->getState("PO");
     TimeStamp loc_ts = problem_->getTimeStamp();
 
     // state not ready
     if (current_state.count('P') == 0 or
         current_state.count('O') == 0 or
-        loc_ts == TimeStamp(0))
+        not loc_ts.ok())
     {
         return;
     }
-
 
     // fill vector and quaternion
     Eigen::Vector3d p = Eigen::Vector3d::Zero();
@@ -119,35 +133,61 @@ void PublisherPose::publishDerived()
         q = q_frame_ * q;
     }
 
-    // Fill Pose msg
-    geometry_msgs::Pose pose_msg;
-    pose_msg.position.x = p(0);
-    pose_msg.position.y = p(1);
-    pose_msg.position.z = p(2);
+    // Covariance
+    Eigen::MatrixXd cov(6,6);
+    auto KF = problem_->getLastFrame();
+    bool success(true);
+    success = success && problem_->getCovarianceBlock(KF->getP(), KF->getP(), cov, 0, 0);
+    success = success && problem_->getCovarianceBlock(KF->getP(), KF->getO(), cov, 0, 3);
+    success = success && problem_->getCovarianceBlock(KF->getO(), KF->getP(), cov, 3, 0);
+    success = success && problem_->getCovarianceBlock(KF->getO(), KF->getO(), cov, 3, 3);
 
-    pose_msg.orientation.x = q.x();
-    pose_msg.orientation.y = q.y();
-    pose_msg.orientation.z = q.z();
-    pose_msg.orientation.w = q.w();
-    publishPose(pose_msg, ros::Time(loc_ts.getSeconds(), loc_ts.getNanoSeconds()));
+    if (success)
+    {
+        if (problem_->getDim() == 2)
+            throw std::runtime_error("not implemented");
+        else
+            std::copy(cov.data(), cov.data() + cov.size(), pose_with_cov_msg_.pose.covariance.data());
+    }
+    else
+    {
+        //WOLF_WARN("Last KF covariance could not be recovered, using the previous one");
+        //pose_with_cov_msg_.pose.covariance[0] = -1; // not valid
+    }
+
+    // Fill Pose msg
+    pose_with_cov_msg_.header.stamp = ros::Time(loc_ts.getSeconds(), loc_ts.getNanoSeconds());
+    pose_with_cov_msg_.pose.pose.position.x = p(0);
+    pose_with_cov_msg_.pose.pose.position.y = p(1);
+    pose_with_cov_msg_.pose.pose.position.z = p(2);
+
+    pose_with_cov_msg_.pose.pose.orientation.x = q.x();
+    pose_with_cov_msg_.pose.pose.orientation.y = q.y();
+    pose_with_cov_msg_.pose.pose.orientation.z = q.z();
+    pose_with_cov_msg_.pose.pose.orientation.w = q.w();
+    publishPose();
 }
 
-void PublisherPose::publishPose(const geometry_msgs::Pose pose, const ros::Time& stamp)
+void PublisherPose::publishPose()
 {
     // fill msgs and publish
-    if (pose_array_)
+    if (pub_pose_array_.getNumSubscribers() != 0)
     {
-        pose_array_msg_.header.stamp = stamp;
-        pose_array_msg_.poses.push_back(pose);
+        pose_array_msg_.header.stamp = pose_with_cov_msg_.header.stamp;
+        pose_array_msg_.poses.push_back(pose_with_cov_msg_.pose.pose);
 
         pub_pose_array_.publish(pose_array_msg_);
     }
-    if (marker_)
+    if (pub_marker_.getNumSubscribers() != 0)
     {
-        marker_msg_.header.stamp = stamp;
-        marker_msg_.points.push_back(pose.position);
+        marker_msg_.header.stamp = pose_with_cov_msg_.header.stamp;
+        marker_msg_.points.push_back(pose_with_cov_msg_.pose.pose.position);
 
         pub_marker_.publish(marker_msg_);
+    }
+    if (pub_pose_with_cov_.getNumSubscribers() != 0)
+    {
+        pub_pose_with_cov_.publish(pose_with_cov_msg_);
     }
 }
 

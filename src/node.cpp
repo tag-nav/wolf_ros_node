@@ -39,6 +39,13 @@ WolfRosNode::WolfRosNode()
     // SOLVER
     ROS_INFO("Creating solver...");
     solver_ = FactorySolver::create("SolverCeres", problem_ptr_, server);
+    // covariance
+    compute_cov_ = server.getParam<bool>("solver/compute_cov");
+    if (compute_cov_)
+    {
+        cov_enum_   = (SolverManager::CovarianceBlocksToBeComputed)server.getParam<int>("solver/cov_enum");
+        cov_period_ = server.getParam<double>("solver/cov_period");
+    }
 
     // ROS SUBSCRIBERS
     ROS_INFO("Creating subscribers...");
@@ -82,9 +89,26 @@ void WolfRosNode::solve()
         ROS_INFO("================ solve ==================");
 
     std::string report = solver_->solve();
-    // if (!report.empty()){
-    //     std::cout << report << std::endl;
-    // }
+
+    if (!report.empty())
+    {
+        std::cout << report << std::endl;
+        //problem_ptr_->print(4,1,1,1);
+    }
+
+    if (compute_cov_ and (ros::Time::now() - last_cov_stamp_).toSec() > cov_period_)
+    {
+        auto start = std::chrono::high_resolution_clock::now();
+        if (solver_->computeCovariances(cov_enum_))
+        {
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start);
+            last_cov_stamp_ = ros::Time::now();
+            if (solver_->getVerbosity() != SolverManager::ReportVerbosity::QUIET)
+                ROS_INFO("Covariances computed successfully! It took %li microseconds", duration.count());
+        }
+        else if (solver_->getVerbosity() != SolverManager::ReportVerbosity::QUIET)
+            ROS_WARN("Failed to compute covariances");
+    }
 }
 
 void WolfRosNode::visualize()
@@ -94,7 +118,7 @@ void WolfRosNode::visualize()
     viz_->visualize(problem_ptr_);
     auto stop     = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-    std::cout << "Visualize took " << duration.count() << " microseconds" << std::endl;
+    //std::cout << "Visualize took " << duration.count() << " microseconds" << std::endl;
 }
 
 bool WolfRosNode::updateTf()
@@ -177,7 +201,7 @@ void WolfRosNode::broadcastTf()
 
 void WolfRosNode::solveLoop()
 {
-    ros::Rate solverRate(1/solver_->getPeriod());
+    ros::Rate solverRate(1/(solver_->getPeriod()+1e-9)); // 1ns added to allow pausing if rosbag paused
     WOLF_DEBUG("Started solver loop");
 
     while (ros::ok())
@@ -208,6 +232,12 @@ int main(int argc, char **argv)
 
     // Solver thread
     std::thread solver_thread(&WolfRosNode::solveLoop, &wolf_node);
+    // set priority
+    struct sched_param Priority_Param; //struct to set priority
+    int priority = 99;
+    Priority_Param.sched_priority = priority;
+    int policy=SCHED_FIFO;
+    pthread_setschedparam(solver_thread.native_handle(), SCHED_FIFO, &Priority_Param);
 
     while (ros::ok())
     {
@@ -219,7 +249,7 @@ int main(int argc, char **argv)
         auto start3 = std::chrono::high_resolution_clock::now();
         if ((ros::Time::now() - last_viz_time).toSec() >= wolf_node.viz_period_)
         {
-            std::cout << "Last Viz since/viz_period_ " << (ros::Time::now() - last_viz_time).toSec() << " / " << wolf_node.viz_period_ << std::endl;
+            //std::cout << "Last Viz since/viz_period_ " << (ros::Time::now() - last_viz_time).toSec() << " / " << wolf_node.viz_period_ << std::endl;
             wolf_node.visualize();
             last_viz_time = ros::Time::now();
         }
