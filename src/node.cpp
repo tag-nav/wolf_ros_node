@@ -241,8 +241,8 @@ int main(int argc, char **argv)
     pthread_setschedparam(solver_thread.native_handle(), SCHED_FIFO, &Priority_Param);*/
 
     // Profiling
-    double duration_viz(0), duration_solver(0);
-    unsigned int n_viz(0), n_solver(0);
+    std::chrono::microseconds duration_viz(0);
+    unsigned int n_viz(0);
 
     while (ros::ok())
     {
@@ -282,41 +282,50 @@ int main(int argc, char **argv)
         loopRate.sleep();
     }
     WOLF_DEBUG("Node is shutting down outside loop... waiting for the thread to stop...");
-    solver_thread.join();
+    //solver_thread.join();
     WOLF_DEBUG("thread stopped.");
 
     // Profiling
-    ofstream profiling_file;
-    profiling_file.open ("~/wolf_profiling.txt");
-    profiling_file << "WOLF PROFILING:\n";
-    profiling_file << "\n\nSOLVER:"
-                   << "\n\ttotal time:"             << wolf_node.solver_.duration_manager_ + wolf_node.solver_.duration_solver_ << " s"
-                   << "\n\tmanager time:"           << wolf_node.solver_.duration_manager_ << " s"
-                   << "\n\tsolver time:"            << wolf_node.solver_.duration_solver_ << " s"
-                   << "\n\texecutions:"             << wolf_node.solver_.n_solve_
-                   << "\n\taverage time:"           << (wolf_node.solver_.duration_manager_ + wolf_node.solver_.duration_solver_) / wolf_node.solver_.n_solve_ << " s"
-                   << "\n\taverage manager time:"   << wolf_node.solver_.duration_manager_ / wolf_node.solver_.n_solve_ << " s"
-                   << "\n\taverage solver time:"    << wolf_node.solver_.duration_solver_ / wolf_node.solver_.n_solve_ << " s" << std::endl;
-    profiling_file << "\n\nVISUALIZATION:"
-                   << "\n\ttotal time:" << duration_viz << " s"
-                   << "\n\texecutions:" << n_viz
-                   << "\n\taverage time:" << duration_viz/n_viz << std::endl;
+    std::stringstream profiling_str;
+    profiling_str << "========== WOLF PROFILING ==========\n";
+
+    profiling_str <<"\nSOLVER:"
+                  << "\n\ttotal time:           " << 1e-9*(wolf_node.solver_->duration_manager_ + wolf_node.solver_->duration_solver_).count() << " s"
+                  << "\n\tmanager time:         " << 1e-9*wolf_node.solver_->duration_manager_.count() << " s"
+                  << "\n\tsolver time:          " << 1e-9*wolf_node.solver_->duration_solver_.count() << " s"
+                  << "\n\texecutions:           " << wolf_node.solver_->n_solve_
+                  << "\n\taverage time:         " << 1e-9*(wolf_node.solver_->duration_manager_ + wolf_node.solver_->duration_solver_).count() / wolf_node.solver_->n_solve_ << " s"
+                  << "\n\taverage manager time: " << 1e-9*wolf_node.solver_->duration_manager_.count() / wolf_node.solver_->n_solve_ << " s"
+                  << "\n\taverage solver time:  " << 1e-9*wolf_node.solver_->duration_solver_.count() / wolf_node.solver_->n_solve_ << " s" << std::endl;
+
+    profiling_str << "\n\nVISUALIZATION:"
+                  << "\n\ttotal time:   " << 1e-9*duration_viz.count() << " s"
+                  << "\n\texecutions:   " << n_viz
+                  << "\n\taverage time: " << 1e-9*duration_viz.count()/n_viz << std::endl;
+
     for (auto sensor : wolf_node.problem_ptr_->getHardware()->getSensorList())
         for (auto proc : sensor->getProcessorList())
         {
-            profiling_file << "\n\nPROCESSOR "                      << proc->getName() << ":"
-                           << "\n\ttotal time:"                     << wolf_node.solver_.duration_manager_ + wolf_node.solver_.duration_solver_ << " s"
-                           << "\n\tproc. captures time:"            << wolf_node.solver_.duration_manager_ << " s"
-                           << "\n\tproc. frames time:"              << wolf_node.solver_.duration_solver_ << " s"
-                           << "\n\texecutions:"                     << wolf_node.solver_.n_solve_
-                           << "\n\taverage time:"                   << (wolf_node.solver_.duration_manager_ + wolf_node.solver_.duration_solver_) / wolf_node.solver_.n_solve_ << " s"
-                           << "\n\taverage proc. captures time:"    << wolf_node.solver_.duration_manager_ / wolf_node.solver_.n_solve_ << " s"
-                           << "\n\taverage proc. frames time:"      << wolf_node.solver_.duration_solver_ / wolf_node.solver_.n_solve_ << " s" << std::endl;
+            profiling_str << "\n\nPROCESSOR "             << proc->getName() << ":"
+                          << "\n\ttotal time:           " << 1e-9*(proc->duration_capture_ + proc->duration_kf_).count()<< " s"
+                          << "\n\tProcessing captures:"
+                          << "\n\t\ttotal time:         " << 1e-9*proc->duration_capture_.count() << " s"
+                          << "\n\t\tcaptures processed: " << proc->n_capture_callback_
+                          << "\n\t\taverage time:       " << 1e-9*proc->duration_capture_.count() / proc->n_capture_callback_ << " s"
+                          << "\n\tProcessing keyframes:"
+                          << "\n\t\ttotal time:         " << 1e-9*proc->duration_kf_.count() << " s"
+                          << "\n\t\tkf processed:       " << proc->n_kf_callback_
+                          << "\n\t\taverage time:       " << 1e-9*proc->duration_kf_.count() / proc->n_kf_callback_ << " s" << std::endl;
         }
 
-    profiling_file.close();
-      return 0;
+    std::cout << profiling_str.str();
 
-    // file.close();
+    ofstream profiling_file;
+    profiling_file.open (std::string(std::getenv("HOME")) + "/wolf_profiling.txt");
+    if (not profiling_file.is_open())
+        ROS_ERROR("Error in opening file to store profiling!");
+    profiling_file << profiling_str.str();
+    profiling_file.close();
+
     return 0;
 }
