@@ -39,6 +39,7 @@ WolfRosNode::WolfRosNode()
     // SOLVER
     ROS_INFO("Creating solver...");
     solver_ = FactorySolver::create("SolverCeres", problem_ptr_, server);
+    solve_period_ = server.getParam<double>("solver/period");
     // covariance
     compute_cov_ = server.getParam<bool>("solver/compute_cov");
     if (compute_cov_)
@@ -199,7 +200,7 @@ void WolfRosNode::broadcastTf()
     tfb_.sendTransform(current_map2odom);
 }
 
-void WolfRosNode::solveLoop()
+/*void WolfRosNode::solveLoop()
 {
     ros::Rate solverRate(1/(solver_->getPeriod()+1e-9)); // 1ns added to allow pausing if rosbag paused
     WOLF_DEBUG("Started solver loop");
@@ -215,7 +216,7 @@ void WolfRosNode::solveLoop()
         solverRate.sleep();
     }
     WOLF_DEBUG("Solver loop finished");
-}
+}*/
 
 int main(int argc, char **argv)
 {
@@ -230,14 +231,18 @@ int main(int argc, char **argv)
     ros::Time last_viz_time = ros::Time(0);
     ros::Time last_solve_time = ros::Time(0);
 
-    // Solver thread
+    /*// Solver thread
     std::thread solver_thread(&WolfRosNode::solveLoop, &wolf_node);
     // set priority
     struct sched_param Priority_Param; //struct to set priority
     int priority = 99;
     Priority_Param.sched_priority = priority;
     int policy=SCHED_FIFO;
-    pthread_setschedparam(solver_thread.native_handle(), SCHED_FIFO, &Priority_Param);
+    pthread_setschedparam(solver_thread.native_handle(), SCHED_FIFO, &Priority_Param);*/
+
+    // Profiling
+    double duration_viz(0), duration_solver(0);
+    unsigned int n_viz(0), n_solver(0);
 
     while (ros::ok())
     {
@@ -246,18 +251,29 @@ int main(int argc, char **argv)
         wolf_node.broadcastTf();
 
         // visualize periodically
-        auto start3 = std::chrono::high_resolution_clock::now();
         if ((ros::Time::now() - last_viz_time).toSec() >= wolf_node.viz_period_)
         {
+            auto start = std::chrono::high_resolution_clock::now();
             //std::cout << "Last Viz since/viz_period_ " << (ros::Time::now() - last_viz_time).toSec() << " / " << wolf_node.viz_period_ << std::endl;
+
             wolf_node.visualize();
             last_viz_time = ros::Time::now();
+
+            duration_viz += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start);
+            n_viz++;
         }
 
         // publish periodically
         for(auto pub : wolf_node.publishers_)
             if (pub->ready())
                 pub->publish();
+
+        // solve periodically
+        if ((ros::Time::now() - last_solve_time).toSec() > wolf_node.solve_period_)
+        {
+            wolf_node.solve();
+            last_solve_time = ros::Time::now();
+        }
 
         // execute pending callbacks
         ros::spinOnce();
@@ -268,6 +284,38 @@ int main(int argc, char **argv)
     WOLF_DEBUG("Node is shutting down outside loop... waiting for the thread to stop...");
     solver_thread.join();
     WOLF_DEBUG("thread stopped.");
+
+    // Profiling
+    ofstream profiling_file;
+    profiling_file.open ("~/wolf_profiling.txt");
+    profiling_file << "WOLF PROFILING:\n";
+    profiling_file << "\n\nSOLVER:"
+                   << "\n\ttotal time:"             << wolf_node.solver_.duration_manager_ + wolf_node.solver_.duration_solver_ << " s"
+                   << "\n\tmanager time:"           << wolf_node.solver_.duration_manager_ << " s"
+                   << "\n\tsolver time:"            << wolf_node.solver_.duration_solver_ << " s"
+                   << "\n\texecutions:"             << wolf_node.solver_.n_solve_
+                   << "\n\taverage time:"           << (wolf_node.solver_.duration_manager_ + wolf_node.solver_.duration_solver_) / wolf_node.solver_.n_solve_ << " s"
+                   << "\n\taverage manager time:"   << wolf_node.solver_.duration_manager_ / wolf_node.solver_.n_solve_ << " s"
+                   << "\n\taverage solver time:"    << wolf_node.solver_.duration_solver_ / wolf_node.solver_.n_solve_ << " s" << std::endl;
+    profiling_file << "\n\nVISUALIZATION:"
+                   << "\n\ttotal time:" << duration_viz << " s"
+                   << "\n\texecutions:" << n_viz
+                   << "\n\taverage time:" << duration_viz/n_viz << std::endl;
+    for (auto sensor : wolf_node.problem_ptr_->getHardware()->getSensorList())
+        for (auto proc : sensor->getProcessorList())
+        {
+            profiling_file << "\n\nPROCESSOR "                      << proc->getName() << ":"
+                           << "\n\ttotal time:"                     << wolf_node.solver_.duration_manager_ + wolf_node.solver_.duration_solver_ << " s"
+                           << "\n\tproc. captures time:"            << wolf_node.solver_.duration_manager_ << " s"
+                           << "\n\tproc. frames time:"              << wolf_node.solver_.duration_solver_ << " s"
+                           << "\n\texecutions:"                     << wolf_node.solver_.n_solve_
+                           << "\n\taverage time:"                   << (wolf_node.solver_.duration_manager_ + wolf_node.solver_.duration_solver_) / wolf_node.solver_.n_solve_ << " s"
+                           << "\n\taverage proc. captures time:"    << wolf_node.solver_.duration_manager_ / wolf_node.solver_.n_solve_ << " s"
+                           << "\n\taverage proc. frames time:"      << wolf_node.solver_.duration_solver_ / wolf_node.solver_.n_solve_ << " s" << std::endl;
+        }
+
+    profiling_file.close();
+      return 0;
 
     // file.close();
     return 0;

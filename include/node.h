@@ -48,10 +48,18 @@ class WolfRosNode
         //wolf problem
         ProblemPtr problem_ptr_;
 
+        // solver
+        SolverManagerPtr solver_;
+        bool compute_cov_;
+        SolverManager::CovarianceBlocksToBeComputed cov_enum_;
+        ros::Time last_cov_stamp_;
+        double cov_period_;
+
         // ROS node handle
         ros::NodeHandle nh_;
 
         double viz_period_;
+        double solve_period_;
 
         // visualizer
         std::shared_ptr<Visualizer> viz_;
@@ -62,12 +70,6 @@ class WolfRosNode
         std::vector<PublisherPtr> publishers_;
 
     protected:
-        // solver
-        SolverManagerPtr solver_;
-        bool compute_cov_;
-        SolverManager::CovarianceBlocksToBeComputed cov_enum_;
-        ros::Time last_cov_stamp_;
-        double cov_period_;
 
         // transforms
         tf::TransformBroadcaster tfb_;
