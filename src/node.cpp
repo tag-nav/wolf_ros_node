@@ -4,9 +4,6 @@
 #include "tf/transform_datatypes.h"
 #include "factory_subscriber.h"
 #include "factory_publisher.h"
-#include <fstream>
-#include <iostream>
-#include <string>
 
 WolfRosNode::WolfRosNode()
     : nh_(ros::this_node::getName())
@@ -79,6 +76,32 @@ WolfRosNode::WolfRosNode()
     ROS_INFO("Initializing TF...");
     updateTf();
     broadcastTf();
+
+    // PROFILING
+    try
+    {
+        profiling_ = server.getParam<bool>("profiling/enabled");
+    }
+    catch(...)
+    {
+        profiling_ = false;
+    }
+    if (profiling_)
+    {
+        std::string prof_file_path;
+        try
+        {
+            prof_file_path = server.getParam<std::string>("profiling/file_path");
+        }
+        catch(...)
+        {
+            prof_file_path = std::string(std::getenv("HOME"));
+        }
+        std::string prof_filename = server.getParam<std::string>("profiling/file_name");
+        profiling_file_.open (prof_file_path + "/" + prof_filename);
+        if (not profiling_file_.is_open())
+            ROS_ERROR("Error in opening file %s to store profiling!", (prof_file_path + "/" + prof_filename).c_str());
+    }
 
     ROS_INFO("Ready!");
 }
@@ -201,7 +224,7 @@ void WolfRosNode::broadcastTf()
 
 void WolfRosNode::solveLoop()
 {
-    ros::Rate solverRate(1/(solver_->getPeriod()+1e-9)); // 1ns added to allow pausing if rosbag paused
+    ros::Rate solverRate(1/(solver_->getPeriod()+1e-9)); // 1ns added to allow pausing if rosbag paused if period==0
     WOLF_DEBUG("Started solver loop");
 
     while (ros::ok())
@@ -215,6 +238,58 @@ void WolfRosNode::solveLoop()
         solverRate.sleep();
     }
     WOLF_DEBUG("Solver loop finished");
+}
+
+void WolfRosNode::createProfilingFile()
+{
+    if (not profiling_)
+        return;
+
+    std::stringstream profiling_str;
+    profiling_str << "========== WOLF PROFILING ==========\n";
+
+    // solver
+    profiling_str <<"\nSOLVER:"
+                  << "\n\ttotal time:           " << 1e-9*(solver_->acc_duration_manager_ + solver_->acc_duration_solver_).count() << " s"
+                  << "\n\tmanager time:         " << 1e-9*solver_->acc_duration_manager_.count() << " s"
+                  << "\n\tsolver time:          " << 1e-9*solver_->acc_duration_solver_.count() << " s"
+                  << "\n\texecutions:           " << solver_->n_solve_
+                  << "\n\taverage time:         " << 1e-6*(solver_->acc_duration_manager_ + solver_->acc_duration_solver_).count() / solver_->n_solve_ << " ms"
+                  << "\n\taverage manager time: " << 1e-6*solver_->acc_duration_manager_.count() / solver_->n_solve_ << " ms"
+                  << "\n\taverage solver time:  " << 1e-6*solver_->acc_duration_solver_.count() / solver_->n_solve_ << " ms"
+                  << "\n\tmax manager time:     " << 1e-6*solver_->max_duration_manager_.count() << " ms"
+                  << "\n\tmax solver time:      " << 1e-6*solver_->max_duration_solver_.count() << " ms" << std::endl;
+
+    /*// visualization
+    profiling_str << "\n\nVISUALIZATION:"
+                  << "\n\ttotal time:   " << 1e-9*duration_viz.count() << " s"
+                  << "\n\texecutions:   " << n_viz
+                  << "\n\taverage time: " << 1e-9*duration_viz.count()/n_viz << std::endl;*/
+
+    // processors
+    for (auto sensor : problem_ptr_->getHardware()->getSensorList())
+        for (auto proc : sensor->getProcessorList())
+        {
+            profiling_str << "\n\nPROCESSOR "             << proc->getName() << ":"
+                          << "\n\ttotal time:           " << 1e-9*(proc->acc_duration_capture_ + proc->acc_duration_kf_).count()<< " s"
+                          << "\n\tProcessing captures:"
+                          << "\n\t\ttotal time:         " << 1e-9*proc->acc_duration_capture_.count() << " s"
+                          << "\n\t\tcaptures processed: " << proc->n_capture_callback_
+                          << "\n\t\taverage time:       " << 1e-6*proc->acc_duration_capture_.count() / proc->n_capture_callback_ << " ms"
+                          << "\n\t\tmax time:           " << 1e-6*proc->max_duration_capture_.count() << " ms"
+                          << "\n\tProcessing keyframes:"
+                          << "\n\t\ttotal time:         " << 1e-9*proc->acc_duration_kf_.count() << " s"
+                          << "\n\t\tkf processed:       " << proc->n_kf_callback_
+                          << "\n\t\taverage time:       " << 1e-6*proc->acc_duration_kf_.count() / proc->n_kf_callback_ << " ms"
+                          << "\n\t\tmax time:           " << 1e-6*proc->max_duration_kf_.count() << " ms" << std::endl;
+        }
+
+    // print
+    std::cout << profiling_str.str();
+
+    // file
+    profiling_file_ << profiling_str.str();
+    profiling_file_.close();
 }
 
 int main(int argc, char **argv)
@@ -269,6 +344,8 @@ int main(int argc, char **argv)
     solver_thread.join();
     WOLF_DEBUG("thread stopped.");
 
-    // file.close();
+    // PROFILING ========================================
+    wolf_node.createProfilingFile();
+
     return 0;
 }

@@ -33,6 +33,8 @@
 #include <iomanip>
 #include <queue>
 #include <memory>
+#include <fstream>
+#include <string>
 
 #include "subscriber.h"
 #include "visualizer.h"
@@ -78,6 +80,10 @@ class WolfRosNode
         // other attributes
         bool state_available_; // used to handle warnings regarding availability of state
 
+        // profiling
+        bool profiling_;
+        std::ofstream profiling_file_;
+
       public:
         WolfRosNode();
 
@@ -91,4 +97,6 @@ class WolfRosNode
         void visualize();
 
         bool updateTf();
+
+        void createProfilingFile();
 };
