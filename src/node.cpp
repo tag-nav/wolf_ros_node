@@ -73,6 +73,7 @@ WolfRosNode::WolfRosNode()
         if (not profiling_file_.is_open())
             ROS_ERROR("Error in opening file %s to store profiling!", prof_file.c_str());
     }
+    start_experiment_ = std::chrono::high_resolution_clock::now();
 
     ROS_INFO("Ready!");
 }
@@ -130,6 +131,8 @@ void WolfRosNode::createProfilingFile()
 
     std::stringstream profiling_str;
     profiling_str << "========== WOLF PROFILING ==========\n";
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start_experiment_);
+    profiling_str << "Experiment total time: " << 1e-6 * duration.count() << " s" << std::endl;
 
     // solver
     profiling_str << "\nSOLVER -----------------------------\n";

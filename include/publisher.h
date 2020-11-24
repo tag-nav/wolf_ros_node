@@ -132,10 +132,10 @@ inline bool Publisher::ready()
 inline void Publisher::printProfiling(std::ostream &_stream) const
 {
     _stream << "\n" << name_ << ":"
-            << "\n\ttotal time:           " << 1e-9 * acc_duration_.count() << " s"
+            << "\n\ttotal time:           " << 1e-6 * acc_duration_.count() << " s"
             << "\n\texecutions:           " << n_publish_
-            << "\n\taverage time:         " << 1e-6 * acc_duration_.count() / n_publish_ << " ms"
-            << "\n\tmax time:             " << 1e-6 * max_duration_.count() << " ms" << std::endl;
+            << "\n\taverage time:         " << 1e-3 * acc_duration_.count() / n_publish_ << " ms"
+            << "\n\tmax time:             " << 1e-3 * max_duration_.count() << " ms" << std::endl;
 }
 
 template<typename T>

@@ -67,6 +67,8 @@ class WolfRosNode
         // profiling
         bool profiling_;
         std::ofstream profiling_file_;
+        std::chrono::time_point<std::chrono::high_resolution_clock> start_experiment_;
+
 
       public:
         WolfRosNode();
