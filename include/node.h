@@ -53,11 +53,6 @@ class WolfRosNode
         // ROS node handle
         ros::NodeHandle nh_;
 
-        double viz_period_;
-
-        // visualizer
-        std::shared_ptr<Visualizer> viz_;
-
         // subscribers
         std::vector<SubscriberPtr> subscribers_;
         // publishers

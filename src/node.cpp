@@ -52,24 +52,15 @@ WolfRosNode::WolfRosNode()
         std::string topic      = it["topic"];
         std::string sensor     = it["sensor_name"];
         WOLF_TRACE("From sensor {" + sensor + "} subscribing {" + subscriber + "} to {" + topic + "} topic");
-        subscribers_.push_back(FactorySubscriber::create(subscriber, subscriber+topic, server, problem_ptr_->getSensor(sensor), nh_));
+        subscribers_.push_back(FactorySubscriber::create(subscriber, subscriber+" - "+topic, server, problem_ptr_->getSensor(sensor), nh_));
     }
-
-    // // ROS VISUALIZER
-    ROS_INFO("Creating visualizer...");
-    // auto visualizer = server.getParam<std::string>("visualizer/type");
-    // viz_ = VisualizerFactory::create(visualizer);
-
-    viz_ = std::make_shared<Visualizer>();
-    viz_->initialize(nh_);
-    viz_period_ = server.getParam<double>("visualizer/period");
 
     // ROS PUBLISHERS
     ROS_INFO("Creating publishers...");
     for (auto it : server.getParam<std::vector<std::map<std::string, std::string>>>("ROS publisher"))
     {
         WOLF_INFO("Pub: ", it["type"]);
-        publishers_.push_back(FactoryPublisher::create(it["type"], it["type"]+it["topic"], server, problem_ptr_, nh_));
+        publishers_.push_back(FactoryPublisher::create(it["type"], it["type"]+" - "+it["topic"], server, problem_ptr_, nh_));
     }
 
     // TF INIT
@@ -78,29 +69,17 @@ WolfRosNode::WolfRosNode()
     broadcastTf();
 
     // PROFILING
-    try
-    {
-        profiling_ = server.getParam<bool>("profiling/enabled");
-    }
-    catch(...)
-    {
-        profiling_ = false;
-    }
+    profiling_ = server.getParam<bool>("profiling/enabled");
     if (profiling_)
     {
-        std::string prof_file_path;
-        try
-        {
-            prof_file_path = server.getParam<std::string>("profiling/file_path");
-        }
-        catch(...)
-        {
-            prof_file_path = std::string(std::getenv("HOME"));
-        }
-        std::string prof_filename = server.getParam<std::string>("profiling/file_name");
-        profiling_file_.open (prof_file_path + "/" + prof_filename);
+        auto prof_file = server.getParam<std::string>("profiling/file_name");
+        // change ~ with HOME using environment variable
+        if (prof_file.at(0) == '~')
+            prof_file = std::string(std::getenv("HOME")) + prof_file.substr(1);
+
+        profiling_file_.open (prof_file);
         if (not profiling_file_.is_open())
-            ROS_ERROR("Error in opening file %s to store profiling!", (prof_file_path + "/" + prof_filename).c_str());
+            ROS_ERROR("Error in opening file %s to store profiling!", prof_file.c_str());
     }
 
     ROS_INFO("Ready!");
@@ -132,16 +111,6 @@ void WolfRosNode::solve()
         else if (solver_->getVerbosity() != SolverManager::ReportVerbosity::QUIET)
             ROS_WARN("Failed to compute covariances");
     }
-}
-
-void WolfRosNode::visualize()
-{
-    ROS_DEBUG("================ visualize ==================");
-    auto start = std::chrono::high_resolution_clock::now();
-    viz_->visualize(problem_ptr_);
-    auto stop     = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-    //std::cout << "Visualize took " << duration.count() << " microseconds" << std::endl;
 }
 
 bool WolfRosNode::updateTf()
@@ -249,40 +218,19 @@ void WolfRosNode::createProfilingFile()
     profiling_str << "========== WOLF PROFILING ==========\n";
 
     // solver
-    profiling_str <<"\nSOLVER:"
-                  << "\n\ttotal time:           " << 1e-9*(solver_->acc_duration_manager_ + solver_->acc_duration_solver_).count() << " s"
-                  << "\n\tmanager time:         " << 1e-9*solver_->acc_duration_manager_.count() << " s"
-                  << "\n\tsolver time:          " << 1e-9*solver_->acc_duration_solver_.count() << " s"
-                  << "\n\texecutions:           " << solver_->n_solve_
-                  << "\n\taverage time:         " << 1e-6*(solver_->acc_duration_manager_ + solver_->acc_duration_solver_).count() / solver_->n_solve_ << " ms"
-                  << "\n\taverage manager time: " << 1e-6*solver_->acc_duration_manager_.count() / solver_->n_solve_ << " ms"
-                  << "\n\taverage solver time:  " << 1e-6*solver_->acc_duration_solver_.count() / solver_->n_solve_ << " ms"
-                  << "\n\tmax manager time:     " << 1e-6*solver_->max_duration_manager_.count() << " ms"
-                  << "\n\tmax solver time:      " << 1e-6*solver_->max_duration_solver_.count() << " ms" << std::endl;
-
-    /*// visualization
-    profiling_str << "\n\nVISUALIZATION:"
-                  << "\n\ttotal time:   " << 1e-9*duration_viz.count() << " s"
-                  << "\n\texecutions:   " << n_viz
-                  << "\n\taverage time: " << 1e-9*duration_viz.count()/n_viz << std::endl;*/
+    profiling_str << "\nSOLVER -----------------------------\n";
+    solver_->printProfiling(profiling_str);
 
     // processors
+    profiling_str << "\nPROCESSORS -------------------------\n";
     for (auto sensor : problem_ptr_->getHardware()->getSensorList())
         for (auto proc : sensor->getProcessorList())
-        {
-            profiling_str << "\n\nPROCESSOR "             << proc->getName() << ":"
-                          << "\n\ttotal time:           " << 1e-9*(proc->acc_duration_capture_ + proc->acc_duration_kf_).count()<< " s"
-                          << "\n\tProcessing captures:"
-                          << "\n\t\ttotal time:         " << 1e-9*proc->acc_duration_capture_.count() << " s"
-                          << "\n\t\tcaptures processed: " << proc->n_capture_callback_
-                          << "\n\t\taverage time:       " << 1e-6*proc->acc_duration_capture_.count() / proc->n_capture_callback_ << " ms"
-                          << "\n\t\tmax time:           " << 1e-6*proc->max_duration_capture_.count() << " ms"
-                          << "\n\tProcessing keyframes:"
-                          << "\n\t\ttotal time:         " << 1e-9*proc->acc_duration_kf_.count() << " s"
-                          << "\n\t\tkf processed:       " << proc->n_kf_callback_
-                          << "\n\t\taverage time:       " << 1e-6*proc->acc_duration_kf_.count() / proc->n_kf_callback_ << " ms"
-                          << "\n\t\tmax time:           " << 1e-6*proc->max_duration_kf_.count() << " ms" << std::endl;
-        }
+             proc->printProfiling(profiling_str);
+
+    // publishers
+    profiling_str << "\nPUBLISHERS -------------------------\n";
+    for (auto pub : publishers_)
+        pub->printProfiling(profiling_str);
 
     // print
     std::cout << profiling_str.str();
@@ -319,15 +267,6 @@ int main(int argc, char **argv)
         // broadcast tf
         wolf_node.updateTf();
         wolf_node.broadcastTf();
-
-        // visualize periodically
-        auto start3 = std::chrono::high_resolution_clock::now();
-        if ((ros::Time::now() - last_viz_time).toSec() >= wolf_node.viz_period_)
-        {
-            //std::cout << "Last Viz since/viz_period_ " << (ros::Time::now() - last_viz_time).toSec() << " / " << wolf_node.viz_period_ << std::endl;
-            wolf_node.visualize();
-            last_viz_time = ros::Time::now();
-        }
 
         // publish periodically
         for(auto pub : wolf_node.publishers_)

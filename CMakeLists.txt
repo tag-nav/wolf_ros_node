@@ -153,7 +153,8 @@ add_library(subscriber_${PROJECT_NAME}
   src/subscriber_odom2d.cpp
   src/subscriber_diffdrive.cpp)
 add_library(publisher_${PROJECT_NAME}
-  src/publisher_pose.cpp)
+  src/publisher_pose.cpp
+  src/publisher_graph.cpp)
 add_library(visualizer src/visualizer.cpp)
 
 ## Rename C++ executable without prefix

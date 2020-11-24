@@ -50,7 +50,11 @@ class Publisher
                       problem_(_problem),
                       first_publish_time_(ros::Time(0)),
                       last_n_period_(0),
-                      prefix_("ROS publisher/" + _unique_name)
+                      name_(_unique_name),
+                      prefix_("ROS publisher/" + _unique_name),
+                      n_publish_(0),
+                      acc_duration_(0),
+                      max_duration_(0)
         {
             period_ = _server.getParam<double>(prefix_ + "/period");
             topic_  = _server.getParam<std::string>(prefix_ + "/topic");
@@ -70,21 +74,47 @@ class Publisher
 
     protected:
 
+        template<typename T>
+        T getParamWithDefault(const ParamsServer &_server,
+                   const std::string &_param_name,
+                   const T _default_value) const;
+
         ProblemPtr problem_;
         ros::Publisher publisher_;
         double period_;
         ros::Time first_publish_time_;
         long unsigned int last_n_period_;
+        std::string name_;
         std::string prefix_;
         std::string topic_;
+
+        // PROFILING
+        unsigned int n_publish_;
+        std::chrono::microseconds acc_duration_;
+        std::chrono::microseconds max_duration_;
+
+    public:
+        void printProfiling(std::ostream& stream = std::cout) const;
 };
+
+inline std::string Publisher::getTopic() const
+{
+    return topic_;
+}
 
 inline void Publisher::publish()
 {
     if (last_n_period_ == 0)
         first_publish_time_ = ros::Time::now();
 
+    auto start = std::chrono::high_resolution_clock::now();
+
     publishDerived();
+
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start);
+    acc_duration_+= duration;
+    max_duration_ = std::max(max_duration_,duration);
+    n_publish_++;
 }
 
 inline bool Publisher::ready()
@@ -99,9 +129,29 @@ inline bool Publisher::ready()
     return false;
 }
 
-inline std::string Publisher::getTopic() const
+inline void Publisher::printProfiling(std::ostream &_stream) const
 {
-    return topic_;
+    _stream << "\n" << name_ << ":"
+            << "\n\ttotal time:           " << 1e-9 * acc_duration_.count() << " s"
+            << "\n\texecutions:           " << n_publish_
+            << "\n\taverage time:         " << 1e-6 * acc_duration_.count() / n_publish_ << " ms"
+            << "\n\tmax time:             " << 1e-6 * max_duration_.count() << " ms" << std::endl;
+}
+
+template<typename T>
+inline T Publisher::getParamWithDefault(const ParamsServer &_server,
+                                        const std::string &_param_name,
+                                        const T _default_value) const
+{
+    try
+    {
+        return _server.getParam<T>(_param_name);
+    }
+    catch (...)
+    {
+        WOLF_INFO("Publisher: Parameter ", _param_name, " is missing. Taking default value: ", _default_value);
+        return _default_value;
+    }
 }
 
 }  // namespace wolf
