@@ -1,6 +1,6 @@
 #include "node.h"
-#include "core/solver/factory_solver.h"
 #include "ros/time.h"
+#include "core/solver/factory_solver.h"
 #include "tf/transform_datatypes.h"
 #include "factory_subscriber.h"
 #include "factory_publisher.h"

@@ -37,9 +37,7 @@
 #include <string>
 
 #include "subscriber.h"
-#include "visualizer.h"
 #include "publisher.h"
-//#include "wolf_ros_scan_visualizer.h"
 
 using namespace wolf;
 using namespace std;

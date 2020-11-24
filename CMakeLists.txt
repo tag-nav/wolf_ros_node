@@ -16,7 +16,6 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   tf_conversions
   dynamic_reconfigure
-
 )
 
 ## System dependencies are found with CMake's conventions
@@ -155,7 +154,6 @@ add_library(subscriber_${PROJECT_NAME}
 add_library(publisher_${PROJECT_NAME}
   src/publisher_pose.cpp
   src/publisher_graph.cpp)
-add_library(visualizer src/visualizer.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -166,7 +164,6 @@ add_library(visualizer src/visualizer.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg)
-add_dependencies(visualizer ${PROJECT_NAME}_gencfg)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(subscriber_${PROJECT_NAME}
@@ -186,7 +183,6 @@ target_link_libraries(publisher_${PROJECT_NAME}
                       )
 
 target_link_libraries(${PROJECT_NAME}
-                      visualizer
                       ${catkin_LIBRARIES}
                       ${CERES_LIBRARIES}
                       ${wolfcore_LIBRARIES}
