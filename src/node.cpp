@@ -7,17 +7,14 @@
 
 WolfRosNode::WolfRosNode()
     : nh_(ros::this_node::getName())
-    , state_available_(true)
 {
     // ROS PARAMS
     std::string yaml_file, plugins_path, subscribers_path;
     nh_.param<std::string>("yaml_file_path", yaml_file, ros::package::getPath("wolf_ros_node")+"/yaml/params_demo.yaml");
     nh_.param<std::string>("plugins_path", plugins_path, "/usr/local/lib/iri-algorithms/");
     nh_.param<std::string>("packages_path", subscribers_path, ros::package::getPath("wolf_ros_node") + "/../../devel/lib/");
-    nh_.param<std::string>("map_frame_id",   map_frame_id_,  "map");
-    nh_.param<std::string>("odom_frame_id",  odom_frame_id_, "odom");
-    nh_.param<std::string>("base_frame_id",  base_frame_id_, "base_footprint");
 
+    // PARAM SERVER CONFIGURATION
     std::cout <<"yaml: " << yaml_file << std::endl;
     int found = yaml_file.find_last_of("\\/");
     std::string yaml_dir = yaml_file.substr(0, found);
@@ -63,11 +60,6 @@ WolfRosNode::WolfRosNode()
         publishers_.push_back(FactoryPublisher::create(it["type"], it["type"]+" - "+it["topic"], server, problem_ptr_, nh_));
     }
 
-    // TF INIT
-    ROS_INFO("Initializing TF...");
-    updateTf();
-    broadcastTf();
-
     // PROFILING
     profiling_ = server.getParam<bool>("profiling/enabled");
     if (profiling_)
@@ -111,84 +103,6 @@ void WolfRosNode::solve()
         else if (solver_->getVerbosity() != SolverManager::ReportVerbosity::QUIET)
             ROS_WARN("Failed to compute covariances");
     }
-}
-
-bool WolfRosNode::updateTf()
-{
-    ROS_DEBUG("================updateTf==================");
-
-    // get current vehicle pose
-    bool result = true;
-
-    VectorComposite current_state = problem_ptr_->getState("PO");
-    TimeStamp loc_ts = problem_ptr_->getTimeStamp();
-
-    //Get map2base from Wolf result, and builds base2map pose
-    tf::Transform T_map2base;
-    if (current_state.count('P') == 0 or
-        current_state.count('O') == 0 or
-        !loc_ts.ok())
-    {
-        if (state_available_)
-        {
-            ROS_WARN("State not available...");
-            state_available_ = false; // warning won't be displayed again
-        }
-        T_map2base.setIdentity();
-    }
-    else
-    {
-        if (not state_available_)
-        {
-            ROS_INFO("State available!");
-            state_available_ = true; // warning won't be displayed again
-        }
-        // 2D
-        if (problem_ptr_->getDim() == 2)
-        {
-            T_map2base = tf::Transform (tf::createQuaternionFromYaw(current_state['O'](0)),
-                                        tf::Vector3(current_state['P'](0), current_state['P'](1), 0) );
-        }
-        // 3D
-        else
-        {
-            T_map2base = tf::Transform (tf::Quaternion(current_state['O'](0), current_state['O'](1), current_state['O'](2), current_state['O'](3)),
-                                        tf::Vector3(current_state['P'](0), current_state['P'](1), current_state['P'](2)) );
-        }
-    }
-
-    //gets T_map2odom_ (odom wrt map), by using tf listener, and assuming an odometry node is broadcasting odom2base
-    tf::StampedTransform T_base2odom;
-    ros::Time loc_stamp(loc_ts.getSeconds(), loc_ts.getNanoSeconds());
-    if ( tfl_.waitForTransform(base_frame_id_, odom_frame_id_, ros::Time(0), ros::Duration(0.2)) )
-    {
-        // tfl_.lookupTransform(base_frame_id_, odom_frame_id_, loc_stamp, T_base2odom);
-        tfl_.lookupTransform(base_frame_id_, odom_frame_id_, ros::Time(0), T_base2odom);
-        //std::cout << ros::Time::now().sec << " Odometry: " << T_base2odom.inverse().getOrigin().getX() << " " << T_base2odom.inverse().getOrigin().getY() << " " << T_base2odom.inverse().getRotation().getAngle() << std::endl;
-    }
-    else
-    {
-        ROS_WARN("No %s to %s frame received", base_frame_id_.c_str(), odom_frame_id_.c_str());
-        T_base2odom.setIdentity();
-        T_base2odom.frame_id_ = base_frame_id_;
-        T_base2odom.child_frame_id_ = odom_frame_id_;
-        T_base2odom.stamp_ = loc_stamp;
-        result = false;
-    }
-
-    // Broadcast transform ---------------------------------------------------------------------------
-    // tf::StampedTransform T_map2odom(T_map2base * T_base2odom, loc_stamp, map_frame_id_, odom_frame_id_);
-    // this->T_map2odom = tf::StampedTransform(T_map2base * T_base2odom, loc_stamp, map_frame_id_, odom_frame_id_);
-    this->T_map2odom = tf::Transform(T_map2base * T_base2odom);
-    //std::cout << "T_map2odom: " << T_map2odom.getOrigin().getX() << " " << T_map2odom.getOrigin().getY() << " " << T_map2odom.getRotation().getAngle() << std::endl;
-    return result;
-    //T_map2odom.setData(T_map2base * T_base2odom);
-    //T_map2odom.stamp_ = loc_stamp;
-}
-void WolfRosNode::broadcastTf()
-{
-    auto current_map2odom = tf::StampedTransform(this->T_map2odom, ros::Time::now(), map_frame_id_, odom_frame_id_);
-    tfb_.sendTransform(current_map2odom);
 }
 
 void WolfRosNode::solveLoop()
@@ -242,16 +156,13 @@ void WolfRosNode::createProfilingFile()
 
 int main(int argc, char **argv)
 {
-    std::cout << "\n=========== WOLF ROS WRAPPER MAIN ===========\n\n";
-
     // Init ROS
     ros::init(argc, argv, ros::this_node::getName());
+
     // Wolf node
     WolfRosNode wolf_node;
 
     ros::Rate loopRate(100);
-    ros::Time last_viz_time = ros::Time(0);
-    ros::Time last_solve_time = ros::Time(0);
 
     // Solver thread
     std::thread solver_thread(&WolfRosNode::solveLoop, &wolf_node);
@@ -264,10 +175,6 @@ int main(int argc, char **argv)
 
     while (ros::ok())
     {
-        // broadcast tf
-        wolf_node.updateTf();
-        wolf_node.broadcastTf();
-
         // publish periodically
         for(auto pub : wolf_node.publishers_)
             if (pub->ready())

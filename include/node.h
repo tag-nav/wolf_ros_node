@@ -64,15 +64,6 @@ class WolfRosNode
         ros::Time last_cov_stamp_;
         double cov_period_;
 
-        // transforms
-        tf::TransformBroadcaster tfb_;
-        tf::TransformListener    tfl_;
-        std::string base_frame_id_, map_frame_id_, odom_frame_id_;
-        tf::Transform T_map2odom;
-
-        // other attributes
-        bool state_available_; // used to handle warnings regarding availability of state
-
         // profiling
         bool profiling_;
         std::ofstream profiling_file_;
@@ -84,12 +75,6 @@ class WolfRosNode
 
         void solve();
         void solveLoop();
-
-        void broadcastTf();
-
-        void visualize();
-
-        bool updateTf();
 
         void createProfilingFile();
 };

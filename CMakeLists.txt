@@ -146,14 +146,14 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 
 add_executable(${PROJECT_NAME} src/node.cpp)
-# add_library(subscriber_odom2d src/subscriber_odom2d.cpp)
-# add_library(subscriber_diffdrive src/subscriber_diffdrive.cpp)
+
 add_library(subscriber_${PROJECT_NAME}
-  src/subscriber_odom2d.cpp
-  src/subscriber_diffdrive.cpp)
+  			src/subscriber_diffdrive.cpp
+  			src/subscriber_odom2d.cpp)
 add_library(publisher_${PROJECT_NAME}
-  src/publisher_pose.cpp
-  src/publisher_graph.cpp)
+  			src/publisher_graph.cpp
+  			src/publisher_pose.cpp
+  			src/publisher_tf.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
