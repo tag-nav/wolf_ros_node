@@ -11,8 +11,8 @@ namespace wolf
 {
 
 PublisherTf::PublisherTf(const std::string& _unique_name,
-                             const ParamsServer& _server,
-                             const ProblemPtr _problem) :
+                         const ParamsServer& _server,
+                         const ProblemPtr _problem) :
         Publisher(_unique_name, _server, _problem),
         state_available_(true)
 {

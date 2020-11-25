@@ -149,6 +149,8 @@ void WolfRosNode::createProfilingFile()
     for (auto pub : publishers_)
         pub->printProfiling(profiling_str);
 
+    profiling_str << "\n";
+
     // print
     std::cout << profiling_str.str();
 
