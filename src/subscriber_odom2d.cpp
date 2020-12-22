@@ -41,7 +41,6 @@ void SubscriberOdom2d::initialize(ros::NodeHandle& nh, const std::string& topic)
 void SubscriberOdom2d::callback(const nav_msgs::Odometry::ConstPtr& msg)
 {
     ROS_DEBUG("WolfNodePolyline::odomCallback");
-    ROS_INFO("WolfNodePolyline::odomCallback: start");
 
     if (last_odom_stamp_ != ros::Time(0))
     {
@@ -56,7 +55,6 @@ void SubscriberOdom2d::callback(const nav_msgs::Odometry::ConstPtr& msg)
     }
     last_odom_stamp_ = msg->header.stamp;
 
-    ROS_INFO("WolfNodePolyline::odomCallback: end");
     ROS_DEBUG("WolfNodePolyline::odomCallback: end");
 }
 

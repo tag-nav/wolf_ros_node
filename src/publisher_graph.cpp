@@ -371,7 +371,7 @@ void PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
 
         // special case: Motion from ProcessorImu
         auto proc_motion = std::dynamic_pointer_cast<ProcessorMotion>(fac->getProcessor());
-        if (proc_motion)
+        if (proc_motion and fac->getCaptureOther())
         {
             // Get state of other
             const auto& x_other = fac->getFrameOther()->getState(proc_motion->getStateStructure());
