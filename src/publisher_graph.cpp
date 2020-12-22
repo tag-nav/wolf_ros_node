@@ -241,57 +241,56 @@ void PublisherGraph::publishTrajectory()
     auto frame_text_marker = frame_text_marker_;
     auto trajectory = *problem_->getTrajectory();
     for (auto frm : trajectory)
-        if (frm->isKey())
-        {
-            // fill marker
-            fillFrameMarker(frm, frame_marker, frame_text_marker);
+    {
+      // fill marker
+      fillFrameMarker(frm, frame_marker, frame_text_marker);
 
-            // Store marker in marker array
-            frame_marker.id = marker_i;
-            frame_marker.header.stamp = ros::Time::now();
+      // Store marker in marker array
+      frame_marker.id = marker_i;
+      frame_marker.header.stamp = ros::Time::now();
 
-            if (trajectory_marker_array_.markers.size() < marker_i+1)
-            {
-                frame_marker.action = visualization_msgs::Marker::ADD;
-                trajectory_marker_array_.markers.push_back(frame_marker);
-            }
-            else
-            {
-                frame_marker.action = visualization_msgs::Marker::MODIFY;
-                trajectory_marker_array_.markers[marker_i] = frame_marker;
-            }
-            marker_i++;
+      if (trajectory_marker_array_.markers.size() < marker_i+1)
+      {
+        frame_marker.action = visualization_msgs::Marker::ADD;
+        trajectory_marker_array_.markers.push_back(frame_marker);
+      }
+      else
+      {
+        frame_marker.action = visualization_msgs::Marker::MODIFY;
+        trajectory_marker_array_.markers[marker_i] = frame_marker;
+      }
+      marker_i++;
 
-            // Store text marker in marker array
-            frame_text_marker.id = marker_i;
-            frame_text_marker.header.stamp = ros::Time::now();
+      // Store text marker in marker array
+      frame_text_marker.id = marker_i;
+      frame_text_marker.header.stamp = ros::Time::now();
 
-            if (trajectory_marker_array_.markers.size() < marker_i + 1) {
-                frame_text_marker.action = visualization_msgs::Marker::ADD;
-                trajectory_marker_array_.markers.push_back(frame_text_marker);
-            } else {
-                frame_text_marker.action = visualization_msgs::Marker::MODIFY;
-                trajectory_marker_array_.markers[marker_i] = frame_text_marker;
-            }
-            marker_i++;
-        }
+      if (trajectory_marker_array_.markers.size() < marker_i + 1) {
+        frame_text_marker.action = visualization_msgs::Marker::ADD;
+        trajectory_marker_array_.markers.push_back(frame_text_marker);
+      } else {
+        frame_text_marker.action = visualization_msgs::Marker::MODIFY;
+        trajectory_marker_array_.markers[marker_i] = frame_text_marker;
+      }
+      marker_i++;
+    }
 
     // rest of markers (if any) action: DELETE
     for (auto i = marker_i; i < trajectory_marker_array_.markers.size(); i++)
-        trajectory_marker_array_.markers[i].action = visualization_msgs::Marker::DELETE;
+      trajectory_marker_array_.markers[i].action = visualization_msgs::Marker::DELETE;
 
     // publish marker array
     trajectory_publisher_.publish(trajectory_marker_array_);
 }
 
 void PublisherGraph::fillLandmarkMarkers(LandmarkBaseConstPtr lmk,
-                                         visualization_msgs::Marker& lmk_marker,
-                                         visualization_msgs::Marker& lmk_text_marker)
+    visualization_msgs::Marker& lmk_marker,
+    visualization_msgs::Marker& lmk_text_marker)
 {
-    // SHAPE ------------------------------------------------------
-    // Position
-    //    2d: CYLINDER
-    //    3d: SPHERE
+  // SHAPE ------------------------------------------------------
+  // Position
+  //    2d: CYLINDER
+  //    3d: SPHERE
     // Pose -> ARROW
     if (lmk->getO() != nullptr)
     {
