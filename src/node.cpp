@@ -101,8 +101,13 @@ void WolfRosNode::solve()
             if (solver_->getVerbosity() != SolverManager::ReportVerbosity::QUIET)
                 ROS_INFO("Covariances computed successfully! It took %li microseconds", duration.count());
         }
-        else if (solver_->getVerbosity() != SolverManager::ReportVerbosity::QUIET)
-            ROS_WARN("Failed to compute covariances");
+        else
+        {
+            // will try again after 10% of cov period
+            last_cov_stamp_ = last_cov_stamp_+ ros::Duration(0.1*cov_period_);
+            if (solver_->getVerbosity() != SolverManager::ReportVerbosity::QUIET)
+                ROS_WARN("Failed to compute covariances");
+        }
     }
 }
 
