@@ -373,7 +373,6 @@ void PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
         auto proc_motion = std::dynamic_pointer_cast<ProcessorMotion>(fac->getProcessor());
         if (proc_motion and fac->getCaptureOther())
         {
-            WOLF_INFO("PublisherGraph: ", fac->getProcessor()->getName());
             // Get state of other
             const auto& x_other = fac->getFrameOther()->getState(proc_motion->getStateStructure());
 
@@ -390,7 +389,6 @@ void PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
             VectorComposite state_integrated;
             if ( proc_motion->hasCalibration())
             {
-                WOLF_INFO("PublisherGraph: Has Calibration ", fac->getProcessor()->getName());
                 // Get current calibration -- from other capture
                 const auto& calib = proc_motion->getCalibration(fac->getCaptureOther());
 
