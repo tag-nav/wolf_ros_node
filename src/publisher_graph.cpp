@@ -12,47 +12,47 @@ PublisherGraph::PublisherGraph(const std::string& _unique_name,
 {
     // LOAD PARAMETERS (all optionals) ---------------------------------------------------
     // General
-    map_frame_id_           = getParamWithDefault<std::string>(_server, prefix_ + "map_frame_id", "map");
-    viz_overlapped_factors_ = getParamWithDefault<bool>     (_server, prefix_ + "viz_overlapped_factors", false);
-    text_scale_             = getParamWithDefault<double>   (_server, prefix_ + "text_scale", 0.5);
-    viz_scale_              = getParamWithDefault<double>   (_server, prefix_ + "viz_scale", 1);
+    map_frame_id_           = getParamWithDefault<std::string>(_server, prefix_ + "/map_frame_id", "map");
+    viz_overlapped_factors_ = getParamWithDefault<bool>     (_server, prefix_ + "/viz_overlapped_factors", false);
+    text_scale_             = getParamWithDefault<double>   (_server, prefix_ + "/text_scale", 0.5);
+    viz_scale_              = getParamWithDefault<double>   (_server, prefix_ + "/viz_scale", 1);
 
     // landmarks
-    landmark_text_z_offset_ = getParamWithDefault<double>   (_server, prefix_ + "landmark_text_z_offset", 1);
-    landmark_width_         = getParamWithDefault<double>   (_server, prefix_ + "landmark_width", 0.1);
-    landmark_length_        = getParamWithDefault<double>   (_server, prefix_ + "landmark_length", 1);
+    landmark_text_z_offset_ = getParamWithDefault<double>   (_server, prefix_ + "/landmark_text_z_offset", 1);
+    landmark_width_         = getParamWithDefault<double>   (_server, prefix_ + "/landmark_width", 0.1);
+    landmark_length_        = getParamWithDefault<double>   (_server, prefix_ + "/landmark_length", 1);
 
     // frames
-    frame_width_            = getParamWithDefault<double>   (_server, prefix_ + "frame_width", 0.1);
-    frame_length_           = getParamWithDefault<double>   (_server, prefix_ + "frame_length", 1);
-    frame_color_.r          = getParamWithDefault<double>   (_server, prefix_ + "frame_color_r", 1);
-    frame_color_.g          = getParamWithDefault<double>   (_server, prefix_ + "frame_color_g", 0.8);
-    frame_color_.b          = getParamWithDefault<double>   (_server, prefix_ + "frame_color_b", 0.0);
-    frame_color_.a          = getParamWithDefault<double>   (_server, prefix_ + "frame_color_a", 1);
+    frame_width_            = getParamWithDefault<double>   (_server, prefix_ + "/frame_width", 0.1);
+    frame_length_           = getParamWithDefault<double>   (_server, prefix_ + "/frame_length", 1);
+    frame_color_.r          = getParamWithDefault<double>   (_server, prefix_ + "/frame_color_r", 1);
+    frame_color_.g          = getParamWithDefault<double>   (_server, prefix_ + "/frame_color_g", 0.8);
+    frame_color_.b          = getParamWithDefault<double>   (_server, prefix_ + "/frame_color_b", 0.0);
+    frame_color_.a          = getParamWithDefault<double>   (_server, prefix_ + "/frame_color_a", 1);
 
     // factors
-    factors_width_          = getParamWithDefault<double>   (_server, prefix_ + "factors_width", 0.02);
-    factors_absolute_height_= getParamWithDefault<double>   (_server, prefix_ + "factors_absolute_height", 2);
-    factor_abs_color_.r     = getParamWithDefault<double>   (_server, prefix_ + "factor_abs_color_r", 0.9);
-    factor_abs_color_.g     = getParamWithDefault<double>   (_server, prefix_ + "factor_abs_color_g", 0.2);
-    factor_abs_color_.b     = getParamWithDefault<double>   (_server, prefix_ + "factor_abs_color_b", 0.6);
-    factor_abs_color_.a     = getParamWithDefault<double>   (_server, prefix_ + "factor_abs_color_a", 1);
-    factor_motion_color_.r  = getParamWithDefault<double>   (_server, prefix_ + "factor_motion_color_r", 1);
-    factor_motion_color_.g  = getParamWithDefault<double>   (_server, prefix_ + "factor_motion_color_g", 1);
-    factor_motion_color_.b  = getParamWithDefault<double>   (_server, prefix_ + "factor_motion_color_b", 0);
-    factor_motion_color_.a  = getParamWithDefault<double>   (_server, prefix_ + "factor_motion_color_a", 1);
-    factor_loop_color_.r    = getParamWithDefault<double>   (_server, prefix_ + "factor_loop_color_r", 1);
-    factor_loop_color_.g    = getParamWithDefault<double>   (_server, prefix_ + "factor_loop_color_g", 0);
-    factor_loop_color_.b    = getParamWithDefault<double>   (_server, prefix_ + "factor_loop_color_b", 0);
-    factor_loop_color_.a    = getParamWithDefault<double>   (_server, prefix_ + "factor_loop_color_a", 1);
-    factor_lmk_color_.r     = getParamWithDefault<double>   (_server, prefix_ + "factor_lmk_color_r", 0);
-    factor_lmk_color_.g     = getParamWithDefault<double>   (_server, prefix_ + "factor_lmk_color_g", 0);
-    factor_lmk_color_.b     = getParamWithDefault<double>   (_server, prefix_ + "factor_lmk_color_b", 1);
-    factor_lmk_color_.a     = getParamWithDefault<double>   (_server, prefix_ + "factor_lmk_color_a", 1);
-    factor_geom_color_.r    = getParamWithDefault<double>   (_server, prefix_ + "factor_geom_color_r", 0);
-    factor_geom_color_.g    = getParamWithDefault<double>   (_server, prefix_ + "factor_geom_color_g", 1);
-    factor_geom_color_.b    = getParamWithDefault<double>   (_server, prefix_ + "factor_geom_color_b", 1);
-    factor_geom_color_.a    = getParamWithDefault<double>   (_server, prefix_ + "factor_geom_color_a", 1);
+    factors_width_          = getParamWithDefault<double>   (_server, prefix_ + "/factors_width", 0.02);
+    factors_absolute_height_= getParamWithDefault<double>   (_server, prefix_ + "/factors_absolute_height", 2);
+    factor_abs_color_.r     = getParamWithDefault<double>   (_server, prefix_ + "/factor_abs_color_r", 0.9);
+    factor_abs_color_.g     = getParamWithDefault<double>   (_server, prefix_ + "/factor_abs_color_g", 0.2);
+    factor_abs_color_.b     = getParamWithDefault<double>   (_server, prefix_ + "/factor_abs_color_b", 0.6);
+    factor_abs_color_.a     = getParamWithDefault<double>   (_server, prefix_ + "/factor_abs_color_a", 1);
+    factor_motion_color_.r  = getParamWithDefault<double>   (_server, prefix_ + "/factor_motion_color_r", 1);
+    factor_motion_color_.g  = getParamWithDefault<double>   (_server, prefix_ + "/factor_motion_color_g", 1);
+    factor_motion_color_.b  = getParamWithDefault<double>   (_server, prefix_ + "/factor_motion_color_b", 0);
+    factor_motion_color_.a  = getParamWithDefault<double>   (_server, prefix_ + "/factor_motion_color_a", 1);
+    factor_loop_color_.r    = getParamWithDefault<double>   (_server, prefix_ + "/factor_loop_color_r", 1);
+    factor_loop_color_.g    = getParamWithDefault<double>   (_server, prefix_ + "/factor_loop_color_g", 0);
+    factor_loop_color_.b    = getParamWithDefault<double>   (_server, prefix_ + "/factor_loop_color_b", 0);
+    factor_loop_color_.a    = getParamWithDefault<double>   (_server, prefix_ + "/factor_loop_color_a", 1);
+    factor_lmk_color_.r     = getParamWithDefault<double>   (_server, prefix_ + "/factor_lmk_color_r", 0);
+    factor_lmk_color_.g     = getParamWithDefault<double>   (_server, prefix_ + "/factor_lmk_color_g", 0);
+    factor_lmk_color_.b     = getParamWithDefault<double>   (_server, prefix_ + "/factor_lmk_color_b", 1);
+    factor_lmk_color_.a     = getParamWithDefault<double>   (_server, prefix_ + "/factor_lmk_color_a", 1);
+    factor_geom_color_.r    = getParamWithDefault<double>   (_server, prefix_ + "/factor_geom_color_r", 0);
+    factor_geom_color_.g    = getParamWithDefault<double>   (_server, prefix_ + "/factor_geom_color_g", 1);
+    factor_geom_color_.b    = getParamWithDefault<double>   (_server, prefix_ + "/factor_geom_color_b", 1);
+    factor_geom_color_.a    = getParamWithDefault<double>   (_server, prefix_ + "/factor_geom_color_a", 1);
 
     // INIT MARKERS ---------------------------------------------------
     // factor markers message
@@ -369,10 +369,11 @@ void PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
     // FRAME
     if (fac->getFrameOther() != nullptr) {
 
-        // special case: Motion from ProcessorImu
+        // special case: Motion from ProcessorMotion
         auto proc_motion = std::dynamic_pointer_cast<ProcessorMotion>(fac->getProcessor());
         if (proc_motion and fac->getCaptureOther())
         {
+            WOLF_INFO("PublisherGraph: ", fac->getProcessor()->getName());
             // Get state of other
             const auto& x_other = fac->getFrameOther()->getState(proc_motion->getStateStructure());
 
@@ -389,6 +390,7 @@ void PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
             VectorComposite state_integrated;
             if ( proc_motion->hasCalibration())
             {
+                WOLF_INFO("PublisherGraph: Has Calibration ", fac->getProcessor()->getName());
                 // Get current calibration -- from other capture
                 const auto& calib = proc_motion->getCalibration(fac->getCaptureOther());
 
@@ -499,14 +501,14 @@ void PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
 
     fac_marker.colors.push_back(color);
     fac_marker.colors.push_back(color);// 2 times because of 2 points
-    fac_marker.ns = std::string("factors_"+fac->getTopology());
+    fac_marker.ns = std::string("factors_"+fac->getProcessor()->getName());
 
     // TEXT MARKER --------------------------------------------------------
     fac_text_marker.text = std::to_string(fac->id());
     fac_text_marker.pose.position.x = (point1.x + point2.x)/(double) 2;
     fac_text_marker.pose.position.y = (point1.y + point2.y)/(double) 2;
     fac_text_marker.pose.position.z = fac_marker.pose.position.z;
-    fac_text_marker.ns = "factors_text";
+    fac_text_marker.ns = std::string("factors_text_"+fac->getProcessor()->getName());
 }
 
 void PublisherGraph::fillFrameMarker(FrameBaseConstPtr frm,
