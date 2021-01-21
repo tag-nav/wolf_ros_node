@@ -438,7 +438,7 @@ void PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
     }
     // CAPTURE (with Frame)
     else if (fac->getCaptureOther() != nullptr &&
-            fac->getCaptureOther()->getFrame() != nullptr) {
+             fac->getCaptureOther()->getFrame() != nullptr) {
         point2.x = fac->getCaptureOther()->getFrame()->getP()->getState()(0);
         point2.y = fac->getCaptureOther()->getFrame()->getP()->getState()(1);
         if (fac->getProblem()->getDim() == 3)
@@ -450,14 +450,10 @@ void PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
     else if (fac->getFeatureOther() != nullptr &&
             fac->getFeatureOther()->getCapture() != nullptr &&
             fac->getFeatureOther()->getCapture()->getFrame() != nullptr) {
-        point2.x =
-                fac->getFeatureOther()->getCapture()->getFrame()->getP()->getState()(0);
-        point2.y =
-                fac->getFeatureOther()->getCapture()->getFrame()->getP()->getState()(1);
+        point2.x = fac->getFeatureOther()->getCapture()->getFrame()->getP()->getState()(0);
+        point2.y = fac->getFeatureOther()->getCapture()->getFrame()->getP()->getState()(1);
         if (fac->getProblem()->getDim() == 3)
-            point2.z =
-                    fac->getFeatureOther()->getCapture()->getFrame()->getP()->getState()(
-                            2);
+            point2.z = fac->getFeatureOther()->getCapture()->getFrame()->getP()->getState()(2);
         else
             point2.z = 0;
     }
@@ -499,14 +495,14 @@ void PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
 
     fac_marker.colors.push_back(color);
     fac_marker.colors.push_back(color);// 2 times because of 2 points
-    fac_marker.ns = std::string("factors_"+fac->getProcessor()->getName());
+    fac_marker.ns = std::string("factors_"+(fac->getProcessor() ? fac->getProcessor()->getName() : "unnamed_processor"));
 
     // TEXT MARKER --------------------------------------------------------
     fac_text_marker.text = std::to_string(fac->id());
     fac_text_marker.pose.position.x = (point1.x + point2.x)/(double) 2;
     fac_text_marker.pose.position.y = (point1.y + point2.y)/(double) 2;
     fac_text_marker.pose.position.z = fac_marker.pose.position.z;
-    fac_text_marker.ns = std::string("factors_text_"+fac->getProcessor()->getName());
+    fac_text_marker.ns = std::string("factors_text_"+(fac->getProcessor() ? fac->getProcessor()->getName() : "unnamed_processor"));
 }
 
 void PublisherGraph::fillFrameMarker(FrameBaseConstPtr frm,
