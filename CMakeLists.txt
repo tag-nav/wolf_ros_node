@@ -15,7 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   tf
   tf_conversions
-  dynamic_reconfigure
+#  dynamic_reconfigure
 )
 
 ## System dependencies are found with CMake's conventions
@@ -95,9 +95,9 @@ find_package(wolfcore REQUIRED)
 ##     and list every .cfg file to be processed
 
 ## Generate dynamic reconfigure parameters in the 'cfg' folder
-generate_dynamic_reconfigure_options(
-  cfg/WolfROS.cfg
-)
+##generate_dynamic_reconfigure_options(
+##  cfg/WolfROS.cfg
+##)
 
 ###################################
 ## catkin specific configuration ##
@@ -163,7 +163,7 @@ add_library(publisher_${PROJECT_NAME}
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg)
+## add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(subscriber_${PROJECT_NAME}
