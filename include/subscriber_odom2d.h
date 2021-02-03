@@ -18,7 +18,7 @@ class SubscriberOdom2d : public Subscriber
 {
    protected:
       ros::Time last_odom_stamp_;
-      double odometry_translational_cov_factor_, odometry_rotational_cov_factor_;
+      SensorOdom2dPtr sensor_odom_;
 
    public:
 
