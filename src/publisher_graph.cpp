@@ -33,26 +33,30 @@ PublisherGraph::PublisherGraph(const std::string& _unique_name,
     // factors
     factors_width_          = getParamWithDefault<double>   (_server, prefix_ + "/factors_width", 0.02);
     factors_absolute_height_= getParamWithDefault<double>   (_server, prefix_ + "/factors_absolute_height", 2);
-    factor_abs_color_.r     = getParamWithDefault<double>   (_server, prefix_ + "/factor_abs_color_r", 0.9);
-    factor_abs_color_.g     = getParamWithDefault<double>   (_server, prefix_ + "/factor_abs_color_g", 0.2);
-    factor_abs_color_.b     = getParamWithDefault<double>   (_server, prefix_ + "/factor_abs_color_b", 0.6);
+    factor_abs_color_.r     = getParamWithDefault<double>   (_server, prefix_ + "/factor_abs_color_r", 1); //red
+    factor_abs_color_.g     = getParamWithDefault<double>   (_server, prefix_ + "/factor_abs_color_g", 0);
+    factor_abs_color_.b     = getParamWithDefault<double>   (_server, prefix_ + "/factor_abs_color_b", 0);
     factor_abs_color_.a     = getParamWithDefault<double>   (_server, prefix_ + "/factor_abs_color_a", 1);
-    factor_motion_color_.r  = getParamWithDefault<double>   (_server, prefix_ + "/factor_motion_color_r", 1);
+    factor_motion_color_.r  = getParamWithDefault<double>   (_server, prefix_ + "/factor_motion_color_r", 1);//yellow
     factor_motion_color_.g  = getParamWithDefault<double>   (_server, prefix_ + "/factor_motion_color_g", 1);
     factor_motion_color_.b  = getParamWithDefault<double>   (_server, prefix_ + "/factor_motion_color_b", 0);
     factor_motion_color_.a  = getParamWithDefault<double>   (_server, prefix_ + "/factor_motion_color_a", 1);
-    factor_loop_color_.r    = getParamWithDefault<double>   (_server, prefix_ + "/factor_loop_color_r", 1);
-    factor_loop_color_.g    = getParamWithDefault<double>   (_server, prefix_ + "/factor_loop_color_g", 0);
+    factor_loop_color_.r    = getParamWithDefault<double>   (_server, prefix_ + "/factor_loop_color_r", 0); //green
+    factor_loop_color_.g    = getParamWithDefault<double>   (_server, prefix_ + "/factor_loop_color_g", 1);
     factor_loop_color_.b    = getParamWithDefault<double>   (_server, prefix_ + "/factor_loop_color_b", 0);
     factor_loop_color_.a    = getParamWithDefault<double>   (_server, prefix_ + "/factor_loop_color_a", 1);
-    factor_lmk_color_.r     = getParamWithDefault<double>   (_server, prefix_ + "/factor_lmk_color_r", 0);
-    factor_lmk_color_.g     = getParamWithDefault<double>   (_server, prefix_ + "/factor_lmk_color_g", 0);
+    factor_lmk_color_.r     = getParamWithDefault<double>   (_server, prefix_ + "/factor_lmk_color_r", 0);  //cyan
+    factor_lmk_color_.g     = getParamWithDefault<double>   (_server, prefix_ + "/factor_lmk_color_g", 1);
     factor_lmk_color_.b     = getParamWithDefault<double>   (_server, prefix_ + "/factor_lmk_color_b", 1);
     factor_lmk_color_.a     = getParamWithDefault<double>   (_server, prefix_ + "/factor_lmk_color_a", 1);
-    factor_geom_color_.r    = getParamWithDefault<double>   (_server, prefix_ + "/factor_geom_color_r", 0);
-    factor_geom_color_.g    = getParamWithDefault<double>   (_server, prefix_ + "/factor_geom_color_g", 1);
+    factor_geom_color_.r    = getParamWithDefault<double>   (_server, prefix_ + "/factor_geom_color_r", 0); //blue
+    factor_geom_color_.g    = getParamWithDefault<double>   (_server, prefix_ + "/factor_geom_color_g", 0);
     factor_geom_color_.b    = getParamWithDefault<double>   (_server, prefix_ + "/factor_geom_color_b", 1);
     factor_geom_color_.a    = getParamWithDefault<double>   (_server, prefix_ + "/factor_geom_color_a", 1);
+    factor_other_color_.r   = getParamWithDefault<double>  (_server, prefix_ + "/factor_other_color_r", 1); //white
+    factor_other_color_.g   = getParamWithDefault<double>  (_server, prefix_ + "/factor_other_color_g", 1);
+    factor_other_color_.b   = getParamWithDefault<double>  (_server, prefix_ + "/factor_other_color_b", 1);
+    factor_other_color_.a   = getParamWithDefault<double>  (_server, prefix_ + "/factor_other_color_a", 1);
 
     // INIT MARKERS ---------------------------------------------------
     // factor markers message
@@ -478,16 +482,18 @@ void PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
 
     // colors ------------------------------------------------------
     auto color = frame_color_;
-    if (fac->getTopology() == "ABS")
+    if (fac->getTopology() == TOP_ABS)
         color = factor_abs_color_;
-    if (fac->getTopology() == "MOTION")
+    if (fac->getTopology() == TOP_MOTION)
         color = factor_motion_color_;
-    if (fac->getTopology() == "LOOP")
+    if (fac->getTopology() == TOP_LOOP)
         color = factor_loop_color_;
-    if (fac->getTopology() == "LMK")
+    if (fac->getTopology() == TOP_LMK)
         color = factor_lmk_color_;
-    if (fac->getTopology() == "GEOM")
+    if (fac->getTopology() == TOP_GEOM)
         color = factor_geom_color_;
+    if (fac->getTopology() == TOP_OTHER)
+        color = factor_other_color_;
 
     // more transparent if inactive
     if (fac->getStatus() == FAC_INACTIVE)
