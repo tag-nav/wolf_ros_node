@@ -18,6 +18,22 @@
 namespace wolf
 {
 
+tf::Transform stateToTfTransform(VectorComposite state, int dim)
+{
+    // 2D
+    if (dim == 2)
+    {
+        return tf::Transform (tf::createQuaternionFromYaw(state['O'](0)),
+                              tf::Vector3(state['P'](0), state['P'](1), 0) );
+    }
+    // 3D
+    else
+    {
+        return tf::Transform (tf::Quaternion(state['O'](0), state['O'](1), state['O'](2), state['O'](3)),
+                              tf::Vector3(state['P'](0), state['P'](1), state['P'](2)) );
+    }
+}
+
 class PublisherTf: public Publisher
 {
     protected:
@@ -25,6 +41,9 @@ class PublisherTf: public Publisher
         tf::TransformBroadcaster tfb_;
         tf::TransformListener tfl_;
 
+        tf::StampedTransform T_odom2base_, T_map2odom_;
+
+        bool publish_odom_tf_;
         bool state_available_; // used to not repeat warnings regarding availability of state
 
     public:
