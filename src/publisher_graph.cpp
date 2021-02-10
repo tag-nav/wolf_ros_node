@@ -10,6 +10,8 @@ PublisherGraph::PublisherGraph(const std::string& _unique_name,
                                const ProblemPtr _problem) :
                 Publisher(_unique_name, _server, _problem)
 {
+    Eigen::Vector4d color;
+
     // LOAD PARAMETERS (all optionals) ---------------------------------------------------
     // General
     map_frame_id_           = getParamWithDefault<std::string>(_server, prefix_ + "/map_frame_id", "map");
@@ -25,38 +27,65 @@ PublisherGraph::PublisherGraph(const std::string& _unique_name,
     // frames
     frame_width_            = getParamWithDefault<double>   (_server, prefix_ + "/frame_width", 0.1);
     frame_length_           = getParamWithDefault<double>   (_server, prefix_ + "/frame_length", 1);
-    frame_color_.r          = getParamWithDefault<double>   (_server, prefix_ + "/frame_color_r", 1);
-    frame_color_.g          = getParamWithDefault<double>   (_server, prefix_ + "/frame_color_g", 0.8);
-    frame_color_.b          = getParamWithDefault<double>   (_server, prefix_ + "/frame_color_b", 0.0);
-    frame_color_.a          = getParamWithDefault<double>   (_server, prefix_ + "/frame_color_a", 1);
+    color = getParamWithDefault<Eigen::Vector4d>(_server,
+                                                 prefix_ + "/frame_color",
+                                                 (Eigen::Vector4d() << 1, 0.8, 0, 1).finished());
+    frame_color_.r = color(0);
+    frame_color_.g = color(1);
+    frame_color_.b = color(2);
+    frame_color_.a = color(3);
 
     // factors
     factors_width_          = getParamWithDefault<double>   (_server, prefix_ + "/factors_width", 0.02);
     factors_absolute_height_= getParamWithDefault<double>   (_server, prefix_ + "/factors_absolute_height", 2);
-    factor_abs_color_.r     = getParamWithDefault<double>   (_server, prefix_ + "/factor_abs_color_r", 1); //red
-    factor_abs_color_.g     = getParamWithDefault<double>   (_server, prefix_ + "/factor_abs_color_g", 0);
-    factor_abs_color_.b     = getParamWithDefault<double>   (_server, prefix_ + "/factor_abs_color_b", 0);
-    factor_abs_color_.a     = getParamWithDefault<double>   (_server, prefix_ + "/factor_abs_color_a", 1);
-    factor_motion_color_.r  = getParamWithDefault<double>   (_server, prefix_ + "/factor_motion_color_r", 1);//yellow
-    factor_motion_color_.g  = getParamWithDefault<double>   (_server, prefix_ + "/factor_motion_color_g", 1);
-    factor_motion_color_.b  = getParamWithDefault<double>   (_server, prefix_ + "/factor_motion_color_b", 0);
-    factor_motion_color_.a  = getParamWithDefault<double>   (_server, prefix_ + "/factor_motion_color_a", 1);
-    factor_loop_color_.r    = getParamWithDefault<double>   (_server, prefix_ + "/factor_loop_color_r", 0); //green
-    factor_loop_color_.g    = getParamWithDefault<double>   (_server, prefix_ + "/factor_loop_color_g", 1);
-    factor_loop_color_.b    = getParamWithDefault<double>   (_server, prefix_ + "/factor_loop_color_b", 0);
-    factor_loop_color_.a    = getParamWithDefault<double>   (_server, prefix_ + "/factor_loop_color_a", 1);
-    factor_lmk_color_.r     = getParamWithDefault<double>   (_server, prefix_ + "/factor_lmk_color_r", 0);  //cyan
-    factor_lmk_color_.g     = getParamWithDefault<double>   (_server, prefix_ + "/factor_lmk_color_g", 1);
-    factor_lmk_color_.b     = getParamWithDefault<double>   (_server, prefix_ + "/factor_lmk_color_b", 1);
-    factor_lmk_color_.a     = getParamWithDefault<double>   (_server, prefix_ + "/factor_lmk_color_a", 1);
-    factor_geom_color_.r    = getParamWithDefault<double>   (_server, prefix_ + "/factor_geom_color_r", 0); //blue
-    factor_geom_color_.g    = getParamWithDefault<double>   (_server, prefix_ + "/factor_geom_color_g", 0);
-    factor_geom_color_.b    = getParamWithDefault<double>   (_server, prefix_ + "/factor_geom_color_b", 1);
-    factor_geom_color_.a    = getParamWithDefault<double>   (_server, prefix_ + "/factor_geom_color_a", 1);
-    factor_other_color_.r   = getParamWithDefault<double>  (_server, prefix_ + "/factor_other_color_r", 1); //white
-    factor_other_color_.g   = getParamWithDefault<double>  (_server, prefix_ + "/factor_other_color_g", 1);
-    factor_other_color_.b   = getParamWithDefault<double>  (_server, prefix_ + "/factor_other_color_b", 1);
-    factor_other_color_.a   = getParamWithDefault<double>  (_server, prefix_ + "/factor_other_color_a", 1);
+
+    color = getParamWithDefault<Eigen::Vector4d>(_server,
+                                                 prefix_ + "/factor_abs_color",
+                                                 (Eigen::Vector4d() << 1, 0, 0, 1).finished()); // red
+    factor_abs_color_.r = color(0);
+    factor_abs_color_.g = color(1);
+    factor_abs_color_.b = color(2);
+    factor_abs_color_.a = color(3);
+
+    color = getParamWithDefault<Eigen::Vector4d>(_server,
+                                                 prefix_ + "/factor_motion_color",
+                                                 (Eigen::Vector4d() << 1, 1, 0, 1).finished()); // yellow
+    factor_motion_color_.r = color(0);
+    factor_motion_color_.g = color(1);
+    factor_motion_color_.b = color(2);
+    factor_motion_color_.a = color(3);
+
+    color = getParamWithDefault<Eigen::Vector4d>(_server,
+                                                 prefix_ + "/factor_loop_color",
+                                                 (Eigen::Vector4d() << 0, 1, 0, 1).finished()); // green
+    factor_loop_color_.r = color(0);
+    factor_loop_color_.g = color(1);
+    factor_loop_color_.b = color(2);
+    factor_loop_color_.a = color(3);
+
+    color = getParamWithDefault<Eigen::Vector4d>(_server,
+                                                 prefix_ + "/factor_lmk_color",
+                                                 (Eigen::Vector4d() << 0, 1, 1, 1).finished()); // cyan
+    factor_lmk_color_.r = color(0);
+    factor_lmk_color_.g = color(1);
+    factor_lmk_color_.b = color(2);
+    factor_lmk_color_.a = color(3);
+
+    color = getParamWithDefault<Eigen::Vector4d>(_server,
+                                                 prefix_ + "/factor_geom_color",
+                                                 (Eigen::Vector4d() << 0, 0, 1, 1).finished()); // blue
+    factor_geom_color_.r = color(0);
+    factor_geom_color_.g = color(1);
+    factor_geom_color_.b = color(2);
+    factor_geom_color_.a = color(3);
+
+    color = getParamWithDefault<Eigen::Vector4d>(_server,
+                                                 prefix_ + "/factor_other_color",
+                                                 (Eigen::Vector4d() << 1, 1, 1, 1).finished()); // white
+    factor_other_color_.r = color(0);
+    factor_other_color_.g = color(1);
+    factor_other_color_.b = color(2);
+    factor_other_color_.a = color(3);
 
     // INIT MARKERS ---------------------------------------------------
     // factor markers message
