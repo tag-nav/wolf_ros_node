@@ -45,17 +45,21 @@ class Subscriber
         //wolf
         SensorBasePtr sensor_ptr_;
         std::string prefix_;
+        std::string name_;
         std::string topic_;
 
         // ros
         ros::Subscriber sub_;
+        ros::Time last_stamp_;
 
     public:
         Subscriber(const std::string& _unique_name,
                    const ParamsServer& _server,
                    const SensorBasePtr _sensor_ptr) :
             sensor_ptr_(_sensor_ptr),
-            prefix_("ROS subscriber/" + _unique_name)
+            prefix_("ROS subscriber/" + _unique_name),
+            name_(_unique_name),
+            last_stamp_(0)
         {
             topic_  = _server.getParam<std::string>(prefix_ + "/topic");
         }
@@ -65,11 +69,42 @@ class Subscriber
         virtual void initialize(ros::NodeHandle& nh, const std::string& topic) = 0;
 
         std::string getTopic() const;
+
+        std::string getName() const;
+
+        ros::Time getLastStamp() const;
+
+        double secondsSinceLastCallback() const;
+
+    protected:
+
+        void setLastStamp(const ros::Time _stamp);
 };
 
 inline std::string Subscriber::getTopic() const
 {
     return topic_;
+}
+
+inline std::string Subscriber::getName() const
+{
+    return name_;
+}
+
+inline ros::Time Subscriber::getLastStamp() const
+{
+    return last_stamp_;
+}
+
+inline double Subscriber::secondsSinceLastCallback() const
+{
+    WOLF_WARN_COND(last_stamp_ == ros::Time(0), "Subscriber::secondsSinceLastCallback: 'last_stamp_` was never initialized. No messages have been received or the Subscriber ", name_, " is not updating this attribute.");
+    return (ros::Time::now() - last_stamp_).toSec();
+}
+
+inline void Subscriber::setLastStamp(const ros::Time _stamp)
+{
+    last_stamp_ = _stamp;
 }
 
 }

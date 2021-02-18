@@ -173,6 +173,7 @@ int main(int argc, char **argv)
     WolfRosNode wolf_node;
 
     ros::Rate loopRate(100);
+    ros::Time last_check = ros::Time::now();
 
     // Solver thread
     std::thread solver_thread(&WolfRosNode::solveLoop, &wolf_node);
@@ -189,6 +190,14 @@ int main(int argc, char **argv)
         for(auto pub : wolf_node.publishers_)
             if (pub->ready())
                 pub->publish();
+
+        // check subscribers (every second)
+        if ((ros::Time::now() - last_check).toSec() > 1)
+        {
+            for (auto sub : wolf_node.subscribers_)
+                WOLF_WARN_COND(sub->secondsSinceLastCallback() > 5, sub->getName(), " has not received any callback for ", sub->secondsSinceLastCallback(), "s.");
+            last_check = ros::Time::now();
+        }
 
         // execute pending callbacks
         ros::spinOnce();

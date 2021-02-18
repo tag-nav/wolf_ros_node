@@ -42,6 +42,8 @@ void SubscriberOdom2d::callback(const nav_msgs::Odometry::ConstPtr& msg)
 {
     ROS_DEBUG("WolfNodePolyline::odomCallback");
 
+    setLastStamp(msg->header.stamp);
+
     if (last_odom_stamp_ != ros::Time(0))
     {
         double           dt          = (msg->header.stamp - last_odom_stamp_).toSec();
