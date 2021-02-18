@@ -23,6 +23,7 @@ namespace wolf
 class PublisherPose: public Publisher
 {
         bool pose_array_, marker_, pose_with_cov_;
+        int max_points_;
 
         geometry_msgs::PoseArray pose_array_msg_;
         visualization_msgs::Marker marker_msg_;

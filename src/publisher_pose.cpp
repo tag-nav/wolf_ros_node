@@ -15,22 +15,18 @@ PublisherPose::PublisherPose(const std::string& _unique_name,
                              const ProblemPtr _problem) :
         Publisher(_unique_name, _server, _problem)
 {
-    try{
-        std::cout << "PublisherPose: taking user defined marker color...\n";
-        Eigen::Vector4d col = _server.getParam<Eigen::Vector4d>(prefix_ + "/marker_color");
-        marker_color_.r = col(0);
-        marker_color_.g = col(1);
-        marker_color_.b = col(2);
-        marker_color_.a = col(3);
-    }
-    catch(...)
-    {
-        std::cout << "PublisherPose: using default marker color: RED\n";
-        marker_color_.r = 1;
-        marker_color_.g = 0;
-        marker_color_.b = 0;
-        marker_color_.a = 1;
-    }
+    Eigen::Vector4d marker_color_v;
+    marker_color_v = getParamWithDefault<Eigen::Vector4d>(_server,
+                                                          prefix_ + "/marker_color",
+                                                          (Eigen::Vector4d() << 1, 0, 0, 1).finished()); // red
+    marker_color_.r = marker_color_v(0);
+    marker_color_.g = marker_color_v(1);
+    marker_color_.b = marker_color_v(2);
+    marker_color_.a = marker_color_v(3);
+
+    max_points_ = getParamWithDefault<int>(_server,
+                                           prefix_ + "/max_points_",
+                                           1e3);
 
     extrinsics_     = _server.getParam<bool>(prefix_ + "/extrinsics");
     if (extrinsics_)
@@ -174,6 +170,11 @@ void PublisherPose::publishPose()
     if (pub_pose_array_.getNumSubscribers() != 0)
     {
         pose_array_msg_.header.stamp = pose_with_cov_msg_.header.stamp;
+
+        if (max_points_ >= 0 and pose_array_msg_.poses.size() >= max_points_)
+            pose_array_msg_.poses.erase(pose_array_msg_.poses.begin(),
+                                        pose_array_msg_.poses.begin() + max_points_/2);
+
         pose_array_msg_.poses.push_back(pose_with_cov_msg_.pose.pose);
 
         pub_pose_array_.publish(pose_array_msg_);
@@ -181,6 +182,11 @@ void PublisherPose::publishPose()
     if (pub_marker_.getNumSubscribers() != 0)
     {
         marker_msg_.header.stamp = pose_with_cov_msg_.header.stamp;
+
+        if (max_points_ >= 0 and marker_msg_.points.size() >= max_points_)
+            marker_msg_.points.erase(marker_msg_.points.begin(),
+                                     marker_msg_.points.begin() + max_points_/2);
+
         marker_msg_.points.push_back(pose_with_cov_msg_.pose.pose.position);
 
         pub_marker_.publish(marker_msg_);
