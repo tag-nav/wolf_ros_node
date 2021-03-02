@@ -61,10 +61,10 @@ WolfRosNode::WolfRosNode()
     }
 
     // PROFILING
-    profiling_ = server.getParam<bool>("profiling/enabled");
+    profiling_ = server.getParam<bool>("debug/profiling");
     if (profiling_)
     {
-        auto prof_file = server.getParam<std::string>("profiling/file_name");
+        auto prof_file = server.getParam<std::string>("debug/profiling_file");
         // change ~ with HOME using environment variable
         if (prof_file.at(0) == '~')
             prof_file = std::string(std::getenv("HOME")) + prof_file.substr(1);
@@ -73,6 +73,14 @@ WolfRosNode::WolfRosNode()
         if (not profiling_file_.is_open())
             ROS_ERROR("Error in opening file %s to store profiling!", prof_file.c_str());
     }
+    //  DEBUG
+    print_problem_ = server.getParam<bool>("debug/print_problem");
+    if(print_problem_)
+    {
+        print_period_ = server.getParam<double>("debug/print_period");
+        last_print_ = ros::Time::now();
+    }
+
     start_experiment_ = std::chrono::high_resolution_clock::now();
 
     ROS_INFO("Ready!");
@@ -198,6 +206,10 @@ int main(int argc, char **argv)
                 WOLF_WARN_COND(sub->secondsSinceLastCallback() > 5, sub->getName(), " has not received any callback for ", sub->secondsSinceLastCallback(), "s.");
             last_check = ros::Time::now();
         }
+
+        // print periodically
+        if(wolf_node.print_problem_ and (ros::Time::now() - wolf_node.last_print_).toSec() >= wolf_node.print_period_)
+          wolf_node.problem_ptr_->print(4,1,1,1);
 
         // execute pending callbacks
         ros::spinOnce();
