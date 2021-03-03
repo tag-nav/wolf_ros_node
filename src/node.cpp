@@ -181,7 +181,10 @@ int main(int argc, char **argv)
     WolfRosNode wolf_node;
 
     ros::Rate loopRate(100);
+
+    // periodic stuff
     ros::Time last_check = ros::Time::now();
+    wolf_node.last_print_ = ros::Time(0);
 
     // Solver thread
     std::thread solver_thread(&WolfRosNode::solveLoop, &wolf_node);
@@ -208,8 +211,12 @@ int main(int argc, char **argv)
         }
 
         // print periodically
-        if(wolf_node.print_problem_ and (ros::Time::now() - wolf_node.last_print_).toSec() >= wolf_node.print_period_)
-          wolf_node.problem_ptr_->print(4,1,1,1);
+        if(wolf_node.print_problem_ and
+           (ros::Time::now() - wolf_node.last_print_).toSec() >= wolf_node.print_period_)
+        {
+            wolf_node.problem_ptr_->print(4,1,1,1);
+            wolf_node.last_print_ = ros::Time::now();
+        }
 
         // execute pending callbacks
         ros::spinOnce();
