@@ -98,7 +98,11 @@ inline ros::Time Subscriber::getLastStamp() const
 
 inline double Subscriber::secondsSinceLastCallback() const
 {
-    WOLF_WARN_COND(last_stamp_ == ros::Time(0), "Subscriber::secondsSinceLastCallback: 'last_stamp_` was never initialized. No messages have been received or the Subscriber ", name_, " is not updating this attribute.");
+    if (last_stamp_ == ros::Time(0))
+    {
+        WOLF_WARN("Subscriber: 'last_stamp_` not initialized. No messages have been received or ", name_, " is not updating this attribute.");
+        return 0;
+    }
     return (ros::Time::now() - last_stamp_).toSec();
 }
 
