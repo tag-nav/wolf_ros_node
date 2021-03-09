@@ -81,14 +81,7 @@ void PublisherTf::publishDerived()
         }
         else
         {
-            VectorComposite odom;
-            for(auto pm : problem_->getProcessorIsMotionList())
-            {
-                /*auto p = std::dynamic_pointer_cast<ProcessorBase>(pm);
-                if(p != nullptr)
-                    WOLF_TRACE("Getting odometry of processor ", p->getName(), ":\n", pm->getOdometry());//*/
-                odom = pm->getOdometry();
-            }
+            VectorComposite odom = problem->getOdometry("PO");
 
             T_odom2base_.setData(stateToTfTransform(odom, problem_->getDim()));
             T_odom2base_.stamp_ = ros::Time::now();
