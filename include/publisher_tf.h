@@ -20,7 +20,7 @@ namespace wolf
 
 tf::Transform stateToTfTransform(const VectorComposite& state, const int& dim)
 {
-    assert(state.includesStateStructure("PO"));
+    assert(state.includesStructure("PO"));
 
     // 2D
     if (dim == 2)
