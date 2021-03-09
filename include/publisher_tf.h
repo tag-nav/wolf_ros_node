@@ -18,19 +18,21 @@
 namespace wolf
 {
 
-tf::Transform stateToTfTransform(VectorComposite state, int dim)
+tf::Transform stateToTfTransform(const VectorComposite& state, const int& dim)
 {
+    assert(state.includesStateStructure("PO"));
+
     // 2D
     if (dim == 2)
     {
-        return tf::Transform (tf::createQuaternionFromYaw(state['O'](0)),
-                              tf::Vector3(state['P'](0), state['P'](1), 0) );
+        return tf::Transform (tf::createQuaternionFromYaw(state.at('O')(0)),
+                              tf::Vector3(state.at('P')(0), state.at('P')(1), 0) );
     }
     // 3D
     else
     {
-        return tf::Transform (tf::Quaternion(state['O'](0), state['O'](1), state['O'](2), state['O'](3)),
-                              tf::Vector3(state['P'](0), state['P'](1), state['P'](2)) );
+        return tf::Transform (tf::Quaternion(state.at('O')(0), state.at('O')(1), state.at('O')(2), state.at('O')(3)),
+                              tf::Vector3(state.at('P')(0), state.at('P')(1), state.at('P')(2)) );
     }
 }
 

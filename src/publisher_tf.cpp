@@ -81,7 +81,7 @@ void PublisherTf::publishDerived()
         }
         else
         {
-            VectorComposite odom = problem->getOdometry("PO");
+            VectorComposite odom = problem_->getOdometry("PO");
 
             T_odom2base_.setData(stateToTfTransform(odom, problem_->getDim()));
             T_odom2base_.stamp_ = ros::Time::now();
