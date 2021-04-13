@@ -25,7 +25,7 @@ PublisherPose::PublisherPose(const std::string& _unique_name,
     marker_color_.a = marker_color_v(3);
 
     max_points_ = getParamWithDefault<int>(_server,
-                                           prefix_ + "/max_points_",
+                                           prefix_ + "/max_points",
                                            1e3);
 
     extrinsics_     = _server.getParam<bool>(prefix_ + "/extrinsics");
