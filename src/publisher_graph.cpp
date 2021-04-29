@@ -612,7 +612,10 @@ std::string PublisherGraph::factorString(FactorBaseConstPtr fac) const
     // ABSOLUTE (nothing
 
     // Topology
-    factor_string += "_" + fac->getTopology();
+    factor_string += "_T" + fac->getTopology();
+
+    // Processor
+    factor_string += "_P" + (fac->getProcessor() ? std::to_string(fac->getProcessor()->id()) : "NO");
 
     return factor_string;
 }
