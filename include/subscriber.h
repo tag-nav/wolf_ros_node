@@ -74,7 +74,7 @@ class Subscriber
 
         ros::Time getLastStamp() const;
 
-        double secondsSinceLastCallback() const;
+        virtual double secondsSinceLastCallback();
 
     protected:
 
@@ -96,7 +96,7 @@ inline ros::Time Subscriber::getLastStamp() const
     return last_stamp_;
 }
 
-inline double Subscriber::secondsSinceLastCallback() const
+inline double Subscriber::secondsSinceLastCallback()
 {
     if (last_stamp_ == ros::Time(0))
     {
