@@ -16,6 +16,7 @@ PublisherGraph::PublisherGraph(const std::string& _unique_name,
     // General
     map_frame_id_           = getParamWithDefault<std::string>(_server, prefix_ + "/map_frame_id", "map");
     viz_overlapped_factors_ = getParamWithDefault<bool>     (_server, prefix_ + "/viz_overlapped_factors", false);
+    viz_inactive_factors_   = getParamWithDefault<bool>     (_server, prefix_ + "/viz_inactive_factors_", false);
     text_scale_             = getParamWithDefault<double>   (_server, prefix_ + "/text_scale", 0.5);
     viz_scale_              = getParamWithDefault<double>   (_server, prefix_ + "/viz_scale", 1);
 
@@ -233,6 +234,8 @@ void PublisherGraph::publishFactors()
     // Iterate over the list of factors
     for (auto fac : fac_list)
     {
+        if (not viz_inactive_factors_ and fac->getStatus() == FAC_INACTIVE)
+            continue;
 
         auto factor_marker = factor_marker_;
         auto factor_text_marker = factor_text_marker_;
