@@ -7,6 +7,7 @@
 
 WolfRosNode::WolfRosNode()
     : nh_(ros::this_node::getName())
+    , last_print_(ros::Time(0))
 {
     // ROS PARAMS
     std::string yaml_file, plugins_path, subscribers_path;
@@ -73,12 +74,18 @@ WolfRosNode::WolfRosNode()
         if (not profiling_file_.is_open())
             ROS_ERROR("Error in opening file %s to store profiling!", prof_file.c_str());
     }
-    //  DEBUG
+    //  PRINT
     print_problem_ = server.getParam<bool>("debug/print_problem");
     if(print_problem_)
     {
-        print_period_ = server.getParam<double>("debug/print_period");
+        print_period_       = server.getParam<double>   ("debug/print_period");
+        print_depth_        = server.getParam<int>      ("debug/print_depth");
+        print_constr_by_    = server.getParam<bool>     ("debug/print_constr_by");
+        print_metric_       = server.getParam<bool>     ("debug/print_metric");
+        print_state_blocks_ = server.getParam<bool>     ("debug/print_state_blocks");
         last_print_ = ros::Time::now();
+        if (print_depth_ > 4 or print_depth_ < 0)
+            throw std::runtime_error("Wrong parameter value, 'debug/print_depth' should be 0, 1, 2, 3 or 4");
     }
 
     start_experiment_ = std::chrono::high_resolution_clock::now();
@@ -137,6 +144,16 @@ void WolfRosNode::solveLoop()
     WOLF_DEBUG("Solver loop finished");
 }
 
+void WolfRosNode::print()
+{
+    if(print_problem_ and
+       (ros::Time::now() - last_print_).toSec() >= print_period_)
+    {
+        problem_ptr_->print(print_depth_, print_constr_by_, print_metric_, print_state_blocks_);
+        last_print_ = ros::Time::now();
+    }
+}
+
 void WolfRosNode::createProfilingFile()
 {
     if (not profiling_)
@@ -184,7 +201,6 @@ int main(int argc, char **argv)
 
     // periodic stuff
     ros::Time last_check = ros::Time::now();
-    wolf_node.last_print_ = ros::Time(0);
 
     // Solver thread
     std::thread solver_thread(&WolfRosNode::solveLoop, &wolf_node);
@@ -211,12 +227,7 @@ int main(int argc, char **argv)
         }
 
         // print periodically
-        if(wolf_node.print_problem_ and
-           (ros::Time::now() - wolf_node.last_print_).toSec() >= wolf_node.print_period_)
-        {
-            wolf_node.problem_ptr_->print(4,1,1,1);
-            wolf_node.last_print_ = ros::Time::now();
-        }
+        wolf_node.print();
 
         // execute pending callbacks
         ros::spinOnce();

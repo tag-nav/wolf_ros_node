@@ -56,10 +56,6 @@ class WolfRosNode
         // publishers
         std::vector<PublisherPtr> publishers_;
 
-        //DEBUG
-        bool print_problem_;
-        double print_period_;
-        ros::Time last_print_;
 
     protected:
         // solver
@@ -74,6 +70,12 @@ class WolfRosNode
         std::ofstream profiling_file_;
         std::chrono::time_point<std::chrono::high_resolution_clock> start_experiment_;
 
+        // print
+        bool print_problem_;
+        double print_period_;
+        ros::Time last_print_;
+        int print_depth_;
+        bool print_constr_by_, print_metric_, print_state_blocks_;
 
 
       public:
@@ -83,6 +85,8 @@ class WolfRosNode
 
         void solve();
         void solveLoop();
+
+        void print();
 
         void createProfilingFile();
 };
