@@ -121,7 +121,7 @@ INCLUDE_DIRS include
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-message("Wolf include path: ${wolf_INCLUDE_DIRS}")
+message("Wolf include path: ${wolfcore_INCLUDE_DIRS}")
 include_directories(
     include
   ${EIGEN_INCLUDE_DIRS}
