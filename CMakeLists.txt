@@ -153,6 +153,7 @@ add_library(subscriber_${PROJECT_NAME}
 add_library(publisher_${PROJECT_NAME}
   			src/publisher_graph.cpp
   			src/publisher_pose.cpp
+  			src/publisher_state_block.cpp
   			src/publisher_tf.cpp)
 
 ## Rename C++ executable without prefix
