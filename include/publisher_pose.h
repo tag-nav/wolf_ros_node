@@ -23,13 +23,14 @@ namespace wolf
 class PublisherPose: public Publisher
 {
         bool pose_array_, marker_, pose_with_cov_;
+        bool extrinsics_;
         int max_points_;
+        double line_size_;
 
         geometry_msgs::PoseArray pose_array_msg_;
         visualization_msgs::Marker marker_msg_;
         geometry_msgs::PoseWithCovarianceStamped pose_with_cov_msg_;
         std_msgs::ColorRGBA marker_color_;
-        bool extrinsics_;
         SensorBasePtr sensor_;
         std::string frame_id_, map_frame_id_;
 

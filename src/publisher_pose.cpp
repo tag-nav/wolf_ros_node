@@ -27,6 +27,9 @@ PublisherPose::PublisherPose(const std::string& _unique_name,
     max_points_ = getParamWithDefault<int>(_server,
                                            prefix_ + "/max_points",
                                            1e3);
+    line_size_  = getParamWithDefault<double>(_server,
+                                              prefix_ + "/line_size",
+                                              0.1);
 
     extrinsics_     = _server.getParam<bool>(prefix_ + "/extrinsics");
     if (extrinsics_)
@@ -51,7 +54,7 @@ void PublisherPose::initialize(ros::NodeHandle& nh, const std::string& topic)
     marker_msg_.type = visualization_msgs::Marker::LINE_STRIP;
     marker_msg_.action = visualization_msgs::Marker::ADD;
     marker_msg_.ns = "trajectory";
-    marker_msg_.scale.x = 0.1;
+    marker_msg_.scale.x = line_size_;
     marker_msg_.color = marker_color_;
     marker_msg_.pose.orientation = tf::createQuaternionMsgFromYaw(0);
 
@@ -172,8 +175,16 @@ void PublisherPose::publishPose()
         pose_array_msg_.header.stamp = pose_with_cov_msg_.header.stamp;
 
         if (max_points_ >= 0 and pose_array_msg_.poses.size() >= max_points_)
-            pose_array_msg_.poses.erase(pose_array_msg_.poses.begin(),
-                                        pose_array_msg_.poses.begin() + max_points_/2);
+        {
+            int i = 1;
+            while (i < pose_array_msg_.poses.size())
+            {
+                pose_array_msg_.poses.erase(pose_array_msg_.poses.begin()+i);
+                i++;
+            }
+            //pose_array_msg_.poses.erase(pose_array_msg_.poses.begin(),
+            //                            pose_array_msg_.poses.begin() + max_points_/2);
+        }
 
         pose_array_msg_.poses.push_back(pose_with_cov_msg_.pose.pose);
 
@@ -184,8 +195,25 @@ void PublisherPose::publishPose()
         marker_msg_.header.stamp = pose_with_cov_msg_.header.stamp;
 
         if (max_points_ >= 0 and marker_msg_.points.size() >= max_points_)
-            marker_msg_.points.erase(marker_msg_.points.begin(),
-                                     marker_msg_.points.begin() + max_points_/2);
+        {
+            auto it = marker_msg_.points.begin();
+            std::advance(it,1);
+            while (it != marker_msg_.points.end())
+            {
+                it = marker_msg_.points.erase(it);
+                if (it == marker_msg_.points.end())
+                    break;
+                std::advance(it,1);
+            }
+            //int i = 1;
+            //while (i < marker_msg_.points.size())
+            //{
+            //    marker_msg_.points.erase(marker_msg_.points.begin()+i);
+            //    i++;
+            //}
+            //marker_msg_.points.erase(marker_msg_.points.begin(),
+            //                         marker_msg_.points.begin() + max_points_/2);
+        }
 
         marker_msg_.points.push_back(pose_with_cov_msg_.pose.pose.position);
 
