@@ -107,12 +107,11 @@ PublisherGraph::PublisherGraph(const std::string& _unique_name,
     factor_text_marker_.scale.z = viz_scale_*text_scale_;
 
     // frame markers
-    frame_marker_.type = visualization_msgs::Marker::ARROW;
+    frame_marker_.type = visualization_msgs::Marker::LINE_LIST;
+    frame_marker_.action = visualization_msgs::Marker::ADD;
     frame_marker_.header.frame_id = map_frame_id_;
     frame_marker_.ns = "frames";
-    frame_marker_.scale.x = viz_scale_*frame_length_;
-    frame_marker_.scale.y = viz_scale_*frame_width_;
-    frame_marker_.scale.z = viz_scale_*frame_width_;
+    frame_marker_.scale.x = viz_scale_*frame_width_;
     frame_marker_.color = frame_color_;
     frame_text_marker_ = frame_marker_;
     frame_text_marker_.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
@@ -124,6 +123,67 @@ PublisherGraph::PublisherGraph(const std::string& _unique_name,
     frame_text_marker_.scale.x = viz_scale_*text_scale_;
     frame_text_marker_.scale.y = viz_scale_*text_scale_;
     frame_text_marker_.scale.z = viz_scale_*text_scale_;
+
+    frame_marker_.points.resize(6);
+    frame_marker_.points[0].x = 0;
+    frame_marker_.points[0].y = 0;
+    frame_marker_.points[0].z = 0;
+    frame_marker_.points[1].x = viz_scale_*frame_length_;
+    frame_marker_.points[1].y = 0;
+    frame_marker_.points[1].z = 0;
+    frame_marker_.points[2].x = 0;
+    frame_marker_.points[2].y = 0;
+    frame_marker_.points[2].z = 0;
+    frame_marker_.points[3].x = 0;
+    frame_marker_.points[3].y = viz_scale_*frame_length_;
+    frame_marker_.points[3].z = 0;
+    frame_marker_.points[4].x = 0;
+    frame_marker_.points[4].y = 0;
+    frame_marker_.points[4].z = 0;
+    frame_marker_.points[5].x = 0;
+    frame_marker_.points[5].y = 0;
+    frame_marker_.points[5].z = viz_scale_*frame_length_;
+
+    frame_marker_.colors.resize(6);
+    frame_marker_.colors[0].r = 1;
+    frame_marker_.colors[0].g = 0;
+    frame_marker_.colors[0].b = 0;
+    frame_marker_.colors[0].a = 1;
+    frame_marker_.colors[1].r = 1;
+    frame_marker_.colors[1].g = 0;
+    frame_marker_.colors[1].b = 0;
+    frame_marker_.colors[1].a = 1;
+    frame_marker_.colors[2].r = 0;
+    frame_marker_.colors[2].g = 1;
+    frame_marker_.colors[2].b = 0;
+    frame_marker_.colors[2].a = 1;
+    frame_marker_.colors[3].r = 0;
+    frame_marker_.colors[3].g = 1;
+    frame_marker_.colors[3].b = 0;
+    frame_marker_.colors[3].a = 1;
+    frame_marker_.colors[4].r = 0;
+    frame_marker_.colors[4].g = 0;
+    frame_marker_.colors[4].b = 1;
+    frame_marker_.colors[4].a = 1;
+    frame_marker_.colors[5].r = 0;
+    frame_marker_.colors[5].g = 0;
+    frame_marker_.colors[5].b = 1;
+    frame_marker_.colors[5].a = 1;
+
+    // velocity
+    if (_problem->getFrameStructure().find('V') != std::string::npos)
+    {
+        // zero vector
+        frame_marker_.points.push_back(frame_marker_.points.front());
+        frame_marker_.points.push_back(frame_marker_.points.front());
+        // yellow
+        frame_marker_.colors.push_back(frame_marker_.colors.front());
+        frame_marker_.colors.back().r = 1;//yellow
+        frame_marker_.colors.back().g = 1;
+        frame_marker_.colors.back().b = 0;
+        frame_marker_.colors.back().a = 1;
+        frame_marker_.colors.push_back(frame_marker_.colors.back());
+    }
 
     // landmark markers
     landmark_marker_.type = visualization_msgs::Marker::ARROW;
@@ -547,20 +607,20 @@ void PublisherGraph::fillFrameMarker(FrameBaseConstPtr frm,
                                      visualization_msgs::Marker &frm_marker,
                                      visualization_msgs::Marker &frm_text_marker)
 {
-    // SHAPE ------------------------------------------------------
-    // Position-> SPHERE
-    // Pose -> ARROW
-    if (frm->getO() != nullptr) {
-        landmark_marker_.type = visualization_msgs::Marker::ARROW;
-        frm_marker.scale.x = viz_scale_*frame_length_;
-        frm_marker.scale.y = viz_scale_*frame_width_;
-        frm_marker.scale.z = viz_scale_*frame_width_;
-    } else {
-        landmark_marker_.type = visualization_msgs::Marker::SPHERE;
-        frm_marker.scale.x = viz_scale_*frame_width_;
-        frm_marker.scale.y = viz_scale_*frame_width_;
-        frm_marker.scale.z = viz_scale_*frame_width_;
-    }
+//    // SHAPE ------------------------------------------------------
+//    // Position-> SPHERE
+//    // Pose -> ARROW
+//    if (frm->getO() != nullptr) {
+//        landmark_marker_.type = visualization_msgs::Marker::ARROW;
+//        frm_marker.scale.x = viz_scale_*frame_length_;
+//        frm_marker.scale.y = viz_scale_*frame_width_;
+//        frm_marker.scale.z = viz_scale_*frame_width_;
+//    } else {
+//        landmark_marker_.type = visualization_msgs::Marker::SPHERE;
+//        frm_marker.scale.x = viz_scale_*frame_width_;
+//        frm_marker.scale.y = viz_scale_*frame_width_;
+//        frm_marker.scale.z = viz_scale_*frame_width_;
+//    }
 
     // POSITION & ORIENTATION
     // ------------------------------------------------------ position
@@ -585,6 +645,31 @@ void PublisherGraph::fillFrameMarker(FrameBaseConstPtr frm,
             frm_marker.pose.orientation =
                     tf::createQuaternionMsgFromYaw(frm->getO()->getState()(0));
     }
+    // velocity
+    if (frm->getV())
+    {
+        if (frm->getO() != nullptr)
+        {
+            // 3d
+            if (frm->getO()->getSize() > 1)
+            {
+                Eigen::Vector3d v_local = Eigen::Quaterniond(Eigen::Vector4d(frm->getO()->getState())).conjugate() * frm->getV()->getState();
+                frm_marker.points.back().x = v_local(0);
+                frm_marker.points.back().y = v_local(1);
+                frm_marker.points.back().z = v_local(2);
+            }
+            // 2d
+            else
+            {
+                // not implemented
+            }
+        }
+        else
+        {
+            // not implemented
+        }
+    }
+
     // TEXT MARKER --------------------------------------------------------
     frm_text_marker.text = std::to_string(frm->id());
     frm_text_marker.pose.position.x = frm_marker.pose.position.x;
