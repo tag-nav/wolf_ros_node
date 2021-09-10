@@ -79,6 +79,11 @@ class Subscriber
     protected:
 
         void setLastStamp(const ros::Time _stamp);
+
+        template<typename T>
+        T getParamWithDefault(const ParamsServer &_server,
+                              const std::string &_param_name,
+                              const T _default_value) const;
 };
 
 inline std::string Subscriber::getTopic() const
@@ -109,6 +114,22 @@ inline double Subscriber::secondsSinceLastCallback()
 inline void Subscriber::setLastStamp(const ros::Time _stamp)
 {
     last_stamp_ = _stamp;
+}
+
+template<typename T>
+inline T Subscriber::getParamWithDefault(const ParamsServer &_server,
+                                         const std::string &_param_name,
+                                         const T _default_value) const
+{
+    try
+    {
+        return _server.getParam<T>(_param_name);
+    }
+    catch (...)
+    {
+        WOLF_INFO("Subscriber: Parameter ", _param_name, " is missing. Taking default value: ", _default_value);
+        return _default_value;
+    }
 }
 
 }
