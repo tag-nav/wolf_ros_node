@@ -38,7 +38,7 @@ PublisherGraph::PublisherGraph(const std::string& _unique_name,
 
     // factors
     factors_width_          = getParamWithDefault<double>   (_server, prefix_ + "/factors_width", 0.02);
-    factors_absolute_height_= getParamWithDefault<double>   (_server, prefix_ + "/factors_absolute_height", 2);
+    factors_absolute_height_= getParamWithDefault<double>   (_server, prefix_ + "/factors_absolute_height", 5);
 
     color = getParamWithDefault<Eigen::Vector4d>(_server,
                                                  prefix_ + "/factor_abs_color",
