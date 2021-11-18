@@ -218,7 +218,7 @@ int main(int argc, char **argv)
             if (pub->ready())
                 pub->publish();
 
-        // check subscribers (every second)
+        // check that subscribers received data (every second)
         if ((ros::Time::now() - last_check).toSec() > 1)
         {
             for (auto sub : wolf_node.subscribers_)
