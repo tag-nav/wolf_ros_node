@@ -34,13 +34,6 @@ WolfRosNode::WolfRosNode()
     // SOLVER
     ROS_INFO("Creating solver...");
     solver_ = FactorySolver::create("SolverCeres", problem_ptr_, server);
-    // covariance
-    compute_cov_ = server.getParam<bool>("solver/compute_cov");
-    if (compute_cov_)
-    {
-        cov_enum_   = (SolverManager::CovarianceBlocksToBeComputed)server.getParam<int>("solver/cov_enum");
-        cov_period_ = server.getParam<double>("solver/cov_period");
-    }
 
     // ROS SUBSCRIBERS
     ROS_INFO("Creating subscribers...");
@@ -101,15 +94,12 @@ void WolfRosNode::solve()
     std::string report = solver_->solve();
 
     if (!report.empty())
-    {
         std::cout << report << std::endl;
-        //problem_ptr_->print(4,1,1,1);
-    }
 
-    if (compute_cov_ and (ros::Time::now() - last_cov_stamp_).toSec() > cov_period_)
+    if (solver_->getParams()->compute_cov and (ros::Time::now() - last_cov_stamp_).toSec() > solver_->getCovPeriod())
     {
         auto start = std::chrono::high_resolution_clock::now();
-        if (solver_->computeCovariances(cov_enum_))
+        if (solver_->computeCovariances())
         {
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start);
             last_cov_stamp_ = ros::Time::now();
@@ -119,7 +109,7 @@ void WolfRosNode::solve()
         else
         {
             // will try again after 10% of cov period
-            last_cov_stamp_ = last_cov_stamp_+ ros::Duration(0.1*cov_period_);
+            last_cov_stamp_ = last_cov_stamp_+ ros::Duration(0.1*solver_->getCovPeriod());
             if (solver_->getVerbosity() != SolverManager::ReportVerbosity::QUIET)
                 ROS_WARN("Failed to compute covariances");
         }

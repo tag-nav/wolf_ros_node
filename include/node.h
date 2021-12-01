@@ -60,10 +60,7 @@ class WolfRosNode
     protected:
         // solver
         SolverManagerPtr solver_;
-        bool compute_cov_;
-        SolverManager::CovarianceBlocksToBeComputed cov_enum_;
         ros::Time last_cov_stamp_;
-        double cov_period_;
 
         // profiling
         bool profiling_;
