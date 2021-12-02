@@ -95,8 +95,10 @@ class WolfRosNode
         int print_depth_;
         bool print_constr_by_, print_metric_, print_state_blocks_;
 
-
       public:
+
+        double node_rate_;
+
         WolfRosNode();
 
         virtual ~WolfRosNode(){};

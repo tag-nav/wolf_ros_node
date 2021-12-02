@@ -56,7 +56,10 @@ WolfRosNode::WolfRosNode()
     ROS_INFO("Creating solver...");
     solver_ = FactorySolver::create("SolverCeres", problem_ptr_, server);
 
-    // ROS SUBSCRIBERS
+    // ROS
+    node_rate_ = server.getParam<double>("problem/node_rate");
+
+    // SUBSCRIBERS
     ROS_INFO("Creating subscribers...");
     for (auto it : server.getParam<std::vector<std::map<std::string, std::string>>>("ROS subscriber"))
     {
@@ -67,7 +70,7 @@ WolfRosNode::WolfRosNode()
         subscribers_.push_back(FactorySubscriber::create(subscriber, subscriber+" - "+topic, server, problem_ptr_->getSensor(sensor), nh_));
     }
 
-    // ROS PUBLISHERS
+    // PUBLISHERS
     ROS_INFO("Creating publishers...");
     for (auto it : server.getParam<std::vector<std::map<std::string, std::string>>>("ROS publisher"))
     {
@@ -208,7 +211,7 @@ int main(int argc, char **argv)
     // Wolf node
     WolfRosNode wolf_node;
 
-    ros::Rate loopRate(100);
+    ros::Rate loopRate(wolf_node.node_rate_);
 
     // periodic stuff
     ros::Time last_check = ros::Time::now();
