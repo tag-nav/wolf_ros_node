@@ -33,7 +33,7 @@ WolfRosNode::WolfRosNode()
     // ROS PARAMS
     std::string yaml_file, plugins_path, subscribers_path;
     nh_.param<std::string>("yaml_file_path", yaml_file, ros::package::getPath("wolf_ros_node")+"/yaml/params_demo.yaml");
-    nh_.param<std::string>("plugins_path", plugins_path, "/usr/local/lib/iri-algorithms/");
+    nh_.param<std::string>("plugins_path", plugins_path, "/usr/local/lib/");
     nh_.param<std::string>("packages_path", subscribers_path, ros::package::getPath("wolf_ros_node") + "/../../devel/lib/");
 
     // PARAM SERVER CONFIGURATION
