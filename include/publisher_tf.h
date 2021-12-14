@@ -35,6 +35,7 @@
 #include <ros/ros.h>
 #include <tf/transform_listener.h>
 #include <tf/transform_broadcaster.h>
+#include <tf2_ros/static_transform_broadcaster.h>
 
 namespace wolf
 {
@@ -62,9 +63,12 @@ class PublisherTf: public Publisher
     protected:
         std::string base_frame_id_, odom_frame_id_, map_frame_id_;
         tf::TransformBroadcaster tfb_;
+        tf2_ros::StaticTransformBroadcaster stfb_;
+
         tf::TransformListener tfl_;
 
-        tf::StampedTransform T_odom2base_, T_map2odom_;
+        tf::StampedTransform T_odom2base_;//, T_map2odom_;
+        geometry_msgs::TransformStamped Tmsg_map2odom_;
 
         bool publish_odom_tf_;
         bool state_available_; // used to not repeat warnings regarding availability of state

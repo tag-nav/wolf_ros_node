@@ -47,10 +47,13 @@ PublisherTf::PublisherTf(const std::string& _unique_name,
     T_odom2base_.frame_id_ = odom_frame_id_;
     T_odom2base_.child_frame_id_ = base_frame_id_;
     T_odom2base_.stamp_ = ros::Time::now();
-    T_map2odom_.setIdentity();
-    T_map2odom_.frame_id_ = map_frame_id_;
-    T_map2odom_.child_frame_id_ = odom_frame_id_;
-    T_map2odom_.stamp_ = ros::Time::now();
+    //T_map2odom_.setIdentity();
+    //T_map2odom_.frame_id_ = map_frame_id_;
+    //T_map2odom_.child_frame_id_ = odom_frame_id_;
+    //T_map2odom_.stamp_ = ros::Time::now();
+    Tmsg_map2odom_.child_frame_id = odom_frame_id_;
+    Tmsg_map2odom_.header.frame_id = map_frame_id_;
+    Tmsg_map2odom_.header.stamp = ros::Time::now();
 }
 
 void PublisherTf::initialize(ros::NodeHandle& nh, const std::string& topic)
@@ -96,9 +99,14 @@ void PublisherTf::publishDerived()
         if (tfl_.getLatestCommonTime(odom_frame_id_, base_frame_id_, transform_time, &error_msg) == tf::ErrorValues::NO_ERROR and
             transform_time != T_odom2base_.stamp_)
         {
-            WOLF_ERROR("PublisherTf: option 'publish_odom_tf' enabled but a transform between ",
-                       base_frame_id_, " and ", odom_frame_id_,
-                       " was found published by a third party. Not publishing this transformation.");
+            ROS_WARN("PublisherTf: option 'publish_odom_tf' enabled but a transform between %s and %s was found published by a third party. Changing 'publish_odom_tf' to false.",
+                     base_frame_id_.c_str(),
+                     odom_frame_id_.c_str());
+
+            tfl_.lookupTransform(odom_frame_id_, base_frame_id_, ros::Time(0), T_odom2base_);
+
+            publish_odom_tf_=false;
+
         }
         else
         {
@@ -118,7 +126,9 @@ void PublisherTf::publishDerived()
         }
         catch(...)
         {
-            ROS_WARN("No %s to %s frame received. Assuming identity.", base_frame_id_.c_str(), odom_frame_id_.c_str());
+            ROS_WARN("No %s to %s frame received. Assuming identity.",
+                     base_frame_id_.c_str(),
+                     odom_frame_id_.c_str());
             T_odom2base_.setIdentity();
             T_odom2base_.stamp_ = ros::Time::now();
         }
@@ -126,10 +136,25 @@ void PublisherTf::publishDerived()
 
 
     // Broadcast transform ---------------------------------------------------------------------------
-    T_map2odom_.setData(T_map2base * T_odom2base_.inverse());
-    T_map2odom_.stamp_ = ros::Time::now();
+    //T_map2odom_.setData(T_map2base * T_odom2base_.inverse());
+    //T_map2odom_.stamp_ = ros::Time::now();
     //std::cout << "T_map2odom: " << T_map2odom.getOrigin().getX() << " " << T_map2odom.getOrigin().getY() << " " << T_map2odom.getRotation().getAngle() << std::endl;
-    tfb_.sendTransform(T_map2odom_);
+    //tfb_.sendTransform(T_map2odom_);
+
+    tf::Transform T_map2odom = T_map2base * T_odom2base_.inverse();
+
+    Tmsg_map2odom_.transform.translation.x = T_map2odom.getOrigin().getX();
+    Tmsg_map2odom_.transform.translation.y = T_map2odom.getOrigin().getY();
+    Tmsg_map2odom_.transform.translation.z = T_map2odom.getOrigin().getZ();
+
+    Tmsg_map2odom_.transform.rotation.x = T_map2odom.getRotation().getX();
+    Tmsg_map2odom_.transform.rotation.y = T_map2odom.getRotation().getY();
+    Tmsg_map2odom_.transform.rotation.z = T_map2odom.getRotation().getZ();
+    Tmsg_map2odom_.transform.rotation.w = T_map2odom.getRotation().getW();
+
+    Tmsg_map2odom_.header.stamp = ros::Time::now();
+
+    stfb_.sendTransform(Tmsg_map2odom_);
 }
 
 }
