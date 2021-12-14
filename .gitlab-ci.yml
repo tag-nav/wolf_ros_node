@@ -82,12 +82,18 @@ stages:
   - make install
 
 .build_and_test_template: &build_and_test_definition
-  - echo "todo"
+  - roscd
+  - cd ../src
+  - git clone ssh://git@gitlab.iri.upc.edu:2202/${CI_PROJECT_PATH}.git
+  - cd wolf_ros_node
+  - git checkout $CI_COMMIT_BRANCH
+  - cd ../..
+  - catkin_make
 
 ############ LICENSE HEADERS ############
 license_headers:
   stage: license
-  image: labrobotica/wolf_deps:16.04
+  image: labrobotica/wolf_deps_ros:16.04
   cache:
     - key: wolf-xenial
       paths:
@@ -103,11 +109,14 @@ license_headers:
 ############ UBUNTU 16.04 TEST ############
 build_and_test:xenial:
   stage: build_and_test
-  image: labrobotica/wolf_deps:16.04
+  image: labrobotica/wolf_deps_ros:16.04
   cache:
     - key: wolf-xenial
       paths:
       - ci_deps/wolf/
+    - key: catkinws-src-xenial
+      paths:
+      - catkin_ws/src
   except:
     - master
   before_script:
@@ -119,11 +128,33 @@ build_and_test:xenial:
 ############ UBUNTU 18.04 TEST ############
 build_and_test:bionic:
   stage: build_and_test
-  image: labrobotica/wolf_deps:18.04
+  image: labrobotica/wolf_deps_ros:18.04
   cache:
     - key: wolf-bionic
       paths:
       - ci_deps/wolf/
+    - key: catkinws-src-bionic
+      paths:
+      - catkin_ws/src
+  except:
+    - master
+  before_script:
+    - *preliminaries_definition
+    - *install_wolf_definition
+  script:
+    - *build_and_test_definition
+
+############ UBUNTU 20.04 TEST ############
+build_and_test:focal:
+  stage: build_and_test
+  image: labrobotica/wolf_deps_ros:20.04
+  cache:
+    - key: wolf-focal
+      paths:
+      - ci_deps/wolf/
+    - key: catkinws-src-focal
+      paths:
+      - catkin_ws/src
   except:
     - master
   before_script:
