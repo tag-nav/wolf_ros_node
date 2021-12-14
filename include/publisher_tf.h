@@ -33,38 +33,49 @@
  *      ROS includes      *
  **************************/
 #include <ros/ros.h>
-#include <tf/transform_listener.h>
-#include <tf/transform_broadcaster.h>
+#include <geometry_msgs/Transform.h>
+#include <geometry_msgs/TransformStamped.h>
+#include <tf2/utils.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <tf2_ros/static_transform_broadcaster.h>
 
 namespace wolf
 {
 
-tf::Transform stateToTfTransform(const VectorComposite& state, const int& dim)
+tf2::Transform stateToTfTransform(const VectorComposite& state, const int& dim)
 {
     assert(state.includesStructure("PO"));
+
+    tf2::Transform t;
 
     // 2D
     if (dim == 2)
     {
-        return tf::Transform (tf::createQuaternionFromYaw(state.at('O')(0)),
-                              tf::Vector3(state.at('P')(0), state.at('P')(1), 0) );
+        t.getRotation().setRPY(0, 0, state.at('O')(0));
+        t.setOrigin( tf2::Vector3(state.at('P')(0), state.at('P')(1), 0) );
     }
     // 3D
     else
     {
-        return tf::Transform (tf::Quaternion(state.at('O')(0), state.at('O')(1), state.at('O')(2), state.at('O')(3)),
-                              tf::Vector3(state.at('P')(0), state.at('P')(1), state.at('P')(2)) );
+        t.setRotation(tf2::Quaternion(state.at('O')(0), state.at('O')(1), state.at('O')(2), state.at('O')(3)) );
+        t.setOrigin( tf2::Vector3(state.at('P')(0), state.at('P')(1), state.at('P')(2)) );
     }
+
+    return t;
 }
 
 class PublisherTf: public Publisher
 {
     protected:
         std::string base_frame_id_, odom_frame_id_, map_frame_id_;
-        tf::TransformBroadcaster tfb_;
-        tf::TransformListener tfl_;
+        tf2_ros::StaticTransformBroadcaster stfb_;
+        tf2_ros::TransformBroadcaster tfb_;
+        tf2_ros::TransformListener tfl_;
+        tf2_ros::Buffer tf_buffer_;
 
-        tf::StampedTransform T_odom2base_, T_map2odom_;
+        geometry_msgs::TransformStamped Tmsg_map2odom_, Tmsg_odom2base_;
+        tf2::Transform T_map2odom_, T_odom2base_;
 
         bool publish_odom_tf_;
         bool state_available_; // used to not repeat warnings regarding availability of state

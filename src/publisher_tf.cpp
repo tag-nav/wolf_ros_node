@@ -25,8 +25,10 @@
  *      ROS includes      *
  **************************/
 #include <ros/ros.h>
-#include "tf/transform_datatypes.h"
-#include "tf_conversions/tf_eigen.h"
+//#include "tf/transform_datatypes.h"
+//#include "tf_conversions/tf_eigen.h"
+#include "tf2_msgs/TF2Error.h"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 
 namespace wolf
 {
@@ -35,6 +37,8 @@ PublisherTf::PublisherTf(const std::string& _unique_name,
                          const ParamsServer& _server,
                          const ProblemPtr _problem) :
         Publisher(_unique_name, _server, _problem),
+        tf_buffer_(),
+        tfl_(tf_buffer_),
         state_available_(true)
 {
     map_frame_id_    = _server.getParam<std::string>(prefix_ + "/map_frame_id");
@@ -44,13 +48,15 @@ PublisherTf::PublisherTf(const std::string& _unique_name,
 
     // initialize TF transforms
     T_odom2base_.setIdentity();
-    T_odom2base_.frame_id_ = odom_frame_id_;
-    T_odom2base_.child_frame_id_ = base_frame_id_;
-    T_odom2base_.stamp_ = ros::Time::now();
     T_map2odom_.setIdentity();
-    T_map2odom_.frame_id_ = map_frame_id_;
-    T_map2odom_.child_frame_id_ = odom_frame_id_;
-    T_map2odom_.stamp_ = ros::Time::now();
+    Tmsg_odom2base_.header.frame_id = odom_frame_id_;
+    Tmsg_odom2base_.child_frame_id = base_frame_id_;
+    Tmsg_odom2base_.header.stamp = ros::Time::now();
+    Tmsg_odom2base_.transform = tf2::toMsg(T_odom2base_);
+    Tmsg_map2odom_.header.frame_id = map_frame_id_;
+    Tmsg_map2odom_.child_frame_id = odom_frame_id_;
+    Tmsg_map2odom_.header.stamp = ros::Time::now();
+    Tmsg_map2odom_.transform = tf2::toMsg(T_map2odom_);
 }
 
 void PublisherTf::initialize(ros::NodeHandle& nh, const std::string& topic)
@@ -65,7 +71,7 @@ void PublisherTf::publishDerived()
 
     // MAP - BASE
     //Get map2base from wolf result, and builds base2map pose
-    tf::Transform T_map2base;
+    tf2::Transform T_map2base;
     if (current_state.count('P') == 0 or
         current_state.count('O') == 0 or
         not current_ts.ok())
@@ -93,20 +99,29 @@ void PublisherTf::publishDerived()
     {
         ros::Time transform_time;
         std::string error_msg;
-        if (tfl_.getLatestCommonTime(odom_frame_id_, base_frame_id_, transform_time, &error_msg) == tf::ErrorValues::NO_ERROR and
-            transform_time != T_odom2base_.stamp_)
+        if (tf_buffer_._getLatestCommonTime(tf_buffer_._lookupFrameNumber(odom_frame_id_),
+                                           tf_buffer_._lookupFrameNumber(base_frame_id_),
+                                           transform_time,
+                                           &error_msg) == tf2_msgs::TF2Error::NO_ERROR and
+                transform_time != Tmsg_odom2base_.header.stamp)
         {
-            WOLF_ERROR("PublisherTf: option 'publish_odom_tf' enabled but a transform between ",
-                       base_frame_id_, " and ", odom_frame_id_,
-                       " was found published by a third party. Not publishing this transformation.");
+            ROS_WARN("PublisherTf: option 'publish_odom_tf' enabled but a transform between %s and %s was found published by a third party. Changing 'publish_odom_tf' to false.",
+                     base_frame_id_.c_str(), odom_frame_id_.c_str());
+
+            Tmsg_odom2base_ = tf_buffer_.lookupTransform(odom_frame_id_, base_frame_id_, ros::Time(0));
+            tf2::fromMsg(Tmsg_odom2base_.transform, T_odom2base_);
+
+            publish_odom_tf_=false;
         }
         else
         {
             VectorComposite odom = problem_->getOdometry("PO");
 
-            T_odom2base_.setData(stateToTfTransform(odom, problem_->getDim()));
-            T_odom2base_.stamp_ = ros::Time::now();
-            tfb_.sendTransform(T_odom2base_);
+            T_odom2base_ = stateToTfTransform(odom, problem_->getDim());
+            Tmsg_odom2base_.transform = tf2::toMsg(T_odom2base_);
+            Tmsg_odom2base_.header.stamp = ros::Time::now();
+
+            tfb_.sendTransform(Tmsg_odom2base_);
         }
     }
     // TF odometry
@@ -114,22 +129,34 @@ void PublisherTf::publishDerived()
     {
         try
         {
-            tfl_.lookupTransform(odom_frame_id_, base_frame_id_, ros::Time(0), T_odom2base_);
+            Tmsg_odom2base_ = tf_buffer_.lookupTransform(odom_frame_id_, base_frame_id_, ros::Time(0));
+            tf2::fromMsg(Tmsg_odom2base_.transform, T_odom2base_);
         }
-        catch(...)
+        catch (tf2::TransformException &ex)
         {
-            ROS_WARN("No %s to %s frame received. Assuming identity.", base_frame_id_.c_str(), odom_frame_id_.c_str());
+            ROS_WARN("No tf between %s to %s received, error: %s. Assuming identity.",
+                     base_frame_id_.c_str(),
+                     odom_frame_id_.c_str(),
+                     ex.what());
             T_odom2base_.setIdentity();
-            T_odom2base_.stamp_ = ros::Time::now();
-        }
+         }
     }
 
-
     // Broadcast transform ---------------------------------------------------------------------------
-    T_map2odom_.setData(T_map2base * T_odom2base_.inverse());
-    T_map2odom_.stamp_ = ros::Time::now();
-    //std::cout << "T_map2odom: " << T_map2odom.getOrigin().getX() << " " << T_map2odom.getOrigin().getY() << " " << T_map2odom.getRotation().getAngle() << std::endl;
-    tfb_.sendTransform(T_map2odom_);
+    tf2::Transform T_map2odom = T_map2base * T_odom2base_.inverse();
+
+    Tmsg_map2odom_.transform.translation.x = T_map2odom.getOrigin().getX();
+    Tmsg_map2odom_.transform.translation.y = T_map2odom.getOrigin().getY();
+    Tmsg_map2odom_.transform.translation.z = T_map2odom.getOrigin().getZ();
+
+    Tmsg_map2odom_.transform.rotation.x = T_map2odom.getRotation().getX();
+    Tmsg_map2odom_.transform.rotation.y = T_map2odom.getRotation().getY();
+    Tmsg_map2odom_.transform.rotation.z = T_map2odom.getRotation().getZ();
+    Tmsg_map2odom_.transform.rotation.w = T_map2odom.getRotation().getW();
+
+    Tmsg_map2odom_.header.stamp = ros::Time::now();
+
+    stfb_.sendTransform(Tmsg_map2odom_);
 }
 
 }

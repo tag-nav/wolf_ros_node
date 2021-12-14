@@ -13,6 +13,9 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
   std_msgs
+  geometry_msgs
+  tf2
+  tf2_ros
   tf
   tf_conversions
 #  dynamic_reconfigure
