@@ -62,11 +62,29 @@ void PublisherTf::initialize(ros::NodeHandle& nh, const std::string& topic)
 
 void PublisherTf::publishDerived()
 {
+    // TF: ODOM - BASE
+    ros::Time tf_odom_stamp;
+    std::string error_msg;
+    bool tf_odom_available = tfl_.getLatestCommonTime(odom_frame_id_,
+                                                      base_frame_id_,
+                                                      tf_odom_stamp,
+                                                      &error_msg) == tf::ErrorValues::NO_ERROR;
+    // WARNING: someone else is publishing tf odom-base
+    if (publish_odom_tf_ and tf_odom_available and tf_odom_stamp != T_odom2base_.stamp_)
+    {
+        ROS_WARN("PublisherTf: option 'publish_odom_tf' enabled but a transform between %s and %s was found published by a third party. Changing 'publish_odom_tf' to false.",
+                 base_frame_id_.c_str(),
+                 odom_frame_id_.c_str());
+
+        publish_odom_tf_=false;
+    }
+
+    // WOLF: MAP - BASE
     // get current state and stamp
     auto current_state = problem_->getState("PO");
     auto current_ts = problem_->getTimeStamp();
+    ros::Time wolf_stamp(current_ts.getSeconds(), current_ts.getNanoSeconds());
 
-    // MAP - BASE
     //Get map2base from wolf result, and builds base2map pose
     tf::Transform T_map2base;
     if (current_state.count('P') == 0 or
@@ -94,39 +112,33 @@ void PublisherTf::publishDerived()
     // Wolf odometry
     if (publish_odom_tf_)
     {
-        ros::Time transform_time;
-        std::string error_msg;
-        if (tfl_.getLatestCommonTime(odom_frame_id_, base_frame_id_, transform_time, &error_msg) == tf::ErrorValues::NO_ERROR and
-            transform_time != T_odom2base_.stamp_)
-        {
-            ROS_WARN("PublisherTf: option 'publish_odom_tf' enabled but a transform between %s and %s was found published by a third party. Changing 'publish_odom_tf' to false.",
-                     base_frame_id_.c_str(),
-                     odom_frame_id_.c_str());
+        VectorComposite odom = problem_->getOdometry("PO");
 
-            tfl_.lookupTransform(odom_frame_id_, base_frame_id_, ros::Time(0), T_odom2base_);
-
-            publish_odom_tf_=false;
-
-        }
-        else
-        {
-            VectorComposite odom = problem_->getOdometry("PO");
-
-            T_odom2base_.setData(stateToTfTransform(odom, problem_->getDim()));
-            T_odom2base_.stamp_ = ros::Time::now();
-            tfb_.sendTransform(T_odom2base_);
-        }
+        T_odom2base_.setData(stateToTfTransform(odom, problem_->getDim()));
+        T_odom2base_.stamp_ = ros::Time::now();
+        tfb_.sendTransform(T_odom2base_);
     }
     // TF odometry
     else
     {
+        if (not tf_odom_available)
+        {
+            ROS_WARN("No %s to %s frame received. Assuming identity. If this transformation is not broadcasted, consider enabling parameter 'PublisherTf/publish_odom_tf'",
+                     base_frame_id_.c_str(),
+                     odom_frame_id_.c_str());
+            T_odom2base_.setIdentity();
+            T_odom2base_.stamp_ = ros::Time::now();
+        }
         try
         {
-            tfl_.lookupTransform(odom_frame_id_, base_frame_id_, ros::Time(0), T_odom2base_);
+            tfl_.lookupTransform(odom_frame_id_,
+                                 base_frame_id_,
+                                 (tf_odom_stamp >= wolf_stamp ? wolf_stamp : tf_odom_stamp),
+                                 T_odom2base_);
         }
         catch(...)
         {
-            ROS_WARN("No %s to %s frame received. Assuming identity.",
+            ROS_WARN("Unexpected error listening TF. No %s to %s frame received. Assuming identity.",
                      base_frame_id_.c_str(),
                      odom_frame_id_.c_str());
             T_odom2base_.setIdentity();
@@ -136,11 +148,6 @@ void PublisherTf::publishDerived()
 
 
     // Broadcast transform ---------------------------------------------------------------------------
-    //T_map2odom_.setData(T_map2base * T_odom2base_.inverse());
-    //T_map2odom_.stamp_ = ros::Time::now();
-    //std::cout << "T_map2odom: " << T_map2odom.getOrigin().getX() << " " << T_map2odom.getOrigin().getY() << " " << T_map2odom.getRotation().getAngle() << std::endl;
-    //tfb_.sendTransform(T_map2odom_);
-
     tf::Transform T_map2odom = T_map2base * T_odom2base_.inverse();
 
     Tmsg_map2odom_.transform.translation.x = T_map2odom.getOrigin().getX();
