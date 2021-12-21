@@ -27,6 +27,10 @@ stages:
 
   # create ci_deps folder (if not exists)
   - mkdir -pv ci_deps
+  
+  - cd
+  - ls
+  - cat .bashrc
 
 .license_header_template: &license_header_definition
   - cd $CI_PROJECT_DIR
