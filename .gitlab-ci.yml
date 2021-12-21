@@ -30,7 +30,10 @@ stages:
   
   - cd
   - ls
+  - pwd
   - cat .bashrc
+  - source .bashrc
+  - roscd
 
 .license_header_template: &license_header_definition
   - cd $CI_PROJECT_DIR
