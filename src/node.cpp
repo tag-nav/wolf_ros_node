@@ -19,6 +19,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 //--------LICENSE_END--------
+#include <chrono>
 #include "node.h"
 #include "ros/time.h"
 #include "core/solver/factory_solver.h"
@@ -142,7 +143,8 @@ void WolfRosNode::solve()
 
 void WolfRosNode::solveLoop()
 {
-    ros::Rate solverRate(1/(solver_->getPeriod()+1e-9)); // 1ns added to allow pausing if rosbag paused if period==0
+    auto awake_time = std::chrono::system_clock::now();
+    auto period = std::chrono::duration<int,std::milli>((int)(solver_->getPeriod()*1e3+1)); // 1ms added to allow pausing if rosbag paused if period==0
     WOLF_DEBUG("Started solver loop");
 
     while (ros::ok())
@@ -153,7 +155,8 @@ void WolfRosNode::solveLoop()
             break;
 
         // relax to fit output rate
-        solverRate.sleep();
+        awake_time += period;
+        std::this_thread::sleep_until(awake_time);
     }
     WOLF_DEBUG("Solver loop finished");
 }
@@ -225,13 +228,12 @@ int main(int argc, char **argv)
     int policy=SCHED_FIFO;
     pthread_setschedparam(solver_thread.native_handle(), SCHED_FIFO, &Priority_Param);
 
+    // Init publishers threads
+    for(auto pub : wolf_node.publishers_)
+        pub->run();
+
     while (ros::ok())
     {
-        // publish periodically
-        for(auto pub : wolf_node.publishers_)
-            if (pub->ready())
-                pub->publish();
-
         // check that subscribers received data (every second)
         if ((ros::Time::now() - last_check).toSec() > 1)
         {
@@ -249,9 +251,15 @@ int main(int argc, char **argv)
         // relax to fit output rate
         loopRate.sleep();
     }
+
+    // Stop solver thread
     WOLF_DEBUG("Node is shutting down outside loop... waiting for the thread to stop...");
     solver_thread.join();
     WOLF_DEBUG("thread stopped.");
+
+    // Stop publishers threads
+    for(auto pub : wolf_node.publishers_)
+        pub->stop();
 
     // PROFILING ========================================
     wolf_node.createProfilingFile();
