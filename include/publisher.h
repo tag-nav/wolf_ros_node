@@ -83,6 +83,10 @@ class Publisher
 
         virtual ~Publisher(){};
 
+        virtual void run() final;
+        virtual void stop() final;
+        virtual void loop() final;
+
         virtual void initialize(ros::NodeHandle& nh, const std::string& topic) = 0;
 
         virtual void publish() final;
@@ -108,6 +112,8 @@ class Publisher
         std::string name_;
         std::string prefix_;
         std::string topic_;
+
+        std::thread pub_thread_;
 
         // PROFILING
         unsigned int n_publish_;
@@ -140,14 +146,7 @@ inline void Publisher::publish()
 
 inline bool Publisher::ready()
 {
-    long unsigned int n_period = (long unsigned int)((ros::Time::now() - first_publish_time_).toSec() / period_);
-    if (n_period > last_n_period_)
-    {
-        last_n_period_ = n_period;
-        return true;
-    }
-
-    return false;
+    return true;
 }
 
 inline void Publisher::printProfiling(std::ostream &_stream) const
@@ -157,6 +156,35 @@ inline void Publisher::printProfiling(std::ostream &_stream) const
             << "\n\texecutions:           " << n_publish_
             << "\n\taverage time:         " << 1e-3 * acc_duration_.count() / n_publish_ << " ms"
             << "\n\tmax time:             " << 1e-3 * max_duration_.count() << " ms" << std::endl;
+}
+
+inline void Publisher::run()
+{
+    pub_thread_ = std::thread(&Publisher::loop, this);
+}
+
+inline void Publisher::stop()
+{
+    pub_thread_.join();
+}
+
+inline void Publisher::loop()
+{
+    auto awake_time = std::chrono::system_clock::now();
+    auto period = std::chrono::duration<int,std::milli>((int)(period_*1e3));
+
+    WOLF_DEBUG("Started publisher ", name_, " loop");
+
+    while (ros::ok())
+    {
+        if (ready())
+            publish();
+
+        // relax to fit output rate
+        awake_time += period;
+        std::this_thread::sleep_until(awake_time);
+    }
+    WOLF_DEBUG("Publisher ", name_, " loop finished");
 }
 
 template<typename T>
