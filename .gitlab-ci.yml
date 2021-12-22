@@ -71,6 +71,7 @@ stages:
   - if [ -d wolf ]; then
   -   echo "directory wolf exists"
   -   cd wolf
+  -   git checkout devel
   -   git pull
   -   git checkout $WOLF_CORE_BRANCH
   - else
