@@ -27,13 +27,10 @@ stages:
 
   # create ci_deps folder (if not exists)
   - mkdir -pv ci_deps
-  
-  - ls /opt/ros/kinetic/setup.bash
-  - ls /root/catkin_ws/devel/setup.bash
-  - source /opt/ros/kinetic/setup.bash
-  - roscd
+
+  # manually source ros setup.bash
   - source /root/catkin_ws/devel/setup.bash
-  - roscd
+  - roscd # check that it works
 
 .license_header_template: &license_header_definition
   - cd $CI_PROJECT_DIR
