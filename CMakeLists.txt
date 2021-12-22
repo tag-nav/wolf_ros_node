@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(wolf_ros_node)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+add_compile_options(-std=c++14)
 
 # SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/wolf_ros_wrapper/cmake_modules")
 ## Find catkin macros and libraries
