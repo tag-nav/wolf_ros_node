@@ -33,16 +33,23 @@ WolfRosNode::WolfRosNode()
 {
     // ROS PARAMS
     std::string yaml_file, plugins_path, subscribers_path;
-    nh_.param<std::string>("yaml_file_path", yaml_file, ros::package::getPath("wolf_ros_node")+"/yaml/params_demo.yaml");
-    nh_.param<std::string>("plugins_path", plugins_path, "/usr/local/lib/");
-    nh_.param<std::string>("packages_path", subscribers_path, ros::package::getPath("wolf_ros_node") + "/../../devel/lib/");
+    nh_.param<std::string>("yaml_file_path",
+                           yaml_file,
+                           ros::package::getPath("wolf_ros_node") + "/yaml/params_demo.yaml");
+    nh_.param<std::string>("plugins_path",
+                           plugins_path,
+                           "/usr/local/lib/");
+    nh_.param<std::string>("packages_path",
+                           subscribers_path,
+                           ros::package::getPath("wolf_ros_node") + "/../../devel/lib/");
 
     // PARAM SERVER CONFIGURATION
-    std::cout <<"yaml: " << yaml_file << std::endl;
+    std::cout << "yaml: " << yaml_file << std::endl;
     int found = yaml_file.find_last_of("\\/");
-    std::string yaml_dir = yaml_file.substr(0, found);
-    ParserYaml parser = ParserYaml(yaml_file, yaml_dir);
-    ParamsServer server = ParamsServer(parser.getParams());
+
+    std::string     yaml_dir    = yaml_file.substr(0, found);
+    ParserYaml      parser      = ParserYaml(yaml_file, yaml_dir);
+    ParamsServer    server      = ParamsServer(parser.getParams());
 
     server.addParam("plugins_path", plugins_path);
     server.addParam("packages_path", subscribers_path);
@@ -68,7 +75,11 @@ WolfRosNode::WolfRosNode()
         std::string topic      = it["topic"];
         std::string sensor     = it["sensor_name"];
         WOLF_TRACE("From sensor {" + sensor + "} subscribing {" + subscriber + "} to {" + topic + "} topic");
-        subscribers_.push_back(FactorySubscriber::create(subscriber, subscriber+" - "+topic, server, problem_ptr_->getSensor(sensor), nh_));
+        subscribers_.push_back(FactorySubscriber::create(subscriber,
+                                                         subscriber+" - " + topic,
+                                                         server,
+                                                         problem_ptr_->getSensor(sensor),
+                                                         nh_));
     }
 
     // PUBLISHERS
@@ -76,7 +87,11 @@ WolfRosNode::WolfRosNode()
     for (auto it : server.getParam<std::vector<std::map<std::string, std::string>>>("ROS publisher"))
     {
         WOLF_INFO("Pub: ", it["type"]);
-        publishers_.push_back(FactoryPublisher::create(it["type"], it["type"]+" - "+it["topic"], server, problem_ptr_, nh_));
+        publishers_.push_back(FactoryPublisher::create(it["type"],
+                                                       it["type"]+" - "+it["topic"],
+                                                       server,
+                                                       problem_ptr_,
+                                                       nh_));
     }
 
     // PROFILING
@@ -92,6 +107,7 @@ WolfRosNode::WolfRosNode()
         if (not profiling_file_.is_open())
             ROS_ERROR("Error in opening file %s to store profiling!", prof_file.c_str());
     }
+
     //  PRINT
     print_problem_ = server.getParam<bool>("debug/print_problem");
     if(print_problem_)
