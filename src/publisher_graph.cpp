@@ -49,6 +49,7 @@ PublisherGraph::PublisherGraph(const std::string& _unique_name,
     // frames
     frame_width_            = getParamWithDefault<double>   (_server, prefix_ + "/frame_width", 0.1);
     frame_length_           = getParamWithDefault<double>   (_server, prefix_ + "/frame_length", 1);
+    frame_vel_scale_        = getParamWithDefault<double>   (_server, prefix_ + "/frame_vel_scale", 0.1);
     color = getParamWithDefault<Eigen::Vector4d>(_server,
                                                  prefix_ + "/frame_color",
                                                  (Eigen::Vector4d() << 1, 0.8, 0, 1).finished());
@@ -675,9 +676,9 @@ void PublisherGraph::fillFrameMarker(FrameBaseConstPtr frm,
             if (frm->getO()->getSize() > 1)
             {
                 Eigen::Vector3d v_local = Eigen::Quaterniond(Eigen::Vector4d(frm->getO()->getState())).conjugate() * frm->getV()->getState();
-                frm_marker.points.back().x = v_local(0);
-                frm_marker.points.back().y = v_local(1);
-                frm_marker.points.back().z = v_local(2);
+                frm_marker.points.back().x = v_local(0) * frame_vel_scale_;
+                frm_marker.points.back().y = v_local(1) * frame_vel_scale_;
+                frm_marker.points.back().z = v_local(2) * frame_vel_scale_;
             }
             // 2d
             else

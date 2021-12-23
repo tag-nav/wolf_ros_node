@@ -88,7 +88,7 @@ class PublisherGraph: public Publisher
         // Options
         std::string map_frame_id_;
         bool        viz_overlapped_factors_, viz_inactive_factors_;
-        double      viz_scale_, text_scale_, factors_width_, factors_absolute_height_, landmark_text_z_offset_, landmark_width_, landmark_length_, frame_width_, frame_length_;
+        double      viz_scale_, text_scale_, factors_width_, factors_absolute_height_, landmark_text_z_offset_, landmark_width_, landmark_length_, frame_width_, frame_length_, frame_vel_scale_;
         std_msgs::ColorRGBA frame_color_, factor_abs_color_, factor_motion_color_, factor_loop_color_, factor_lmk_color_, factor_geom_color_, factor_other_color_;
 
         // auxiliar variables
