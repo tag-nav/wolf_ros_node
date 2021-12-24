@@ -647,29 +647,31 @@ void PublisherGraph::fillFrameMarker(FrameBaseConstPtr frm,
             frm_marker.pose.orientation =
                     tf::createQuaternionMsgFromYaw(frm->getO()->getState()(0));
     }
+    else
+        frm_marker.pose.orientation = tf::createQuaternionMsgFromYaw(0);
+
     // velocity
     if (frm->getV())
     {
+        Eigen::Vector3d v_local(Eigen::Vector3d::Zero());
         if (frm->getO() != nullptr)
         {
             // 3d
             if (frm->getO()->getSize() > 1)
             {
-                Eigen::Vector3d v_local = Eigen::Quaterniond(Eigen::Vector4d(frm->getO()->getState())).conjugate() * frm->getV()->getState();
-                frm_marker.points.back().x = v_local(0) * frame_vel_scale_;
-                frm_marker.points.back().y = v_local(1) * frame_vel_scale_;
-                frm_marker.points.back().z = v_local(2) * frame_vel_scale_;
+                v_local = Eigen::Quaterniond(Eigen::Vector4d(frm->getO()->getState())).conjugate() * frm->getV()->getState();
             }
             // 2d
             else
             {
-                // not implemented
+                v_local.head<2>() = Eigen::Rotation2Dd(-frm->getO()->getState()(0)) * frm->getV()->getState();
             }
         }
-        else
-        {
-            // not implemented
-        }
+
+        // change last point (2nd of velocity pair)
+        frm_marker.points.back().x = v_local(0) * frame_vel_scale_;
+        frm_marker.points.back().y = v_local(1) * frame_vel_scale_;
+        frm_marker.points.back().z = v_local(2) * frame_vel_scale_;
     }
 
     // TEXT MARKER --------------------------------------------------------
