@@ -72,6 +72,7 @@ class Subscriber
         // ros
         ros::Subscriber sub_;
         ros::Time last_stamp_;
+        int last_seq_;
 
     public:
         Subscriber(const std::string& _unique_name,
@@ -80,7 +81,8 @@ class Subscriber
             sensor_ptr_(_sensor_ptr),
             prefix_("ROS subscriber/" + _unique_name),
             name_(_unique_name),
-            last_stamp_(0)
+            last_stamp_(0),
+            last_seq_(-1)
         {
             topic_  = _server.getParam<std::string>(prefix_ + "/topic");
         }
@@ -99,7 +101,7 @@ class Subscriber
 
     protected:
 
-        void setLastStamp(const ros::Time _stamp);
+        void updateLastHeader(const std_msgs::Header& _header);
 
         template<typename T>
         T getParamWithDefault(const ParamsServer &_server,
@@ -126,15 +128,24 @@ inline double Subscriber::secondsSinceLastCallback()
 {
     if (last_stamp_ == ros::Time(0))
     {
-        WOLF_WARN("Subscriber: 'last_stamp_` not initialized. No messages have been received or ", name_, " is not updating this attribute.");
+        WOLF_WARN("Subscriber: 'last_stamp_` not initialized. No messages have been received or ", name_, " is not updating headers (be sure to add 'updateLastHeader(msg->header)' in your subscriber callback).");
         return 0;
     }
     return (ros::Time::now() - last_stamp_).toSec();
 }
 
-inline void Subscriber::setLastStamp(const ros::Time _stamp)
+inline void Subscriber::updateLastHeader(const std_msgs::Header& _header)
 {
-    last_stamp_ = _stamp;
+    // stamp
+    if ((ros::Time::now() - _header.stamp).toSec() > 1) // in case use_sim_time == false
+        last_stamp_ = ros::Time::now();
+    else
+        last_stamp_ = _header.stamp;
+
+    // seq
+    if (last_seq_ >= 0 and _header.seq - last_seq_ > 1)
+        ROS_ERROR("Subscriber %s lost %i messages!", name_.c_str(), _header.seq - last_seq_ - 1);
+    last_seq_ = _header.seq;
 }
 
 template<typename T>

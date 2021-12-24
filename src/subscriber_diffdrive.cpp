@@ -48,7 +48,7 @@ void SubscriberDiffdrive::initialize(ros::NodeHandle& nh, const std::string& top
 
 void SubscriberDiffdrive::callback(const sensor_msgs::JointState::ConstPtr& msg)
 {
-    setLastStamp(msg->header.stamp);
+    updateLastHeader(msg->header);
 
     auto left_angle            = msg->position[0];
     auto right_angle           = msg->position[1];
