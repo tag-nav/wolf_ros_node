@@ -51,12 +51,12 @@ PublisherGraph::PublisherGraph(const std::string& _unique_name,
     frame_length_           = getParamWithDefault<double>   (_server, prefix_ + "/frame_length", 1);
     frame_vel_scale_        = getParamWithDefault<double>   (_server, prefix_ + "/frame_vel_scale", 0.1);
     color = getParamWithDefault<Eigen::Vector4d>(_server,
-                                                 prefix_ + "/frame_color",
-                                                 (Eigen::Vector4d() << 1, 0.8, 0, 1).finished());
-    frame_color_.r = color(0);
-    frame_color_.g = color(1);
-    frame_color_.b = color(2);
-    frame_color_.a = color(3);
+                                                 prefix_ + "/frame_vel_color",
+                                                 (Eigen::Vector4d() << 0.5, 0, 1, 1).finished());
+    frame_vel_color_.r = color(0);
+    frame_vel_color_.g = color(1);
+    frame_vel_color_.b = color(2);
+    frame_vel_color_.a = color(3);
 
     // factors
     factors_width_          = getParamWithDefault<double>   (_server, prefix_ + "/factors_width", 0.02);
@@ -134,7 +134,6 @@ PublisherGraph::PublisherGraph(const std::string& _unique_name,
     frame_marker_.header.frame_id = map_frame_id_;
     frame_marker_.ns = "frames";
     frame_marker_.scale.x = viz_scale_*frame_width_;
-    frame_marker_.color = frame_color_;
     frame_text_marker_ = frame_marker_;
     frame_text_marker_.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
     frame_text_marker_.ns = "frames_text";
@@ -198,13 +197,9 @@ PublisherGraph::PublisherGraph(const std::string& _unique_name,
         // zero vector
         frame_marker_.points.push_back(frame_marker_.points.front());
         frame_marker_.points.push_back(frame_marker_.points.front());
-        // yellow
-        frame_marker_.colors.push_back(frame_marker_.colors.front());
-        frame_marker_.colors.back().r = 1;//yellow
-        frame_marker_.colors.back().g = 1;
-        frame_marker_.colors.back().b = 0;
-        frame_marker_.colors.back().a = 1;
-        frame_marker_.colors.push_back(frame_marker_.colors.back());
+        // vel color
+        frame_marker_.colors.push_back(frame_vel_color_);
+        frame_marker_.colors.push_back(frame_vel_color_);
     }
 
     // landmark markers
@@ -595,7 +590,7 @@ void PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
     fac_marker.points.push_back(point2);
 
     // colors ------------------------------------------------------
-    auto color = frame_color_;
+    auto color = factor_abs_color_;
     if (fac->getTopology() == TOP_ABS)
         color = factor_abs_color_;
     if (fac->getTopology() == TOP_MOTION)
@@ -629,21 +624,6 @@ void PublisherGraph::fillFrameMarker(FrameBaseConstPtr frm,
                                      visualization_msgs::Marker &frm_marker,
                                      visualization_msgs::Marker &frm_text_marker)
 {
-//    // SHAPE ------------------------------------------------------
-//    // Position-> SPHERE
-//    // Pose -> ARROW
-//    if (frm->getO() != nullptr) {
-//        landmark_marker_.type = visualization_msgs::Marker::ARROW;
-//        frm_marker.scale.x = viz_scale_*frame_length_;
-//        frm_marker.scale.y = viz_scale_*frame_width_;
-//        frm_marker.scale.z = viz_scale_*frame_width_;
-//    } else {
-//        landmark_marker_.type = visualization_msgs::Marker::SPHERE;
-//        frm_marker.scale.x = viz_scale_*frame_width_;
-//        frm_marker.scale.y = viz_scale_*frame_width_;
-//        frm_marker.scale.z = viz_scale_*frame_width_;
-//    }
-
     // POSITION & ORIENTATION
     // ------------------------------------------------------ position
     frm_marker.pose.position.x = frm->getP()->getState()(0);
