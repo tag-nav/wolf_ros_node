@@ -43,7 +43,6 @@ namespace wolf
 
 class PublisherPose: public Publisher
 {
-        bool pose_array_, marker_, pose_with_cov_;
         bool extrinsics_;
         int max_points_;
         double line_size_;
