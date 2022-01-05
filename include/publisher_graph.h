@@ -93,7 +93,6 @@ class PublisherGraph: public Publisher
 
         // auxiliar variables
         unsigned int landmark_max_hits_;
-        double       viz_period_;
         ros::Time    last_markers_publish_;
         std::set<std::string> factors_drawn_;
 

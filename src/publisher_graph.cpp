@@ -589,6 +589,12 @@ void PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
     fac_marker.points.push_back(point1);
     fac_marker.points.push_back(point2);
 
+    // initialize quaternion to avoid RVIZ warning
+    fac_marker.pose.orientation.w = 1.0;
+    fac_marker.pose.orientation.x = 0.0;
+    fac_marker.pose.orientation.y = 0.0;
+    fac_marker.pose.orientation.z = 0.0;
+
     // colors ------------------------------------------------------
     auto color = factor_abs_color_;
     if (fac->getTopology() == TOP_ABS)
