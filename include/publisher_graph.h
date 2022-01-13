@@ -58,13 +58,13 @@ class PublisherGraph: public Publisher
         void publishFactors();
         void publishTrajectory();
 
-        virtual void fillLandmarkMarkers(LandmarkBaseConstPtr        lmk,
+        virtual bool fillLandmarkMarkers(LandmarkBaseConstPtr        lmk,
                                          visualization_msgs::Marker& lmk_marker,
                                          visualization_msgs::Marker& lmk_text_marker);
-        virtual void fillFactorMarker(FactorBaseConstPtr          fac,
+        virtual bool fillFactorMarker(FactorBaseConstPtr          fac,
                                       visualization_msgs::Marker& fac_marker,
                                       visualization_msgs::Marker& fac_text_marker);
-        virtual void fillFrameMarker(FrameBaseConstPtr           frm,
+        virtual bool fillFrameMarker(FrameBaseConstPtr           frm,
                                      visualization_msgs::Marker& frm_marker,
                                      visualization_msgs::Marker& frm_text_marker);
 

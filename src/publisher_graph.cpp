@@ -238,19 +238,23 @@ void PublisherGraph::publishDerived()
 }
 void PublisherGraph::publishLandmarks()
 {
-    // Iterate over all landmarks
-    int marker_i = 0;
+    // copy and update stamps of generic messages
     auto landmark_marker = landmark_marker_;
     auto landmark_text_marker = landmark_text_marker_;
+    landmark_marker.header.stamp = ros::Time::now();
+    landmark_marker.header.stamp = ros::Time::now();
+
+    // Iterate over all landmarks
+    int marker_i = 0;
     auto landmark_list = problem_->getMap()->getLandmarkList();
     for (auto lmk : landmark_list)
     {
-        // fill markers
-        fillLandmarkMarkers(lmk,landmark_marker, landmark_text_marker);
+        // Try to fill markers
+        if (not fillLandmarkMarkers(lmk,landmark_marker, landmark_text_marker))
+            continue;
 
         // Store landmark marker in marker array
         landmark_marker.id = marker_i;
-        landmark_marker.header.stamp = ros::Time::now();
 
         if (landmarks_marker_array_.markers.size() < marker_i+1)
         {
@@ -266,7 +270,6 @@ void PublisherGraph::publishLandmarks()
 
         // Store text landmark marker in marker array
         landmark_text_marker.id = marker_i;
-        landmark_text_marker.header.stamp = ros::Time::now();
 
         if (landmarks_marker_array_.markers.size() < marker_i+1)
         {
@@ -292,13 +295,15 @@ void PublisherGraph::publishLandmarks()
 
 void PublisherGraph::publishFactors()
 {
-    // update stamps of generic messages
-    factor_marker_.header.stamp = ros::Time::now();
-    factor_text_marker_.header.stamp = ros::Time::now();
+    // copy and update stamps of generic messages
+    auto factor_marker = factor_marker_;
+    auto factor_text_marker = factor_text_marker_;
+    factor_marker.header.stamp = ros::Time::now();
+    factor_text_marker.header.stamp = ros::Time::now();
 
-    // previous
+    // delete all previous
     factors_marker_array_.markers.clear();
-    factors_marker_array_.markers.push_back(factor_marker_);
+    factors_marker_array_.markers.push_back(factor_marker);
     factors_marker_array_.markers.front().action = visualization_msgs::Marker::DELETEALL;
 
     // Get a list of factors of the trajectory (discarded all prior factors for extrinsics/intrinsics..)
@@ -311,18 +316,15 @@ void PublisherGraph::publishFactors()
     // Iterate over the list of factors
     for (auto fac : fac_list)
     {
-        if (not viz_inactive_factors_ and fac->getStatus() == FAC_INACTIVE)
-            continue;
+        std::string fac_str = factorString(fac);
 
-        auto factor_marker = factor_marker_;
-        auto factor_text_marker = factor_text_marker_;
+        // Try to fill marker
+        if (not fillFactorMarker(fac, factor_marker, factor_text_marker))
+            continue;
 
         // markers id
         factor_marker.id = fac->id();
         factor_text_marker.id = fac->id();
-
-        // fill marker
-        fillFactorMarker(fac, factor_marker, factor_text_marker);
 
         // Store marker text in marker array
         factors_marker_array_.markers.push_back(factor_text_marker);
@@ -330,8 +332,6 @@ void PublisherGraph::publishFactors()
         // avoid drawing overlapped factors markers
         if (not viz_overlapped_factors_)
         {
-            std::string fac_str = factorString(fac);
-
             if (factors_drawn_.count(fac_str) == 0)
             {
                 factors_marker_array_.markers.push_back(factor_marker);
@@ -348,44 +348,47 @@ void PublisherGraph::publishFactors()
 
 void PublisherGraph::publishTrajectory()
 {
-    // Iterate over the key frames
-    int marker_i = 0;
+    // copy and update stamps of generic messages
     auto frame_marker = frame_marker_;
     auto frame_text_marker = frame_text_marker_;
+    frame_marker.header.stamp = ros::Time::now();
+    frame_text_marker.header.stamp = ros::Time::now();
+
+    // Iterate over the key frames
+    int marker_i = 0;
     auto trajectory = *problem_->getTrajectory();
     for (auto frm : trajectory)
     {
-      // fill marker
-      fillFrameMarker(frm, frame_marker, frame_text_marker);
+        // Try to fill marker
+        if (not fillFrameMarker(frm, frame_marker, frame_text_marker))
+            continue;
 
-      // Store marker in marker array
-      frame_marker.id = marker_i;
-      frame_marker.header.stamp = ros::Time::now();
+        // Store marker in marker array
+        frame_marker.id = marker_i;
 
-      if (trajectory_marker_array_.markers.size() < marker_i+1)
-      {
-        frame_marker.action = visualization_msgs::Marker::ADD;
-        trajectory_marker_array_.markers.push_back(frame_marker);
-      }
-      else
-      {
-        frame_marker.action = visualization_msgs::Marker::MODIFY;
-        trajectory_marker_array_.markers[marker_i] = frame_marker;
-      }
-      marker_i++;
+        if (trajectory_marker_array_.markers.size() < marker_i+1)
+        {
+            frame_marker.action = visualization_msgs::Marker::ADD;
+            trajectory_marker_array_.markers.push_back(frame_marker);
+        }
+        else
+        {
+            frame_marker.action = visualization_msgs::Marker::MODIFY;
+            trajectory_marker_array_.markers[marker_i] = frame_marker;
+        }
+        marker_i++;
 
-      // Store text marker in marker array
-      frame_text_marker.id = marker_i;
-      frame_text_marker.header.stamp = ros::Time::now();
+        // Store text marker in marker array
+        frame_text_marker.id = marker_i;
 
-      if (trajectory_marker_array_.markers.size() < marker_i + 1) {
-        frame_text_marker.action = visualization_msgs::Marker::ADD;
-        trajectory_marker_array_.markers.push_back(frame_text_marker);
-      } else {
-        frame_text_marker.action = visualization_msgs::Marker::MODIFY;
-        trajectory_marker_array_.markers[marker_i] = frame_text_marker;
-      }
-      marker_i++;
+        if (trajectory_marker_array_.markers.size() < marker_i + 1) {
+            frame_text_marker.action = visualization_msgs::Marker::ADD;
+            trajectory_marker_array_.markers.push_back(frame_text_marker);
+        } else {
+            frame_text_marker.action = visualization_msgs::Marker::MODIFY;
+            trajectory_marker_array_.markers[marker_i] = frame_text_marker;
+        }
+        marker_i++;
     }
 
     // rest of markers (if any) action: DELETE
@@ -396,14 +399,18 @@ void PublisherGraph::publishTrajectory()
     trajectory_publisher_.publish(trajectory_marker_array_);
 }
 
-void PublisherGraph::fillLandmarkMarkers(LandmarkBaseConstPtr lmk,
-    visualization_msgs::Marker& lmk_marker,
-    visualization_msgs::Marker& lmk_text_marker)
+bool PublisherGraph::fillLandmarkMarkers(LandmarkBaseConstPtr lmk,
+                                         visualization_msgs::Marker& lmk_marker,
+                                         visualization_msgs::Marker& lmk_text_marker)
 {
-  // SHAPE ------------------------------------------------------
-  // Position
-  //    2d: CYLINDER
-  //    3d: SPHERE
+    // check is not removing
+    if (not lmk or lmk->isRemoving() or not lmk->getP())
+        return false;
+
+    // SHAPE ------------------------------------------------------
+    // Position
+    //    2d: CYLINDER
+    //    3d: SPHERE
     // Pose -> ARROW
     if (lmk->getO() != nullptr)
     {
@@ -462,15 +469,29 @@ void PublisherGraph::fillLandmarkMarkers(LandmarkBaseConstPtr lmk,
     lmk_text_marker.pose.position.x = lmk_marker.pose.position.x;
     lmk_text_marker.pose.position.y = lmk_marker.pose.position.y;
     lmk_text_marker.pose.position.z = lmk_marker.pose.position.z + viz_scale_*landmark_text_z_offset_;
+
+    return true;
 }
 
-void PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
+bool PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
                                       visualization_msgs::Marker &fac_marker,
                                       visualization_msgs::Marker &fac_text_marker)
 {
+    // check is not removing
+    if (not fac or fac->isRemoving())
+        return false;
+
+    if (not viz_inactive_factors_ and fac->getStatus() == FAC_INACTIVE)
+        return false;
+
     geometry_msgs::Point point1, point2;
 
     // point1 -> frame ------------------------------------------------------
+    if (not fac->getCapture() or
+        not fac->getCapture()->getFrame() or
+        not fac->getCapture()->getFrame()->getP())
+        return false;
+
     point1.x = fac->getCapture()->getFrame()->getP()->getState()(0);
     point1.y = fac->getCapture()->getFrame()->getP()->getState()(1);
     if (fac->getProblem()->getDim() == 3)
@@ -480,8 +501,8 @@ void PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
 
     // point2 -> other ------------------------------------------------------
     // FRAME
-    if (fac->getFrameOther() != nullptr) {
-
+    if (fac->getFrameOther() != nullptr)
+    {
         // special case: Motion from ProcessorMotion
         auto proc_motion = std::dynamic_pointer_cast<ProcessorMotion>(fac->getProcessor());
         if (proc_motion and fac->getCaptureOther())
@@ -539,8 +560,14 @@ void PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
             else
                 point2.z = 0;
         }
+        // Normal frame-frame factor
         else
         {
+            if (fac->getFrameOther()->isRemoving() or
+                not fac->getFrameOther() or
+                not fac->getFrameOther()->getP())
+                return false;
+
             point2.x = fac->getFrameOther()->getP()->getState()(0);
             point2.y = fac->getFrameOther()->getP()->getState()(1);
             if (fac->getProblem()->getDim() == 3)
@@ -549,9 +576,14 @@ void PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
                 point2.z = 0;
         }
     }
-    // CAPTURE (with Frame)
-    else if (fac->getCaptureOther() != nullptr &&
-             fac->getCaptureOther()->getFrame() != nullptr) {
+    // CAPTURE
+    else if (fac->getCaptureOther() != nullptr)
+    {
+        if (fac->getCaptureOther()->isRemoving() or
+            not fac->getCaptureOther()->getFrame() or
+            not fac->getCaptureOther()->getFrame()->getP())
+            return false;
+
         point2.x = fac->getCaptureOther()->getFrame()->getP()->getState()(0);
         point2.y = fac->getCaptureOther()->getFrame()->getP()->getState()(1);
         if (fac->getProblem()->getDim() == 3)
@@ -559,10 +591,15 @@ void PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
         else
             point2.z = 0;
     }
-    // FEATURE (with Frame)
-    else if (fac->getFeatureOther() != nullptr &&
-            fac->getFeatureOther()->getCapture() != nullptr &&
-            fac->getFeatureOther()->getCapture()->getFrame() != nullptr) {
+    // FEATURE
+    else if (fac->getFeatureOther() != nullptr)
+    {
+        if (fac->getFeatureOther()->isRemoving() or
+            not fac->getFeatureOther()->getCapture() or
+            not fac->getFeatureOther()->getCapture()->getFrame() or
+            not fac->getFeatureOther()->getCapture()->getFrame()->getP())
+            return false;
+
         point2.x = fac->getFeatureOther()->getCapture()->getFrame()->getP()->getState()(0);
         point2.y = fac->getFeatureOther()->getCapture()->getFrame()->getP()->getState()(1);
         if (fac->getProblem()->getDim() == 3)
@@ -571,7 +608,12 @@ void PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
             point2.z = 0;
     }
     // LANDMARK
-    else if (fac->getLandmarkOther() != nullptr) {
+    else if (fac->getLandmarkOther() != nullptr)
+    {
+        if (fac->getLandmarkOther()->isRemoving() or
+            not fac->getLandmarkOther()->getP())
+            return false;
+
         point2.x = fac->getLandmarkOther()->getP()->getState()(0);
         point2.y = fac->getLandmarkOther()->getP()->getState()(1);
         if (fac->getProblem()->getDim() == 3)
@@ -622,14 +664,20 @@ void PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
     fac_text_marker.text = std::to_string(fac->id());
     fac_text_marker.pose.position.x = (point1.x + point2.x)/(double) 2;
     fac_text_marker.pose.position.y = (point1.y + point2.y)/(double) 2;
-    fac_text_marker.pose.position.z = fac_marker.pose.position.z;
+    fac_text_marker.pose.position.z = (point1.z + point2.z)/(double) 2;
     fac_text_marker.ns = std::string("factors_text_"+(fac->getProcessor() ? fac->getProcessor()->getName() : "unnamed_processor"));
+
+    return true;
 }
 
-void PublisherGraph::fillFrameMarker(FrameBaseConstPtr frm,
+bool PublisherGraph::fillFrameMarker(FrameBaseConstPtr frm,
                                      visualization_msgs::Marker &frm_marker,
                                      visualization_msgs::Marker &frm_text_marker)
 {
+    // check is not removing
+    if (not frm or frm->isRemoving() or not frm->getP())
+        return false;
+
     // POSITION & ORIENTATION
     // ------------------------------------------------------ position
     frm_marker.pose.position.x = frm->getP()->getState()(0);
@@ -685,6 +733,8 @@ void PublisherGraph::fillFrameMarker(FrameBaseConstPtr frm,
     frm_text_marker.pose.position.x = frm_marker.pose.position.x;
     frm_text_marker.pose.position.y = frm_marker.pose.position.y;
     frm_text_marker.pose.position.z = frm_marker.pose.position.z + viz_scale_*landmark_text_z_offset_;
+
+    return true;
 }
 
 std::string PublisherGraph::factorString(FactorBaseConstPtr fac) const
