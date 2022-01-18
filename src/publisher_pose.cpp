@@ -47,7 +47,7 @@ PublisherPose::PublisherPose(const std::string& _unique_name,
 
     max_points_ = getParamWithDefault<int>(_server,
                                            prefix_ + "/max_points",
-                                           1e3);
+                                           1e4);
     line_size_  = getParamWithDefault<double>(_server,
                                               prefix_ + "/line_size",
                                               0.1);

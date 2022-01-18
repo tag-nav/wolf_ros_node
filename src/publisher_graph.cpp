@@ -316,11 +316,11 @@ void PublisherGraph::publishFactors()
     // Iterate over the list of factors
     for (auto fac : fac_list)
     {
-        std::string fac_str = factorString(fac);
-
         // Try to fill marker
         if (not fillFactorMarker(fac, factor_marker, factor_text_marker))
             continue;
+
+        std::string fac_str = factorString(fac);
 
         // markers id
         factor_marker.id = fac->id();
@@ -740,6 +740,10 @@ bool PublisherGraph::fillFrameMarker(FrameBaseConstPtr frm,
 std::string PublisherGraph::factorString(FactorBaseConstPtr fac) const
 {
     std::string factor_string;
+
+    if (not fac or not fac->getCapture() or not fac->getCapture()->getFrame())
+        return "invalid factor" + std::to_string(fac->id());
+
     factor_string = "F" + std::to_string(fac->getCapture()->getFrame()->id());
 
     // FRAME
