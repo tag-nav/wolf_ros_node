@@ -74,16 +74,15 @@ stages:
   -   git checkout devel
   -   git pull
   -   git checkout $WOLF_CORE_BRANCH
+  -   git pull
   - else
-  -   git clone ssh://git@gitlab.iri.upc.edu:2202/mobile_robotics/wolf_projects/wolf_lib/wolf.git
+  -   git clone -b $WOLF_CORE_BRANCH ssh://git@gitlab.iri.upc.edu:2202/mobile_robotics/wolf_projects/wolf_lib/wolf.git
   -   cd wolf
-  -   git checkout $WOLF_CORE_BRANCH
   - fi
   - mkdir -pv build
   - cd build
-  - cmake -DCMAKE_BUILD_TYPE=release -DBUILD_EXAMPLES=ON -DBUILD_TESTS=ON ..
+  - cmake -DCMAKE_BUILD_TYPE=release -DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF ..
   - make -j$(nproc)
-  - ctest -j$(nproc)
   - make install
 
 .build_and_test_template: &build_and_test_definition
