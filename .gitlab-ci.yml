@@ -97,9 +97,9 @@ stages:
 ############ LICENSE HEADERS ############
 license_headers:
   stage: license
-  image: labrobotica/wolf_deps_ros:16.04
+  image: labrobotica/wolf_deps_ros:20.04
   cache:
-    - key: wolf-xenial
+    - key: wolf-focal
       paths:
       - ci_deps/wolf/
   except:
@@ -109,25 +109,6 @@ license_headers:
     - *install_wolf_definition
   script:
     - *license_header_definition
-
-############ UBUNTU 16.04 TEST ############
-build_and_test:xenial:
-  stage: build_and_test
-  image: labrobotica/wolf_deps_ros:16.04
-  cache:
-    - key: wolf-xenial
-      paths:
-      - ci_deps/wolf/
-    - key: catkinws-src-xenial
-      paths:
-      - catkin_ws/src
-  except:
-    - master
-  before_script:
-    - *preliminaries_definition
-    - *install_wolf_definition
-  script:
-    - *build_and_test_definition
 
 ############ UBUNTU 18.04 TEST ############
 build_and_test:bionic:
