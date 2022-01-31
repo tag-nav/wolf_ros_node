@@ -98,10 +98,7 @@ stages:
 license_headers:
   stage: license
   image: labrobotica/wolf_deps_ros:20.04
-  cache:
-    - key: wolf-focal
-      paths:
-      - ci_deps/wolf/
+  cache: []
   except:
     - master
   before_script:
