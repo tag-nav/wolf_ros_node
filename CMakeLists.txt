@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
   std_msgs
+  nav_msgs
   tf
   tf_conversions
   tf2_ros
@@ -154,6 +155,7 @@ add_library(subscriber_${PROJECT_NAME}
 add_library(publisher_${PROJECT_NAME}
   			src/publisher_graph.cpp
   			src/publisher_pose.cpp
+  			src/publisher_trajectory.cpp
   			src/publisher_state_block.cpp
   			src/publisher_tf.cpp)
 
