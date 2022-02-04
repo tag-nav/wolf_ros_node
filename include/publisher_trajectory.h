@@ -18,6 +18,12 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
+/*
+ * publisher_trajectory.h
+ *
+ *  Created on: Feb 03, 2022
+ *      Author: igeer
+ */
 //--------LICENSE_END--------
 #ifndef PUBLISHER_TRAJECTORY_H
 #define PUBLISHER_TRAJECTORY_H
@@ -33,31 +39,18 @@
  *      ROS includes      *
  **************************/
 #include <ros/ros.h>
-#include <geometry_msgs/PoseArray.h>
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <nav_msgs/Path.h>
-#include <nav_msgs/Odometry.h>
-#include <visualization_msgs/Marker.h>
-#include <tf/transform_listener.h>
 
 namespace wolf
 {
 
 class PublisherTrajectory: public Publisher
 {
-        bool extrinsics_;
-        int max_points_;
-        double line_size_;
-
         nav_msgs::Path path_msg_;
-        nav_msgs::Odometry odometry_msg_;
+        
+        std::string frame_id_;
 
-        visualization_msgs::Marker marker_msg_;
-        std_msgs::ColorRGBA marker_color_;
-        SensorBasePtr sensor_;
-        std::string frame_id_, map_frame_id_;
-
-        ros::Publisher pub_path_, pub_marker_, pub_odometry_;
+        ros::Publisher pub_path_;
 
     public:
         PublisherTrajectory(const std::string& _unique_name,
@@ -73,12 +66,6 @@ class PublisherTrajectory: public Publisher
 
         void publishTrajectory();
 
-    protected:
-
-        bool listenTf();
-        Eigen::Quaterniond q_frame_;
-        Eigen::Vector3d t_frame_;
-        tf::TransformListener tfl_;
 };
 
 WOLF_REGISTER_PUBLISHER(PublisherTrajectory)
