@@ -81,12 +81,19 @@ void PublisherTrajectory::initialize(ros::NodeHandle& nh, const std::string& top
 
     pub_marker_ = nh.advertise<visualization_msgs::Marker>(topic + "_marker", 1);
 
+    // Odometry
+    odometry_msg_.header.frame_id = frame_id_;
+
+    pub_odometry_ = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>(topic + "_pose_with_cov", 1);
+
+
 }
 
 void PublisherTrajectory::publishDerived()
 {
     if (pub_path_.getNumSubscribers() == 0 and
-        pub_marker_.getNumSubscribers() == 0)
+        pub_marker_.getNumSubscribers() == 0 and
+        pub_odometry_.getNumSubscribers() == 0 )
         return;
 
     VectorComposite current_state = problem_->getState("PO");
@@ -162,24 +169,24 @@ void PublisherTrajectory::publishDerived()
         if (problem_->getDim() == 2)
             throw std::runtime_error("not implemented");
         else
-            std::copy(cov.data(), cov.data() + cov.size(), pose_with_cov_msg_.pose.covariance.data());
+            std::copy(cov.data(), cov.data() + cov.size(), odometry_msg_.pose.covariance.data());
     }
     else
     {
         //WOLF_WARN("Last KF covariance could not be recovered, using the previous one");
-        //pose_with_cov_msg_.pose.covariance[0] = -1; // not valid
+        //odometry_msg_.pose.covariance[0] = -1; // not valid
     }
 
     // Fill Trajectory msg
-    pose_with_cov_msg_.header.stamp = ros::Time(loc_ts.getSeconds(), loc_ts.getNanoSeconds());
-    pose_with_cov_msg_.pose.pose.position.x = p(0);
-    pose_with_cov_msg_.pose.pose.position.y = p(1);
-    pose_with_cov_msg_.pose.pose.position.z = p(2);
+    odometry_msg_.header.stamp = ros::Time(loc_ts.getSeconds(), loc_ts.getNanoSeconds());
+    odometry_msg_.pose.pose.position.x = p(0);
+    odometry_msg_.pose.pose.position.y = p(1);
+    odometry_msg_.pose.pose.position.z = p(2);
 
-    pose_with_cov_msg_.pose.pose.orientation.x = q.x();
-    pose_with_cov_msg_.pose.pose.orientation.y = q.y();
-    pose_with_cov_msg_.pose.pose.orientation.z = q.z();
-    pose_with_cov_msg_.pose.pose.orientation.w = q.w();
+    odometry_msg_.pose.pose.orientation.x = q.x();
+    odometry_msg_.pose.pose.orientation.y = q.y();
+    odometry_msg_.pose.pose.orientation.z = q.z();
+    odometry_msg_.pose.pose.orientation.w = q.w();
     publishTrajectory();
 }
 
@@ -188,7 +195,7 @@ void PublisherTrajectory::publishTrajectory()
     // fill msgs and publish
     if (pub_path_.getNumSubscribers() != 0)
     {
-        path_msg_.header.stamp = pose_with_cov_msg_.header.stamp;
+        path_msg_.header.stamp = odometry_msg_.header.stamp;
 
         if (max_points_ >= 0 and path_msg_.poses.size() >= max_points_)
         {
@@ -202,13 +209,13 @@ void PublisherTrajectory::publishTrajectory()
             //                            path_msg_.poses.begin() + max_points_/2);
         }
 
-        path_msg_.poses.push_back(pose_with_cov_msg_.pose.pose);
+        path_msg_.poses.push_back(odometry_msg_.pose.pose);
 
         pub_path_.publish(path_msg_);
     }
     if (pub_marker_.getNumSubscribers() != 0)
     {
-        marker_msg_.header.stamp = pose_with_cov_msg_.header.stamp;
+        marker_msg_.header.stamp = odometry_msg_.header.stamp;
 
         if (max_points_ >= 0 and marker_msg_.points.size() >= max_points_)
         {
@@ -231,13 +238,13 @@ void PublisherTrajectory::publishTrajectory()
             //                         marker_msg_.points.begin() + max_points_/2);
         }
 
-        marker_msg_.points.push_back(pose_with_cov_msg_.pose.pose.position);
+        marker_msg_.points.push_back(odometry_msg_.pose.pose.position);
 
         pub_marker_.publish(marker_msg_);
     }
-    if (pub_pose_with_cov_.getNumSubscribers() != 0)
+    if (pub_odometry_.getNumSubscribers() != 0)
     {
-        pub_pose_with_cov_.publish(pose_with_cov_msg_);
+        pub_odometry_.publish(odometry_msg_);
     }
 }
 

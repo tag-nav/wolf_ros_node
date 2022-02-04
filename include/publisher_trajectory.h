@@ -52,7 +52,6 @@ class PublisherTrajectory: public Publisher
         nav_msgs::Path path_msg_;
         nav_msgs::Odometry odometry_msg_;
 
-        geometry_msgs::PoseArray pose_array_msg_;
         visualization_msgs::Marker marker_msg_;
         std_msgs::ColorRGBA marker_color_;
         SensorBasePtr sensor_;
