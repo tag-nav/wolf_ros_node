@@ -52,12 +52,12 @@ void PublisherTrajectory::initialize(ros::NodeHandle& nh, const std::string& top
 
     // PATH
     path_msg_.header.frame_id = frame_id_;
-    pub_path_ = nh.advertise<nav_msgs::Path>(topic, 1);
+    publisher_ = nh.advertise<nav_msgs::Path>(topic, 1);
 }
 
 void PublisherTrajectory::publishDerived()
 {
-    if (pub_path_.getNumSubscribers() != 0 )
+    if (publisher_.getNumSubscribers() != 0 )
         publishTrajectory();
 }
 
@@ -100,7 +100,7 @@ void PublisherTrajectory::publishTrajectory()
         }
 
     //Publish path
-    pub_path_.publish(path_msg_);
+    publisher_.publish(path_msg_);
 
     //clear msg
     path_msg_.poses.clear();
