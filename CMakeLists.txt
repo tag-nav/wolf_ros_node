@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(wolf_ros_node)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+add_compile_options(-std=c++14)
 
 # SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/wolf_ros_wrapper/cmake_modules")
 ## Find catkin macros and libraries
@@ -13,15 +13,18 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
   std_msgs
+  nav_msgs
   tf
-  dynamic_reconfigure
+  tf_conversions
+  tf2_ros
+#  dynamic_reconfigure
 )
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 # find_package(Ceres REQUIRED)
 # find_package(Eigen3 REQUIRED)
-find_package(wolf REQUIRED)
+find_package(wolfcore REQUIRED)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -94,9 +97,9 @@ find_package(wolf REQUIRED)
 ##     and list every .cfg file to be processed
 
 ## Generate dynamic reconfigure parameters in the 'cfg' folder
-generate_dynamic_reconfigure_options(
-  cfg/WolfROS.cfg
-)
+##generate_dynamic_reconfigure_options(
+##  cfg/WolfROS.cfg
+##)
 
 ###################################
 ## catkin specific configuration ##
@@ -120,11 +123,11 @@ INCLUDE_DIRS include
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-message("Wolf include path: ${wolf_INCLUDE_DIR}")
+message("Wolf include path: ${wolfcore_INCLUDE_DIRS}")
 include_directories(
     include
   ${EIGEN_INCLUDE_DIRS}
-  ${wolf_INCLUDE_DIRS}
+  ${wolfcore_INCLUDE_DIRS}
   ${catkin_INCLUDE_DIRS}
   ${CERES_INCLUDE_DIRS}
 )
@@ -144,10 +147,17 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 
-add_executable(${PROJECT_NAME} src/wolf_ros_node.cpp)
-add_library(wolf_subscriber_odom2D src/wolf_ros_subscriber_odom2D.cpp)
-add_library(wolf_subscriber_other src/wolf_ros_subscriber_other.cpp)
-add_library(wolf_ros_visualizer src/wolf_ros_visualizer.cpp)
+add_executable(${PROJECT_NAME} src/node.cpp)
+
+add_library(subscriber_${PROJECT_NAME}
+  			src/subscriber_diffdrive.cpp
+  			src/subscriber_odom2d.cpp)
+add_library(publisher_${PROJECT_NAME}
+  			src/publisher_graph.cpp
+  			src/publisher_pose.cpp
+  			src/publisher_trajectory.cpp
+  			src/publisher_state_block.cpp
+  			src/publisher_tf.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -157,17 +167,29 @@ add_library(wolf_ros_visualizer src/wolf_ros_visualizer.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg)
-add_dependencies(wolf_ros_visualizer ${PROJECT_NAME}_gencfg)
+## add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(wolf_ros_visualizer ${wolf_LIBRARIES})
-
-target_link_libraries(${PROJECT_NAME}
-                      wolf_ros_visualizer
+target_link_libraries(subscriber_${PROJECT_NAME}
                       ${catkin_LIBRARIES}
                       ${CERES_LIBRARIES}
-                      ${wolf_LIBRARIES}
+                      ${wolfcore_LIBRARIES}
+                      yaml-cpp
+                      dl
+                      )
+
+target_link_libraries(publisher_${PROJECT_NAME}
+                      ${catkin_LIBRARIES}
+                      ${CERES_LIBRARIES}
+                      ${wolfcore_LIBRARIES}
+                      yaml-cpp
+                      dl
+                      )
+
+target_link_libraries(${PROJECT_NAME}
+                      ${catkin_LIBRARIES}
+                      ${CERES_LIBRARIES}
+                      ${wolfcore_LIBRARIES}
                       yaml-cpp
                       dl
                       )
