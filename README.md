@@ -1,3 +1,3 @@
-# wolf_ros_node
+# WOLF ROS node
 
-Wolf ROS node
+For installation guide and code documentation, please visit the [documentation website](http://www.iri.upc.edu/wolf).
