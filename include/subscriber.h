@@ -25,6 +25,8 @@
 /**************************
  *      WOLF includes     *
  **************************/
+#include "core/common/wolf.h"
+#include <core/utils/params_server.h>
 #include <core/sensor/sensor_base.h>
 #include "factory_subscriber.h"
 
@@ -32,6 +34,7 @@
  *      ROS includes      *
  **************************/
 #include <ros/ros.h>
+#include <std_msgs/Header.h>
 
 namespace wolf {
 WOLF_PTR_TYPEDEFS(Subscriber);

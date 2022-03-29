@@ -26,7 +26,6 @@
 #include <core/common/factory.h>
 #include <core/utils/params_server.h>
 #include <ros/ros.h>
-#include <nav_msgs/Odometry.h>
 
 // #include "wolf_ros_subscriber.h"
 // std
@@ -177,12 +176,12 @@ namespace wolf
  *
  * You can also check the code in the example file ````src/examples/test_wolf_factories.cpp````.
  */
-    class Subscriber;
-    typedef Factory<Subscriber,
-                    const std::string&,
-                    const ParamsServer&,
-                    const SensorBasePtr,
-                    ros::NodeHandle&> FactorySubscriber;
+class Subscriber;
+typedef Factory<Subscriber,
+                const std::string&,
+                const ParamsServer&,
+                const SensorBasePtr,
+                ros::NodeHandle&> FactorySubscriber;
 template<>
 inline std::string FactorySubscriber::getClass() const
 {
