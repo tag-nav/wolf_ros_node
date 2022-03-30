@@ -55,5 +55,4 @@ class SubscriberDiffdrive : public Subscriber
     void callback(const sensor_msgs::JointState::ConstPtr& msg);
 };
 
-WOLF_REGISTER_SUBSCRIBER(SubscriberDiffdrive)
 }  // namespace wolf

@@ -106,4 +106,5 @@ void PublisherTrajectory::publishTrajectory()
     path_msg_.poses.clear();
 }
 
+WOLF_REGISTER_PUBLISHER(PublisherTrajectory)
 }

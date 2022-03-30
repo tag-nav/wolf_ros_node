@@ -53,5 +53,4 @@ class SubscriberOdom2d : public Subscriber
     void callback(const nav_msgs::Odometry::ConstPtr& msg);
 };
 
-WOLF_REGISTER_SUBSCRIBER(SubscriberOdom2d)
 }  // namespace wolf

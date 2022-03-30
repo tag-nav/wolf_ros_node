@@ -78,7 +78,6 @@ class PublisherPose: public Publisher
         tf::TransformListener tfl_;
 };
 
-WOLF_REGISTER_PUBLISHER(PublisherPose)
 }
 
 #endif

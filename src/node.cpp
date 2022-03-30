@@ -66,7 +66,6 @@ WolfRosNode::WolfRosNode()
     node_rate_ = server.getParam<double>("problem/node_rate");
 
     // LOAD PACKAGES (subscribers and publishers)
-    auto loaders = std::vector<std::shared_ptr<Loader>>();
 #if __APPLE__
     std::string lib_extension = ".dylib";
 #else
@@ -77,14 +76,14 @@ WolfRosNode::WolfRosNode()
         WOLF_TRACE("Loading subscriber " + subscriber_name + " via " + subscriber);
         auto l = std::make_shared<LoaderRaw>(subscriber);
         l->load();
-        loaders.push_back(l);
+        loaders_.push_back(l);
     }
     for (auto publisher_name : server.getParam<std::vector<std::string>>("packages_publisher")) {
         std::string publisher = packages_path + "/libpublisher_" + publisher_name + lib_extension;
         WOLF_TRACE("Loading publisher " + publisher_name + " via " + publisher);
         auto l = std::make_shared<LoaderRaw>(publisher);
         l->load();
-        loaders.push_back(l);
+        loaders_.push_back(l);
     }
     
     // PUBLISHERS
@@ -94,11 +93,11 @@ WolfRosNode::WolfRosNode()
         std::string publisher = it["type"];
         std::string topic      = it["topic"];
         WOLF_INFO("Pub: ", publisher, " name: ", publisher+" - "+topic);
-        publishers_.push_back(FactoryEmptyObject::create(publisher,
-                                                        publisher+" - "+topic,
-                                                        server,
-                                                        problem_ptr_,
-                                                        nh_));
+        publishers_.push_back(FactoryPublisher::create(publisher,
+                                                       publisher+" - "+topic,
+                                                       server,
+                                                       problem_ptr_,
+                                                       nh_));
     }
 
     // SUBSCRIBERS
@@ -268,7 +267,10 @@ int main(int argc, char **argv)
 
     // Init publishers threads
     for(auto pub : wolf_node.publishers_)
+    {
+        WOLF_INFO("Running publisher ", pub->getName());
         pub->run();
+    }
 
     while (ros::ok())
     {
