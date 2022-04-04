@@ -47,10 +47,13 @@ PublisherTf::PublisherTf(const std::string& _unique_name,
     T_odom2base_.frame_id_ = odom_frame_id_;
     T_odom2base_.child_frame_id_ = base_frame_id_;
     T_odom2base_.stamp_ = ros::Time::now();
+<<<<<<< HEAD
     //T_map2odom_.setIdentity();
     //T_map2odom_.frame_id_ = map_frame_id_;
     //T_map2odom_.child_frame_id_ = odom_frame_id_;
     //T_map2odom_.stamp_ = ros::Time::now();
+=======
+>>>>>>> devel
     Tmsg_map2odom_.child_frame_id = odom_frame_id_;
     Tmsg_map2odom_.header.frame_id = map_frame_id_;
     Tmsg_map2odom_.header.stamp = ros::Time::now();
@@ -164,4 +167,5 @@ void PublisherTf::publishDerived()
     stfb_.sendTransform(Tmsg_map2odom_);
 }
 
+WOLF_REGISTER_PUBLISHER(PublisherTf)
 }

@@ -263,4 +263,5 @@ bool PublisherPose::listenTf()
     return false;
 }
 
+WOLF_REGISTER_PUBLISHER(PublisherPose)
 }

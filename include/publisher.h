@@ -97,6 +97,8 @@ class Publisher
 
         std::string getTopic() const;
 
+        std::string getName() const;
+
     protected:
 
         template<typename T>
@@ -127,6 +129,11 @@ class Publisher
 inline std::string Publisher::getTopic() const
 {
     return topic_;
+}
+
+inline std::string Publisher::getName() const
+{
+    return name_;
 }
 
 inline void Publisher::publish()

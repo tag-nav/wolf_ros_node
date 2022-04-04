@@ -64,4 +64,5 @@ void PublisherStateBlock::publishDerived()
 
 }
 
+WOLF_REGISTER_PUBLISHER(PublisherStateBlock)
 }

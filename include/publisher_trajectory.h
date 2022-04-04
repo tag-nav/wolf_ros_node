@@ -66,7 +66,6 @@ class PublisherTrajectory: public Publisher
 
 };
 
-WOLF_REGISTER_PUBLISHER(PublisherTrajectory)
 }
 
 #endif

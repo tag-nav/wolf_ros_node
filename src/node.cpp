@@ -32,7 +32,7 @@ WolfRosNode::WolfRosNode()
     , last_print_(ros::Time(0))
 {
     // ROS PARAMS
-    std::string yaml_file, plugins_path, subscribers_path;
+    std::string yaml_file, plugins_path, packages_path;
     nh_.param<std::string>("yaml_file_path",
                            yaml_file,
                            ros::package::getPath("wolf_ros_node") + "/yaml/params_demo.yaml");
@@ -40,7 +40,7 @@ WolfRosNode::WolfRosNode()
                            plugins_path,
                            "/usr/local/lib/");
     nh_.param<std::string>("packages_path",
-                           subscribers_path,
+                           packages_path,
                            ros::package::getPath("wolf_ros_node") + "/../../devel/lib/");
 
     // PARAM SERVER CONFIGURATION
@@ -52,8 +52,6 @@ WolfRosNode::WolfRosNode()
     ParamsServer    server      = ParamsServer(parser.getParams());
 
     server.addParam("plugins_path", plugins_path);
-    server.addParam("packages_path", subscribers_path);
-
     server.print();
 
     // PROBLEM
@@ -66,6 +64,41 @@ WolfRosNode::WolfRosNode()
 
     // ROS
     node_rate_ = server.getParam<double>("problem/node_rate");
+
+    // LOAD PACKAGES (subscribers and publishers)
+#if __APPLE__
+    std::string lib_extension = ".dylib";
+#else
+    std::string lib_extension = ".so";
+#endif
+    for (auto subscriber_name : server.getParam<std::vector<std::string>>("packages_subscriber")) {
+        std::string subscriber = packages_path + "/libsubscriber_" + subscriber_name + lib_extension;
+        WOLF_TRACE("Loading subscriber " + subscriber_name + " via " + subscriber);
+        auto l = std::make_shared<LoaderRaw>(subscriber);
+        l->load();
+        loaders_.push_back(l);
+    }
+    for (auto publisher_name : server.getParam<std::vector<std::string>>("packages_publisher")) {
+        std::string publisher = packages_path + "/libpublisher_" + publisher_name + lib_extension;
+        WOLF_TRACE("Loading publisher " + publisher_name + " via " + publisher);
+        auto l = std::make_shared<LoaderRaw>(publisher);
+        l->load();
+        loaders_.push_back(l);
+    }
+    
+    // PUBLISHERS
+    ROS_INFO("Creating publishers...");
+    for (auto it : server.getParam<std::vector<std::map<std::string, std::string>>>("ROS publisher"))
+    {
+        std::string publisher = it["type"];
+        std::string topic      = it["topic"];
+        WOLF_INFO("Pub: ", publisher, " name: ", publisher+" - "+topic);
+        publishers_.push_back(FactoryPublisher::create(publisher,
+                                                       publisher+" - "+topic,
+                                                       server,
+                                                       problem_ptr_,
+                                                       nh_));
+    }
 
     // SUBSCRIBERS
     ROS_INFO("Creating subscribers...");
@@ -80,18 +113,6 @@ WolfRosNode::WolfRosNode()
                                                          server,
                                                          problem_ptr_->getSensor(sensor),
                                                          nh_));
-    }
-
-    // PUBLISHERS
-    ROS_INFO("Creating publishers...");
-    for (auto it : server.getParam<std::vector<std::map<std::string, std::string>>>("ROS publisher"))
-    {
-        WOLF_INFO("Pub: ", it["type"]);
-        publishers_.push_back(FactoryPublisher::create(it["type"],
-                                                       it["type"]+" - "+it["topic"],
-                                                       server,
-                                                       problem_ptr_,
-                                                       nh_));
     }
 
     // PROFILING
@@ -246,7 +267,10 @@ int main(int argc, char **argv)
 
     // Init publishers threads
     for(auto pub : wolf_node.publishers_)
+    {
+        WOLF_INFO("Running publisher ", pub->getName());
         pub->run();
+    }
 
     while (ros::ok())
     {

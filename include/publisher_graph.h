@@ -99,8 +99,6 @@ class PublisherGraph: public Publisher
 
 };
 
-WOLF_REGISTER_PUBLISHER(PublisherGraph)
-
 }
 
 #endif
