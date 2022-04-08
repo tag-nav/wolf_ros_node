@@ -76,7 +76,7 @@ WolfRosNode::WolfRosNode()
         std::string sensor     = it["sensor_name"];
         WOLF_TRACE("From sensor {" + sensor + "} subscribing {" + subscriber + "} to {" + topic + "} topic");
         subscribers_.push_back(FactorySubscriber::create(subscriber,
-                                                         subscriber+" - " + topic,
+                                                         subscriber + " - " + topic,
                                                          server,
                                                          problem_ptr_->getSensor(sensor),
                                                          nh_));
