@@ -59,7 +59,6 @@ class PublisherStateBlock: public Publisher
         void publishDerived() override;
 };
 
-WOLF_REGISTER_PUBLISHER(PublisherStateBlock)
 }
 
 #endif

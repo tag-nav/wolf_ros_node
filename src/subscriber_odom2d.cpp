@@ -81,4 +81,5 @@ void SubscriberOdom2d::callback(const nav_msgs::Odometry::ConstPtr& msg)
     ROS_DEBUG("WolfNodePolyline::odomCallback: end");
 }
 
+WOLF_REGISTER_SUBSCRIBER(SubscriberOdom2d)
 }  // namespace wolf

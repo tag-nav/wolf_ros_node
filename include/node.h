@@ -79,6 +79,8 @@ class WolfRosNode
 
 
     protected:
+        std::vector<std::shared_ptr<Loader>> loaders_;
+
         // solver
         SolverManagerPtr solver_;
         ros::Time last_cov_stamp_;

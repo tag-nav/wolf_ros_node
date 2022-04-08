@@ -67,7 +67,7 @@ class PublisherTf: public Publisher
 
         tf::TransformListener tfl_;
 
-        tf::StampedTransform T_odom2base_;//, T_map2odom_;
+        tf::StampedTransform T_odom2base_;
         geometry_msgs::TransformStamped Tmsg_map2odom_;
 
         bool publish_odom_tf_;
@@ -86,7 +86,6 @@ class PublisherTf: public Publisher
         void publishDerived() override;
 };
 
-WOLF_REGISTER_PUBLISHER(PublisherTf)
 }
 
 #endif

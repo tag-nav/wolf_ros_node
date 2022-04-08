@@ -772,4 +772,6 @@ std::string PublisherGraph::factorString(FactorBaseConstPtr fac) const
     return factor_string;
 }
 
+WOLF_REGISTER_PUBLISHER(PublisherGraph)
+
 }

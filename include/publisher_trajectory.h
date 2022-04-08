@@ -50,8 +50,6 @@ class PublisherTrajectory: public Publisher
         
         std::string frame_id_;
 
-        ros::Publisher pub_path_;
-
     public:
         PublisherTrajectory(const std::string& _unique_name,
                       const ParamsServer& _server,
@@ -68,7 +66,6 @@ class PublisherTrajectory: public Publisher
 
 };
 
-WOLF_REGISTER_PUBLISHER(PublisherTrajectory)
 }
 
 #endif

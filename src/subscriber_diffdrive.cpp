@@ -88,4 +88,5 @@ void SubscriberDiffdrive::callback(const sensor_msgs::JointState::ConstPtr& msg)
     last_odom_seq_   = msg->header.seq;
 }
 
+WOLF_REGISTER_SUBSCRIBER(SubscriberDiffdrive)
 }  // namespace wolf

@@ -118,8 +118,6 @@ build_and_test:bionic:
     - key: catkinws-src-bionic
       paths:
       - catkin_ws/src
-  except:
-    - master
   before_script:
     - *preliminaries_definition
     - *install_wolf_definition
@@ -137,8 +135,6 @@ build_and_test:focal:
     - key: catkinws-src-focal
       paths:
       - catkin_ws/src
-  except:
-    - master
   before_script:
     - *preliminaries_definition
     - *install_wolf_definition
