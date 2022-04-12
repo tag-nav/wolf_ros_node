@@ -443,11 +443,21 @@ bool PublisherGraph::fillLandmarkMarkers(LandmarkBaseConstPtr lmk,
 
     // POSITION & ORIENTATION ------------------------------------------------------
     // position
-    lmk_marker.pose.position.x = lmk->getP()->getState()(0);
-    lmk_marker.pose.position.y = lmk->getP()->getState()(1);
-    if (lmk->getP()->getSize() > 2)
-        lmk_marker.pose.position.z = lmk->getP()->getState()(2);
-
+    Eigen::VectorXd lmk_pos;
+    lmk_pos = lmk->getP()->getState();
+    lmk_marker.pose.position.x = lmk_pos(0);
+    lmk_marker.pose.position.y = lmk_pos(1);
+    if (lmk_pos.size() > 2) // this is a 3d point
+    {
+        lmk_marker.pose.position.z = lmk_pos(2);
+        if (lmk_pos.size() == 4) // this is a homogeneous 3d point with 4 numbers. Divide xyz by last element:
+        {
+            double w = lmk_pos(3);
+            lmk_marker.pose.position.x /= w;
+            lmk_marker.pose.position.y /= w;
+            lmk_marker.pose.position.z /= w;
+        }
+    }
     // orientation
     if (lmk->getO() != nullptr)
     {
@@ -614,10 +624,22 @@ bool PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
             not fac->getLandmarkOther()->getP())
             return false;
 
-        point2.x = fac->getLandmarkOther()->getP()->getState()(0);
-        point2.y = fac->getLandmarkOther()->getP()->getState()(1);
+        Eigen::VectorXd lmk_pos;
+        lmk_pos  = fac->getLandmarkOther()->getP()->getState();
+        point2.x = lmk_pos(0);
+        point2.y = lmk_pos(1);
         if (fac->getProblem()->getDim() == 3)
-            point2.z = fac->getLandmarkOther()->getP()->getState()(2);
+        {
+            point2.z = lmk_pos(2);
+            if (lmk_pos.size() == 4)
+            {
+                // homogeneous 3d point. Divide XYZ by 4th component
+                double w = lmk_pos(3);
+                point2.x /= w;
+                point2.y /= w;
+                point2.z /= w;
+            }
+        }
         else
             point2.z = 0;
     }
