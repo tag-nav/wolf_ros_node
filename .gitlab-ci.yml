@@ -99,8 +99,6 @@ license_headers:
   stage: license
   image: labrobotica/wolf_deps_ros:20.04
   cache: []
-  except:
-    - master
   before_script:
     - *preliminaries_definition
     - *install_wolf_definition
