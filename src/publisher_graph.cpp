@@ -473,6 +473,13 @@ bool PublisherGraph::fillLandmarkMarkers(LandmarkBaseConstPtr lmk,
         else
             lmk_marker.pose.orientation = tf::createQuaternionMsgFromYaw(lmk->getO()->getState()(0));
     }
+    else
+    {
+        lmk_marker.pose.orientation.x = 0;
+        lmk_marker.pose.orientation.y = 0;
+        lmk_marker.pose.orientation.z = 0;
+        lmk_marker.pose.orientation.w = 1;
+    }
 
     // TEXT MARKER ------------------------------------------------------
     lmk_text_marker.text = std::to_string(lmk->id());
