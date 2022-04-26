@@ -209,7 +209,7 @@ PublisherGraph::PublisherGraph(const std::string& _unique_name,
     landmark_marker_.scale.x = viz_scale_*landmark_length_;
     landmark_marker_.scale.y = viz_scale_*landmark_width_;
     landmark_marker_.scale.z = viz_scale_*landmark_width_;
-    landmark_marker_.color.a = 0.5;
+    landmark_marker_.color.a = 1.0;
     landmark_text_marker_ = landmark_marker_;
     landmark_text_marker_.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
     landmark_text_marker_.ns = "landmarks_text";
