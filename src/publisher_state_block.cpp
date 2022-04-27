@@ -30,7 +30,7 @@ PublisherStateBlock::PublisherStateBlock(const std::string& _unique_name,
         Publisher(_unique_name, _server, _problem),
         msg_init_(false)
 {
-  sensor_ = _problem->getSensor(_server.getParam<std::string>(prefix_ + "/sensor"));
+  sensor_ = _problem->findSensor(_server.getParam<std::string>(prefix_ + "/sensor"));
   assert(sensor_);
   key_ = _server.getParam<char>(prefix_ + "/key");
 }

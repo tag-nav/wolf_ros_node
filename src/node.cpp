@@ -111,7 +111,7 @@ WolfRosNode::WolfRosNode()
         subscribers_.push_back(FactorySubscriber::create(subscriber,
                                                          subscriber + " - " + topic,
                                                          server,
-                                                         problem_ptr_->getSensor(sensor),
+                                                         problem_ptr_->findSensor(sensor),
                                                          nh_));
     }
 

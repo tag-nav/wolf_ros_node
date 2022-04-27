@@ -54,7 +54,7 @@ PublisherPose::PublisherPose(const std::string& _unique_name,
 
     extrinsics_ = _server.getParam<bool>(prefix_ + "/extrinsics");
     if (extrinsics_)
-        sensor_ = _problem->getSensor(_server.getParam<std::string>(prefix_ + "/sensor"));
+        sensor_ = _problem->findSensor(_server.getParam<std::string>(prefix_ + "/sensor"));
     frame_id_ = _server.getParam<std::string>(prefix_ + "/frame_id");
 }
 
