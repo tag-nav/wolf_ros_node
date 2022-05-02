@@ -18,6 +18,11 @@ find_package(catkin REQUIRED COMPONENTS
 ## System dependencies are found with CMake's conventions
 find_package(wolfcore REQUIRED)
 
+
+###################################
+## catkin specific configuration ##
+###################################
+# produces the XXXConfig.cmake file among other things
 catkin_package(
   INCLUDE_DIRS include
 )
