@@ -33,7 +33,7 @@ namespace wolf
 
 PublisherPose::PublisherPose(const std::string& _unique_name,
                              const ParamsServer& _server,
-                             const ProblemPtr _problem) :
+                             ProblemConstPtr _problem) :
         Publisher(_unique_name, _server, _problem)
 {
     Eigen::Vector4d marker_color_v;

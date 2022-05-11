@@ -53,7 +53,7 @@ WOLF_PTR_TYPEDEFS(Publisher);
 #define WOLF_PUBLISHER_CREATE(PublisherClass)                                               \
         static PublisherPtr create(const std::string& _unique_name,                         \
                                    const ParamsServer& _server,                             \
-                                   const ProblemPtr _problem,                               \
+                                   ProblemConstPtr _problem,                                \
                                    ros::NodeHandle& _nh)                                    \
                                    {                                                        \
     PublisherPtr pub = std::make_shared<PublisherClass>(_unique_name, _server, _problem);   \
@@ -67,7 +67,7 @@ class Publisher
 
         Publisher(const std::string& _unique_name,
                   const ParamsServer& _server,
-                  const ProblemPtr _problem) :
+                  ProblemConstPtr _problem) :
                       problem_(_problem),
                       first_publish_time_(ros::Time(0)),
                       last_n_period_(0),
@@ -103,10 +103,10 @@ class Publisher
 
         template<typename T>
         T getParamWithDefault(const ParamsServer &_server,
-                   const std::string &_param_name,
-                   const T _default_value) const;
+                              const std::string &_param_name,
+                              const T _default_value) const;
 
-        ProblemPtr problem_;
+        ProblemConstPtr problem_;
         ros::Publisher publisher_;
         double period_;
         ros::Time first_publish_time_;

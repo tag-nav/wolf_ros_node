@@ -37,8 +37,8 @@ namespace wolf
 {
 
 PublisherTrajectory::PublisherTrajectory(const std::string& _unique_name,
-                             const ParamsServer& _server,
-                             const ProblemPtr _problem) :
+                                         const ParamsServer& _server,
+                                         ProblemConstPtr _problem) :
         Publisher(_unique_name, _server, _problem)
 {
     frame_id_ = _server.getParam<std::string>(prefix_ + "/frame_id");
@@ -65,7 +65,6 @@ void PublisherTrajectory::publishTrajectory()
 {
     path_msg_.header.stamp = ros::Time::now();
 
-    auto trajectory = problem_->getTrajectory();
     int frame_num = 0;
 
     //Fill path message with PoseStamped from trajectory
@@ -73,7 +72,8 @@ void PublisherTrajectory::publishTrajectory()
     Eigen::Vector3d p = Eigen::Vector3d::Zero();
     Eigen::Quaterniond q;
 
-    for (auto frm: trajectory->getFrameMap())
+    auto frame_map = problem_->getTrajectory()->getFrameMap();
+    for (auto frm : frame_map)
     {
         auto loc_ts = frm.first;
         framepose.header.frame_id = frame_id_;

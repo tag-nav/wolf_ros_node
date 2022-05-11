@@ -176,7 +176,7 @@ class Publisher;
 typedef Factory<Publisher,
                 const std::string&,
                 const ParamsServer&,
-                const ProblemPtr,
+                ProblemConstPtr,
                 ros::NodeHandle&> FactoryPublisher;
 
 template<>
