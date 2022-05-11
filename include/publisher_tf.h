@@ -75,8 +75,8 @@ class PublisherTf: public Publisher
 
     public:
         PublisherTf(const std::string& _unique_name,
-                      const ParamsServer& _server,
-                      const ProblemPtr _problem);
+                    const ParamsServer& _server,
+                    ProblemConstPtr _problem);
         WOLF_PUBLISHER_CREATE(PublisherTf);
 
         virtual ~PublisherTf(){};

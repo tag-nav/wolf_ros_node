@@ -42,8 +42,8 @@ class PublisherGraph: public Publisher
 {
     public:
         PublisherGraph(const std::string& _unique_name,
-                      const ParamsServer& _server,
-                      const ProblemPtr _problem);
+                       const ParamsServer& _server,
+                       ProblemConstPtr _problem);
         WOLF_PUBLISHER_CREATE(PublisherGraph);
 
         virtual ~PublisherGraph(){};
