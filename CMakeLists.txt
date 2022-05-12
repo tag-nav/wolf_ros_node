@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.10)
 project(wolf_ros_node)
 
-## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++14)
+## Compile as C++14
+add_compile_options(-std=c++14) 
+# -fPIC and -rdynamic ensure unique singleton instance across shared libraries (for factories) see: https://stackoverflow.com/a/8626922
+SET(CMAKE_CXX_FLAGS "-fPIC -rdynamic")
 
 find_package(catkin REQUIRED COMPONENTS
   roslib
@@ -38,40 +40,31 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-
 add_executable(${PROJECT_NAME} src/node.cpp)
 
 add_library(subscriber_${PROJECT_NAME}
-  			src/subscriber_diffdrive.cpp
-  			src/subscriber_odom2d.cpp)
+  			    src/subscriber_diffdrive.cpp
+  			    src/subscriber_odom2d.cpp)
+
 add_library(publisher_${PROJECT_NAME}
-  			src/publisher_graph.cpp
-  			src/publisher_pose.cpp
-  			src/publisher_trajectory.cpp
-  			src/publisher_state_block.cpp
-  			src/publisher_tf.cpp)
+  			    src/publisher_graph.cpp
+  			    src/publisher_pose.cpp
+  			    src/publisher_trajectory.cpp
+  			    src/publisher_state_block.cpp
+  			    src/publisher_tf.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(subscriber_${PROJECT_NAME}
                       ${catkin_LIBRARIES}
-                      ceres
                       wolfcore
-                      yaml-cpp
-                      dl
                       )
 
 target_link_libraries(publisher_${PROJECT_NAME}
                       ${catkin_LIBRARIES}
-                      ceres
                       wolfcore
-                      yaml-cpp
-                      dl
                       )
 
 target_link_libraries(${PROJECT_NAME}
                       ${catkin_LIBRARIES}
-                      ceres
                       wolfcore
-                      yaml-cpp
-                      dl
                       )

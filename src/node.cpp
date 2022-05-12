@@ -84,12 +84,7 @@ WolfRosNode::WolfRosNode()
 
         WOLF_TRACE("Loading publisher " + type + " via " + lib_publisher);
         auto l = std::make_shared<LoaderRaw>(lib_publisher);
-
-        FactoryPublisher::printCallbacks();
-        FactoryPublisher::printAddress();
         l->load();
-        FactoryPublisher::printCallbacks();
-        FactoryPublisher::printAddress();
         //loaders_.push_back(l);
 
         WOLF_INFO("Pub: ", type, " name: ", name);
