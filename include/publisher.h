@@ -48,14 +48,14 @@ WOLF_PTR_TYPEDEFS(Publisher);
  *
  *   PublisherClass(const std::string& _unique_name,
  *                  const ParamsServer& _server,
- *                  const ProblemPtr _problem);
+ *                  ProblemConstPtr _problem);
  */
 #define WOLF_PUBLISHER_CREATE(PublisherClass)                                               \
         static PublisherPtr create(const std::string& _unique_name,                         \
                                    const ParamsServer& _server,                             \
                                    ProblemConstPtr _problem,                                \
                                    ros::NodeHandle& _nh)                                    \
-                                   {                                                        \
+{                                                                                           \
     PublisherPtr pub = std::make_shared<PublisherClass>(_unique_name, _server, _problem);   \
     pub->initialize(_nh, pub->getTopic());                                                  \
     return pub;                                                                             \
@@ -99,6 +99,8 @@ class Publisher
 
         std::string getName() const;
 
+        void printProfiling(std::ostream& stream = std::cout) const;
+
     protected:
 
         template<typename T>
@@ -121,9 +123,6 @@ class Publisher
         unsigned int n_publish_;
         std::chrono::microseconds acc_duration_;
         std::chrono::microseconds max_duration_;
-
-    public:
-        void printProfiling(std::ostream& stream = std::cout) const;
 };
 
 inline std::string Publisher::getTopic() const
