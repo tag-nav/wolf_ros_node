@@ -48,7 +48,7 @@ WOLF_PTR_TYPEDEFS(Publisher);
  *
  *   PublisherClass(const std::string& _unique_name,
  *                  const ParamsServer& _server,
- *                  const ProblemPtr _problem);
+ *                  ProblemConstPtr _problem);
  */
 #define WOLF_PUBLISHER_CREATE(PublisherClass)                                               \
         static PublisherPtr create(const std::string& _unique_name,                         \
