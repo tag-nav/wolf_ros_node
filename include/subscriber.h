@@ -131,7 +131,7 @@ inline double Subscriber::secondsSinceLastCallback()
 {
     if (last_stamp_ == ros::Time(0))
     {
-        WOLF_WARN("Subscriber: 'last_stamp_` not initialized. No messages have been received or ", name_, " is not updating headers (be sure to add 'updateLastHeader(msg->header)' in your subscriber callback).");
+        WOLF_WARN("[", name_, "]: 'last_stamp_` not initialized. No messages have been received or ", name_, " is not updating headers (be sure to add 'updateLastHeader(msg->header)' in your subscriber callback).");
         return 0;
     }
     return (ros::Time::now() - last_stamp_).toSec();
@@ -162,7 +162,7 @@ inline T Subscriber::getParamWithDefault(const ParamsServer &_server,
     }
     catch (...)
     {
-        WOLF_INFO("Subscriber: Parameter ", _param_name, " is missing. Taking default value: ", _default_value);
+        WOLF_INFO("[", name_, "]: Parameter ", _param_name, " is missing. Taking default value: ", _default_value);
         return _default_value;
     }
 }

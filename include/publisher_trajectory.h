@@ -52,8 +52,8 @@ class PublisherTrajectory: public Publisher
 
     public:
         PublisherTrajectory(const std::string& _unique_name,
-                      const ParamsServer& _server,
-                      const ProblemPtr _problem);
+                            const ParamsServer& _server,
+                            ProblemConstPtr _problem);
         WOLF_PUBLISHER_CREATE(PublisherTrajectory);
 
         virtual ~PublisherTrajectory(){};

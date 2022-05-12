@@ -51,7 +51,7 @@ class PublisherPose: public Publisher
         visualization_msgs::Marker marker_msg_;
         geometry_msgs::PoseWithCovarianceStamped pose_with_cov_msg_;
         std_msgs::ColorRGBA marker_color_;
-        SensorBasePtr sensor_;
+        SensorBaseConstPtr sensor_;
         std::string frame_id_, map_frame_id_;
 
         ros::Publisher pub_pose_array_, pub_marker_, pub_pose_with_cov_;
@@ -59,7 +59,7 @@ class PublisherPose: public Publisher
     public:
         PublisherPose(const std::string& _unique_name,
                       const ParamsServer& _server,
-                      const ProblemPtr _problem);
+                      ProblemConstPtr _problem);
         WOLF_PUBLISHER_CREATE(PublisherPose);
 
         virtual ~PublisherPose(){};

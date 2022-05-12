@@ -71,30 +71,25 @@ WolfRosNode::WolfRosNode()
 #else
     std::string lib_extension = ".so";
 #endif
-    for (auto subscriber_name : server.getParam<std::vector<std::string>>("packages_subscriber")) {
-        std::string subscriber = packages_path + "/libsubscriber_" + subscriber_name + lib_extension;
-        WOLF_TRACE("Loading subscriber " + subscriber_name + " via " + subscriber);
-        auto l = std::make_shared<LoaderRaw>(subscriber);
-        l->load();
-        loaders_.push_back(l);
-    }
-    for (auto publisher_name : server.getParam<std::vector<std::string>>("packages_publisher")) {
-        std::string publisher = packages_path + "/libpublisher_" + publisher_name + lib_extension;
-        WOLF_TRACE("Loading publisher " + publisher_name + " via " + publisher);
-        auto l = std::make_shared<LoaderRaw>(publisher);
-        l->load();
-        loaders_.push_back(l);
-    }
     
     // PUBLISHERS
     ROS_INFO("Creating publishers...");
     for (auto it : server.getParam<std::vector<std::map<std::string, std::string>>>("ROS publisher"))
     {
-        std::string publisher = it["type"];
-        std::string topic      = it["topic"];
-        WOLF_INFO("Pub: ", publisher, " name: ", publisher+" - "+topic);
-        publishers_.push_back(FactoryPublisher::create(publisher,
-                                                       publisher+" - "+topic,
+        std::string type            = it["type"];
+        std::string topic           = it["topic"];
+        std::string package         = it["package"];
+        std::string name            = type + " - " + topic;
+        std::string lib_publisher   = packages_path + "/libpublisher_" + package + lib_extension;
+
+        WOLF_TRACE("Loading publisher " + type + " via " + lib_publisher);
+        auto l = std::make_shared<LoaderRaw>(lib_publisher);
+        l->load();
+        //loaders_.push_back(l);
+
+        WOLF_INFO("Pub: ", type, " name: ", name);
+        publishers_.push_back(FactoryPublisher::create(type,
+                                                       name,
                                                        server,
                                                        problem_ptr_,
                                                        nh_));
@@ -104,12 +99,21 @@ WolfRosNode::WolfRosNode()
     ROS_INFO("Creating subscribers...");
     for (auto it : server.getParam<std::vector<std::map<std::string, std::string>>>("ROS subscriber"))
     {
-        std::string subscriber = it["type"];
-        std::string topic      = it["topic"];
-        std::string sensor     = it["sensor_name"];
-        WOLF_TRACE("From sensor {" + sensor + "} subscribing {" + subscriber + "} to {" + topic + "} topic");
-        subscribers_.push_back(FactorySubscriber::create(subscriber,
-                                                         subscriber + " - " + topic,
+        std::string type            = it["type"];
+        std::string topic           = it["topic"];
+        std::string sensor          = it["sensor_name"];
+        std::string package         = it["package"];
+        std::string name            = type + " - " + topic;
+        std::string lib_subscriber  = packages_path + "/libsubscriber_" + package + lib_extension;
+
+        WOLF_TRACE("Loading subscriber " + type + " via " + lib_subscriber);
+        auto l = std::make_shared<LoaderRaw>(lib_subscriber);
+        l->load();
+        //loaders_.push_back(l);
+
+        WOLF_TRACE("From sensor {" + sensor + "} subscribing {" + type + "} to {" + topic + "} topic");
+        subscribers_.push_back(FactorySubscriber::create(type,
+                                                         name,
                                                          server,
                                                          problem_ptr_->findSensor(sensor),
                                                          nh_));

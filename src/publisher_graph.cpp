@@ -28,7 +28,7 @@ namespace wolf
 
 PublisherGraph::PublisherGraph(const std::string& _unique_name,
                                const ParamsServer& _server,
-                               const ProblemPtr _problem) :
+                               ProblemConstPtr _problem) :
                 Publisher(_unique_name, _server, _problem)
 {
     Eigen::Vector4d color;
@@ -307,7 +307,7 @@ void PublisherGraph::publishFactors()
     factors_marker_array_.markers.front().action = visualization_msgs::Marker::DELETEALL;
 
     // Get a list of factors of the trajectory (discarded all prior factors for extrinsics/intrinsics..)
-    FactorBasePtrList fac_list;
+    FactorBaseConstPtrList fac_list;
     problem_->getTrajectory()->getFactorList(fac_list);
 
     // reset previously drawn factors
@@ -356,9 +356,11 @@ void PublisherGraph::publishTrajectory()
 
     // Iterate over the key frames
     int marker_i = 0;
-    auto trajectory = *problem_->getTrajectory();
-    for (auto frm : trajectory)
+    auto frame_map = problem_->getTrajectory()->getFrameMap();
+    for (auto frm_pair : frame_map)
     {
+        auto frm = frm_pair.second;
+
         // Try to fill marker
         if (not fillFrameMarker(frm, frame_marker, frame_text_marker))
             continue;
@@ -521,36 +523,36 @@ bool PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
     if (fac->getFrameOther() != nullptr)
     {
         // special case: Motion from ProcessorMotion
-        auto proc_motion = std::dynamic_pointer_cast<ProcessorMotion>(fac->getProcessor());
+        auto proc_motion = std::dynamic_pointer_cast<const ProcessorMotion>(fac->getProcessor());
         if (proc_motion and fac->getCaptureOther())
         {
             // Get state of other
-            const auto& x_other = fac->getFrameOther()->getState(proc_motion->getStateStructure());
+            auto x_other = fac->getFrameOther()->getState(proc_motion->getStateStructure());
 
             // Get most recent motion
-            const auto& cap_own = std::static_pointer_cast<CaptureMotion>(fac->getFeature()->getCapture());
+            auto cap_own = std::static_pointer_cast<const CaptureMotion>(fac->getFeature()->getCapture());
             const auto& motion = cap_own->getBuffer().back();
 
             // Get delta preintegrated up to now
             const auto& delta_preint = motion.delta_integr_;
 
             // Get calibration preint -- stored in last capture
-            const auto& calib_preint = cap_own->getCalibrationPreint();
+            auto calib_preint = cap_own->getCalibrationPreint();
 
             VectorComposite state_integrated;
             if ( proc_motion->hasCalibration())
             {
                 // Get current calibration -- from other capture
-                const auto& calib = proc_motion->getCalibration(fac->getCaptureOther());
+                auto calib = proc_motion->getCalibration(fac->getCaptureOther());
 
                 // get Jacobian of delta wrt calibration
                 const auto& J_delta_calib = motion.jacobian_calib_;
 
                 // compute delta change
-                const auto& delta_step = J_delta_calib * (calib - calib_preint);
+                auto delta_step = J_delta_calib * (calib - calib_preint);
 
                 // correct delta // this is (+)
-                const auto& delta_corrected = proc_motion->correctDelta(delta_preint, delta_step);
+                auto delta_corrected = proc_motion->correctDelta(delta_preint, delta_step);
 
                 // compute current state // this is [+]
                 proc_motion->statePlusDelta(x_other, delta_corrected, cap_own->getTimeStamp() - fac->getCaptureOther()->getTimeStamp(), state_integrated);
