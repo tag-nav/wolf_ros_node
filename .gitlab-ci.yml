@@ -4,6 +4,25 @@ stages:
   - deploy_packages
   
 ############ YAML ANCHORS ############
+.print_variables_template: &print_variables_definition
+  # Print variables
+  - echo $WOLF_IMU_BRANCH
+  - echo $WOLF_GNSS_BRANCH
+  - echo $WOLF_LASER_BRANCH
+  - echo $WOLF_VISION_BRANCH
+  - echo $WOLF_APRILTAG_BRANCH
+  - echo $WOLF_BODYDYNAMICS_BRANCH
+  - echo $GNSSUTILS_BRANCH
+  - echo $LASERSCANUTILS_BRANCH
+  - echo $CI_COMMIT_BRANCH
+  - echo $WOLF_ROS_NODE_BRANCH
+  - echo $WOLF_ROS_IMU_BRANCH
+  - echo $WOLF_ROS_GNSS_BRANCH
+  - echo $WOLF_ROS_LASER_BRANCH
+  - echo $WOLF_ROS_VISION_BRANCH
+  - echo $WOLF_ROS_APRILTAG_BRANCH
+  - echo $WOLF_ROS_BODYDYNAMICS_BRANCH
+
 .preliminaries_template: &preliminaries_definition
   ## Install ssh-agent if not already installed, it is required by Docker.
   ## (change apt-get to yum if you use an RPM-based image)
@@ -145,27 +164,42 @@ deploy_imu:
   variables:
     WOLF_CORE_BRANCH: $WOLF_CORE_BRANCH
     WOLF_IMU_BRANCH: $WOLF_IMU_BRANCH
-    WOLF_ROS_CORE_BRANCH: $CI_COMMIT_BRANCH
+    WOLF_ROS_NODE_BRANCH: $CI_COMMIT_BRANCH
   trigger: 
     project: mobile_robotics/wolf_projects/wolf_ros/wolf_ros_imu
+    branch: $WOLF_ROS_IMU_BRANCH
 
 deploy_gnss:
   stage: deploy_packages
   variables:
     WOLF_CORE_BRANCH: $WOLF_CORE_BRANCH
     WOLF_APRILTAG_BRANCH: $WOLF_GNSS_BRANCH
-    WOLF_ROS_CORE_BRANCH: $CI_COMMIT_BRANCH
+    WOLF_ROS_NODE_BRANCH: $CI_COMMIT_BRANCH
+    GNSSUTILS_BRANCH: $GNSSUTILS_BRANCH
   trigger: 
     project: mobile_robotics/wolf_projects/wolf_ros/wolf_ros_gnss
+    branch: $WOLF_ROS_GNSS_BRANCH
 
 deploy_laser:
   stage: deploy_packages
   variables:
     WOLF_CORE_BRANCH: $WOLF_CORE_BRANCH
     WOLF_LASER_BRANCH: $WOLF_LASER_BRANCH
-    WOLF_ROS_CORE_BRANCH: $CI_COMMIT_BRANCH
+    WOLF_ROS_NODE_BRANCH: $CI_COMMIT_BRANCH
+    LASERSCANUTILS_BRANCH: $LASERSCANUTILS_BRANCH
   trigger: 
     project: mobile_robotics/wolf_projects/wolf_ros/wolf_ros_laser
+    branch: $WOLF_ROS_LASER_BRANCH
+
+deploy_vision:
+  stage: deploy_packages
+  variables:
+    WOLF_CORE_BRANCH: $WOLF_CORE_BRANCH
+    WOLF_VISION_BRANCH: $WOLF_VISION_BRANCH
+    WOLF_ROS_NODE_BRANCH: $CI_COMMIT_BRANCH
+  trigger: 
+    project: mobile_robotics/wolf_projects/wolf_ros/wolf_ros_apriltag
+    branch: $WOLF_ROS_VISION_BRANCH
 
 deploy_apriltag:
   stage: deploy_packages
@@ -173,6 +207,7 @@ deploy_apriltag:
     WOLF_CORE_BRANCH: $WOLF_CORE_BRANCH
     WOLF_VISION_BRANCH: $WOLF_VISION_BRANCH
     WOLF_APRILTAG_BRANCH: $WOLF_APRILTAG_BRANCH
-    WOLF_ROS_CORE_BRANCH: $CI_COMMIT_BRANCH
+    WOLF_ROS_NORE_BRANCH: $CI_COMMIT_BRANCH
   trigger: 
     project: mobile_robotics/wolf_projects/wolf_ros/wolf_ros_apriltag
+    branch: $WOLF_ROS_APRILTAG_BRANCH

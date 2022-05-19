@@ -61,7 +61,6 @@
 #include "publisher.h"
 
 using namespace wolf;
-using namespace std;
 
 class WolfRosNode
 {
