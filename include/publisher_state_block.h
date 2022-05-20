@@ -42,14 +42,14 @@ class PublisherStateBlock: public Publisher
 {
     protected:
         std_msgs::Float64MultiArray state_msg_;
-        SensorBasePtr sensor_;
+        SensorBaseConstPtr sensor_;
         char key_;
         bool msg_init_;
 
     public:
         PublisherStateBlock(const std::string& _unique_name,
-                      const ParamsServer& _server,
-                      const ProblemPtr _problem);
+                            const ParamsServer& _server,
+                            ProblemConstPtr _problem);
         WOLF_PUBLISHER_CREATE(PublisherStateBlock);
 
         virtual ~PublisherStateBlock(){};

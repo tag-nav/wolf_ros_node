@@ -61,7 +61,6 @@
 #include "publisher.h"
 
 using namespace wolf;
-using namespace std;
 
 class WolfRosNode
 {
@@ -79,7 +78,7 @@ class WolfRosNode
 
 
     protected:
-        std::vector<std::shared_ptr<Loader>> loaders_;
+        //std::vector<std::shared_ptr<Loader>> loaders_;
 
         // solver
         SolverManagerPtr solver_;

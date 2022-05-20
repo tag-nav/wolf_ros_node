@@ -28,7 +28,7 @@ namespace wolf
 
 PublisherGraph::PublisherGraph(const std::string& _unique_name,
                                const ParamsServer& _server,
-                               const ProblemPtr _problem) :
+                               ProblemConstPtr _problem) :
                 Publisher(_unique_name, _server, _problem)
 {
     Eigen::Vector4d color;
@@ -209,7 +209,7 @@ PublisherGraph::PublisherGraph(const std::string& _unique_name,
     landmark_marker_.scale.x = viz_scale_*landmark_length_;
     landmark_marker_.scale.y = viz_scale_*landmark_width_;
     landmark_marker_.scale.z = viz_scale_*landmark_width_;
-    landmark_marker_.color.a = 0.5;
+    landmark_marker_.color.a = 1.0;
     landmark_text_marker_ = landmark_marker_;
     landmark_text_marker_.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
     landmark_text_marker_.ns = "landmarks_text";
@@ -307,7 +307,7 @@ void PublisherGraph::publishFactors()
     factors_marker_array_.markers.front().action = visualization_msgs::Marker::DELETEALL;
 
     // Get a list of factors of the trajectory (discarded all prior factors for extrinsics/intrinsics..)
-    FactorBasePtrList fac_list;
+    FactorBaseConstPtrList fac_list;
     problem_->getTrajectory()->getFactorList(fac_list);
 
     // reset previously drawn factors
@@ -356,9 +356,11 @@ void PublisherGraph::publishTrajectory()
 
     // Iterate over the key frames
     int marker_i = 0;
-    auto trajectory = *problem_->getTrajectory();
-    for (auto frm : trajectory)
+    auto frame_map = problem_->getTrajectory()->getFrameMap();
+    for (auto frm_pair : frame_map)
     {
+        auto frm = frm_pair.second;
+
         // Try to fill marker
         if (not fillFrameMarker(frm, frame_marker, frame_text_marker))
             continue;
@@ -443,11 +445,21 @@ bool PublisherGraph::fillLandmarkMarkers(LandmarkBaseConstPtr lmk,
 
     // POSITION & ORIENTATION ------------------------------------------------------
     // position
-    lmk_marker.pose.position.x = lmk->getP()->getState()(0);
-    lmk_marker.pose.position.y = lmk->getP()->getState()(1);
-    if (lmk->getP()->getSize() > 2)
-        lmk_marker.pose.position.z = lmk->getP()->getState()(2);
-
+    Eigen::VectorXd lmk_pos;
+    lmk_pos = lmk->getP()->getState();
+    lmk_marker.pose.position.x = lmk_pos(0);
+    lmk_marker.pose.position.y = lmk_pos(1);
+    if (lmk_pos.size() > 2) // this is a 3d point
+    {
+        lmk_marker.pose.position.z = lmk_pos(2);
+        if (lmk_pos.size() == 4) // this is a homogeneous 3d point with 4 numbers. Divide xyz by last element:
+        {
+            double w = lmk_pos(3);
+            lmk_marker.pose.position.x /= w;
+            lmk_marker.pose.position.y /= w;
+            lmk_marker.pose.position.z /= w;
+        }
+    }
     // orientation
     if (lmk->getO() != nullptr)
     {
@@ -462,6 +474,13 @@ bool PublisherGraph::fillLandmarkMarkers(LandmarkBaseConstPtr lmk,
         // 2d
         else
             lmk_marker.pose.orientation = tf::createQuaternionMsgFromYaw(lmk->getO()->getState()(0));
+    }
+    else
+    {
+        lmk_marker.pose.orientation.x = 0;
+        lmk_marker.pose.orientation.y = 0;
+        lmk_marker.pose.orientation.z = 0;
+        lmk_marker.pose.orientation.w = 1;
     }
 
     // TEXT MARKER ------------------------------------------------------
@@ -504,36 +523,36 @@ bool PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
     if (fac->getFrameOther() != nullptr)
     {
         // special case: Motion from ProcessorMotion
-        auto proc_motion = std::dynamic_pointer_cast<ProcessorMotion>(fac->getProcessor());
+        auto proc_motion = std::dynamic_pointer_cast<const ProcessorMotion>(fac->getProcessor());
         if (proc_motion and fac->getCaptureOther())
         {
             // Get state of other
-            const auto& x_other = fac->getFrameOther()->getState(proc_motion->getStateStructure());
+            auto x_other = fac->getFrameOther()->getState(proc_motion->getStateStructure());
 
             // Get most recent motion
-            const auto& cap_own = std::static_pointer_cast<CaptureMotion>(fac->getFeature()->getCapture());
+            auto cap_own = std::static_pointer_cast<const CaptureMotion>(fac->getFeature()->getCapture());
             const auto& motion = cap_own->getBuffer().back();
 
             // Get delta preintegrated up to now
             const auto& delta_preint = motion.delta_integr_;
 
             // Get calibration preint -- stored in last capture
-            const auto& calib_preint = cap_own->getCalibrationPreint();
+            auto calib_preint = cap_own->getCalibrationPreint();
 
             VectorComposite state_integrated;
             if ( proc_motion->hasCalibration())
             {
                 // Get current calibration -- from other capture
-                const auto& calib = proc_motion->getCalibration(fac->getCaptureOther());
+                auto calib = proc_motion->getCalibration(fac->getCaptureOther());
 
                 // get Jacobian of delta wrt calibration
                 const auto& J_delta_calib = motion.jacobian_calib_;
 
                 // compute delta change
-                const auto& delta_step = J_delta_calib * (calib - calib_preint);
+                auto delta_step = J_delta_calib * (calib - calib_preint);
 
                 // correct delta // this is (+)
-                const auto& delta_corrected = proc_motion->correctDelta(delta_preint, delta_step);
+                auto delta_corrected = proc_motion->correctDelta(delta_preint, delta_step);
 
                 // compute current state // this is [+]
                 proc_motion->statePlusDelta(x_other, delta_corrected, cap_own->getTimeStamp() - fac->getCaptureOther()->getTimeStamp(), state_integrated);
@@ -614,10 +633,22 @@ bool PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
             not fac->getLandmarkOther()->getP())
             return false;
 
-        point2.x = fac->getLandmarkOther()->getP()->getState()(0);
-        point2.y = fac->getLandmarkOther()->getP()->getState()(1);
+        Eigen::VectorXd lmk_pos;
+        lmk_pos  = fac->getLandmarkOther()->getP()->getState();
+        point2.x = lmk_pos(0);
+        point2.y = lmk_pos(1);
         if (fac->getProblem()->getDim() == 3)
-            point2.z = fac->getLandmarkOther()->getP()->getState()(2);
+        {
+            point2.z = lmk_pos(2);
+            if (lmk_pos.size() == 4)
+            {
+                // homogeneous 3d point. Divide XYZ by 4th component
+                double w = lmk_pos(3);
+                point2.x /= w;
+                point2.y /= w;
+                point2.z /= w;
+            }
+        }
         else
             point2.z = 0;
     }

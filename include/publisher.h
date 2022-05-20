@@ -48,14 +48,14 @@ WOLF_PTR_TYPEDEFS(Publisher);
  *
  *   PublisherClass(const std::string& _unique_name,
  *                  const ParamsServer& _server,
- *                  const ProblemPtr _problem);
+ *                  ProblemConstPtr _problem);
  */
 #define WOLF_PUBLISHER_CREATE(PublisherClass)                                               \
         static PublisherPtr create(const std::string& _unique_name,                         \
                                    const ParamsServer& _server,                             \
-                                   const ProblemPtr _problem,                               \
+                                   ProblemConstPtr _problem,                                \
                                    ros::NodeHandle& _nh)                                    \
-                                   {                                                        \
+{                                                                                           \
     PublisherPtr pub = std::make_shared<PublisherClass>(_unique_name, _server, _problem);   \
     pub->initialize(_nh, pub->getTopic());                                                  \
     return pub;                                                                             \
@@ -67,7 +67,7 @@ class Publisher
 
         Publisher(const std::string& _unique_name,
                   const ParamsServer& _server,
-                  const ProblemPtr _problem) :
+                  ProblemConstPtr _problem) :
                       problem_(_problem),
                       first_publish_time_(ros::Time(0)),
                       last_n_period_(0),
@@ -99,14 +99,16 @@ class Publisher
 
         std::string getName() const;
 
+        void printProfiling(std::ostream& stream = std::cout) const;
+
     protected:
 
         template<typename T>
         T getParamWithDefault(const ParamsServer &_server,
-                   const std::string &_param_name,
-                   const T _default_value) const;
+                              const std::string &_param_name,
+                              const T _default_value) const;
 
-        ProblemPtr problem_;
+        ProblemConstPtr problem_;
         ros::Publisher publisher_;
         double period_;
         ros::Time first_publish_time_;
@@ -121,9 +123,6 @@ class Publisher
         unsigned int n_publish_;
         std::chrono::microseconds acc_duration_;
         std::chrono::microseconds max_duration_;
-
-    public:
-        void printProfiling(std::ostream& stream = std::cout) const;
 };
 
 inline std::string Publisher::getTopic() const

@@ -33,7 +33,7 @@ namespace wolf
 
 PublisherPose::PublisherPose(const std::string& _unique_name,
                              const ParamsServer& _server,
-                             const ProblemPtr _problem) :
+                             ProblemConstPtr _problem) :
         Publisher(_unique_name, _server, _problem)
 {
     Eigen::Vector4d marker_color_v;
@@ -54,7 +54,7 @@ PublisherPose::PublisherPose(const std::string& _unique_name,
 
     extrinsics_ = _server.getParam<bool>(prefix_ + "/extrinsics");
     if (extrinsics_)
-        sensor_ = _problem->getSensor(_server.getParam<std::string>(prefix_ + "/sensor"));
+        sensor_ = _problem->findSensor(_server.getParam<std::string>(prefix_ + "/sensor"));
     frame_id_ = _server.getParam<std::string>(prefix_ + "/frame_id");
 }
 
