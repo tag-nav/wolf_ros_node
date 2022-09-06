@@ -85,7 +85,7 @@ WolfRosNode::WolfRosNode()
         WOLF_TRACE("Loading publisher " + type + " via " + lib_publisher);
         auto l = std::make_shared<LoaderRaw>(lib_publisher);
         l->load();
-        //loaders_.push_back(l);
+        loaders_.push_back(l);
 
         WOLF_INFO("Pub: ", type, " name: ", name);
         publishers_.push_back(FactoryPublisher::create(type,
@@ -109,7 +109,7 @@ WolfRosNode::WolfRosNode()
         WOLF_TRACE("Loading subscriber " + type + " via " + lib_subscriber);
         auto l = std::make_shared<LoaderRaw>(lib_subscriber);
         l->load();
-        //loaders_.push_back(l);
+        loaders_.push_back(l);
 
         WOLF_TRACE("From sensor {" + sensor + "} subscribing {" + type + "} to {" + topic + "} topic");
         subscribers_.push_back(FactorySubscriber::create(type,
