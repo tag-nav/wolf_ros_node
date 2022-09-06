@@ -410,31 +410,57 @@ bool PublisherGraph::fillLandmarkMarkers(LandmarkBaseConstPtr lmk,
         return false;
 
     // SHAPE ------------------------------------------------------
+    // Pose
+    //    2d: ARROW
+    //    3d: FRAME
     // Position
     //    2d: CYLINDER
     //    3d: SPHERE
-    // Pose -> ARROW
-    if (lmk->getO() != nullptr)
+    if (lmk->getO() and lmk->getO())
     {
-        landmark_marker_.type = visualization_msgs::Marker::ARROW;
-        lmk_marker.scale.x = viz_scale_*landmark_length_;
-        lmk_marker.scale.y = viz_scale_*landmark_width_;
-        lmk_marker.scale.z = viz_scale_*landmark_width_;
+        if (lmk->getP()->getSize() == 2)
+        {
+            landmark_marker_.type = visualization_msgs::Marker::ARROW;
+            lmk_marker.scale.x = viz_scale_*landmark_length_;
+            lmk_marker.scale.y = viz_scale_*landmark_width_;
+            lmk_marker.scale.z = viz_scale_*landmark_width_;
+        }
+        else if (lmk->getP()->getSize() == 3)
+        {
+            landmark_marker_.type = visualization_msgs::Marker::LINE_LIST;
+            lmk_marker.scale.x = viz_scale_*landmark_width_;
+
+            lmk_marker.points = frame_marker_.points;
+            lmk_marker.points[1].x = viz_scale_*landmark_length_;
+            lmk_marker.points[3].y = viz_scale_*landmark_length_;
+            lmk_marker.points[5].z = viz_scale_*landmark_length_;
+
+            lmk_marker.colors = frame_marker_.colors;
+        }
+        else
+            return false;
     }
-    else if (lmk->getP()->getSize() == 2)
+    else if (lmk->getP())
     {
-        landmark_marker_.type = visualization_msgs::Marker::CYLINDER;
-        lmk_marker.scale.x = viz_scale_*landmark_width_;
-        lmk_marker.scale.y = viz_scale_*landmark_width_;
-        lmk_marker.scale.z = viz_scale_*landmark_length_;
+        if (lmk->getP()->getSize() == 2)
+        {
+            landmark_marker_.type = visualization_msgs::Marker::CYLINDER;
+            lmk_marker.scale.x = viz_scale_*landmark_width_;
+            lmk_marker.scale.y = viz_scale_*landmark_width_;
+            lmk_marker.scale.z = viz_scale_*landmark_length_;
+        }
+        else if (lmk->getP()->getSize() == 3)
+        {
+            landmark_marker_.type = visualization_msgs::Marker::SPHERE;
+            lmk_marker.scale.x = viz_scale_*landmark_width_;
+            lmk_marker.scale.y = viz_scale_*landmark_width_;
+            lmk_marker.scale.z = viz_scale_*landmark_width_;
+        }
+        else
+            return false;
     }
     else
-    {
-        landmark_marker_.type = visualization_msgs::Marker::SPHERE;
-        lmk_marker.scale.x = viz_scale_*landmark_width_;
-        lmk_marker.scale.y = viz_scale_*landmark_width_;
-        lmk_marker.scale.z = viz_scale_*landmark_width_;
-    }
+        return false;
 
     // COLOR ------------------------------------------------------
     if (lmk->getHits() > landmark_max_hits_)
