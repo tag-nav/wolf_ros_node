@@ -116,7 +116,7 @@ stages:
 ############ LICENSE HEADERS ############
 license_headers:
   stage: license
-  image: labrobotica/wolf_deps_ros:20.04
+  image: labrobotica/wolf_deps_ros_new:20.04
   cache: []
   before_script:
     - *preliminaries_definition
@@ -127,7 +127,7 @@ license_headers:
 ############ UBUNTU 18.04 TEST ############
 build_and_test:bionic:
   stage: build_and_test
-  image: labrobotica/wolf_deps_ros:18.04
+  image: labrobotica/wolf_deps_ros_new:18.04
   cache:
     - key: wolf-bionic
       paths:
@@ -144,7 +144,7 @@ build_and_test:bionic:
 ############ UBUNTU 20.04 TEST ############
 build_and_test:focal:
   stage: build_and_test
-  image: labrobotica/wolf_deps_ros:20.04
+  image: labrobotica/wolf_deps_ros_new:20.04
   cache:
     - key: wolf-focal
       paths:
