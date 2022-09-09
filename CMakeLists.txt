@@ -44,14 +44,15 @@ add_executable(${PROJECT_NAME} src/node.cpp)
 
 add_library(subscriber_${PROJECT_NAME}
   			    src/subscriber_diffdrive.cpp
-  			    src/subscriber_odom2d.cpp)
+  			    src/subscriber_odom2d.cpp
+  			    src/subscriber_pose.cpp)
 
 add_library(publisher_${PROJECT_NAME}
   			    src/publisher_graph.cpp
   			    src/publisher_pose.cpp
-  			    src/publisher_trajectory.cpp
   			    src/publisher_state_block.cpp
-  			    src/publisher_tf.cpp)
+  			    src/publisher_tf.cpp
+  			    src/publisher_trajectory.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(subscriber_${PROJECT_NAME}
