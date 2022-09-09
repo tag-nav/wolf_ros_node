@@ -19,6 +19,11 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 //--------LICENSE_END--------
+
+#ifndef WOLF_SUBSCRIBER_ODOM2D_H_
+#define WOLF_SUBSCRIBER_ODOM2D_H_
+
+
 /**************************
  *      WOLF includes     *
  **************************/
@@ -54,3 +59,5 @@ class SubscriberOdom2d : public Subscriber
 };
 
 }  // namespace wolf
+
+#endif
