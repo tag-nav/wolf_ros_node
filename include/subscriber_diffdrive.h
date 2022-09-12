@@ -19,6 +19,11 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 //--------LICENSE_END--------
+
+#ifndef WOLF_SUBSCRIBER_DIFFDRIVE_H_
+#define WOLF_SUBSCRIBER_DIFFDRIVE_H_
+
+
 /**************************
  *      WOLF includes     *
  **************************/
@@ -56,3 +61,5 @@ class SubscriberDiffdrive : public Subscriber
 };
 
 }  // namespace wolf
+
+#endif // WOLF_SUBSCRIBER_DIFFDRIVE_H_
