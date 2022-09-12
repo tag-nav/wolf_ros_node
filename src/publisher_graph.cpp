@@ -685,6 +685,7 @@ bool PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
     }
 
     // store points ------------------------------------------------------
+    fac_marker.points.clear();
     fac_marker.points.push_back(point1);
     fac_marker.points.push_back(point2);
 
@@ -713,6 +714,7 @@ bool PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
     if (fac->getStatus() == FAC_INACTIVE)
         color.a *= 0.5;
 
+    fac_marker.colors.clear();
     fac_marker.colors.push_back(color);
     fac_marker.colors.push_back(color);// 2 times because of 2 points
     fac_marker.ns = std::string("factors_"+(fac->getProcessor() ? fac->getProcessor()->getName() : "unnamed_processor"));
