@@ -58,6 +58,16 @@ WolfRosNode::WolfRosNode()
     ROS_INFO("Creating problem...");
     problem_ptr_ = Problem::autoSetup(server);
 
+    // // HACK -> SENSOR PRIORS
+    // auto imu = problem_ptr_->findSensor("IMU");
+    // double std_acc = server.getParam<double>("sensor/IMU/ab_initial_stdev");
+    // double std_gyro = server.getParam<double>("sensor/IMU/wb_initial_stdev");
+    // Array<double,6,1> std_bias;
+    // std_bias << std_acc, std_acc, std_acc, std_gyro, std_gyro, std_gyro;
+    // imu->addPriorParameter('I',                   // bias
+    //                      Vector6d::Zero(),            // mean
+    //                      std_bias.square().matrix().asDiagonal());  // cov
+
     // SOLVER
     ROS_INFO("Creating solver...");
     solver_ = FactorySolver::create("SolverCeres", problem_ptr_, server);
