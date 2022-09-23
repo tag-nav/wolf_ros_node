@@ -15,11 +15,25 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   tf_conversions
   tf2_ros
+  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
 find_package(wolfcore REQUIRED)
 
+## Generate messages in the 'msg' folder
+add_message_files(
+  FILES
+  LandmarkDetection.msg
+  LandmarkDetectionArray.msg
+)
+
+## Generate added messages and services with any dependencies listed here
+generate_messages(
+  DEPENDENCIES
+  geometry_msgs
+  std_msgs
+)
 
 ###################################
 ## catkin specific configuration ##
