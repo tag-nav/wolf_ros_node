@@ -316,6 +316,11 @@ void PublisherGraph::publishFactors()
     // Iterate over the list of factors
     for (auto fac : fac_list)
     {
+        // check factor is valid (it is not being removed) 
+        // (this is redundant with getFactorList() checks but just in case)
+        if (fac->isRemoving())
+            continue;
+
         // Try to fill marker
         if (not fillFactorMarker(fac, factor_marker, factor_text_marker))
             continue;
@@ -532,8 +537,10 @@ bool PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
     geometry_msgs::Point point1, point2;
 
     // point1 -> frame ------------------------------------------------------
-    if (not fac->getCapture() or
-        not fac->getCapture()->getFrame() or
+    if (not fac->getCapture() or 
+        fac->getCapture()->isRemoving() or
+        not fac->getCapture()->getFrame() or 
+        fac->getCapture()->getFrame()->isRemoving() or
         not fac->getCapture()->getFrame()->getP())
         return false;
 
@@ -546,11 +553,11 @@ bool PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
 
     // point2 -> other ------------------------------------------------------
     // FRAME
-    if (fac->getFrameOther() != nullptr)
+    if (fac->getFrameOther() != nullptr and not fac->getFrameOther()->isRemoving())
     {
         // special case: Motion from ProcessorMotion
         auto proc_motion = std::dynamic_pointer_cast<const ProcessorMotion>(fac->getProcessor());
-        if (proc_motion and fac->getCaptureOther())
+        if (proc_motion and fac->getCaptureOther() and not fac->getCaptureOther()->isRemoving())
         {
             // Get state of other
             auto x_other = fac->getFrameOther()->getState(proc_motion->getStateStructure());
@@ -622,7 +629,7 @@ bool PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
         }
     }
     // CAPTURE
-    else if (fac->getCaptureOther() != nullptr)
+    else if (fac->getCaptureOther() != nullptr and not fac->getCaptureOther()->isRemoving())
     {
         if (fac->getCaptureOther()->isRemoving() or
             not fac->getCaptureOther()->getFrame() or
@@ -637,7 +644,7 @@ bool PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
             point2.z = 0;
     }
     // FEATURE
-    else if (fac->getFeatureOther() != nullptr)
+    else if (fac->getFeatureOther() != nullptr and not fac->getFeatureOther()->isRemoving())
     {
         if (fac->getFeatureOther()->isRemoving() or
             not fac->getFeatureOther()->getCapture() or
@@ -653,7 +660,7 @@ bool PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
             point2.z = 0;
     }
     // LANDMARK
-    else if (fac->getLandmarkOther() != nullptr)
+    else if (fac->getLandmarkOther() != nullptr and not fac->getLandmarkOther()->isRemoving())
     {
         if (fac->getLandmarkOther()->isRemoving() or
             not fac->getLandmarkOther()->getP())
