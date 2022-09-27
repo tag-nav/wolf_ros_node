@@ -25,10 +25,9 @@
 // wolf
 #include <core/common/factory.h>
 #include <core/utils/params_server.h>
-#include <ros/ros.h>
 
-// #include "wolf_ros_subscriber.h"
-// std
+// ros
+#include <ros/ros.h>
 
 
 namespace wolf

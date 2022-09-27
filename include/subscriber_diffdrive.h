@@ -24,18 +24,18 @@
 #define WOLF_SUBSCRIBER_DIFFDRIVE_H_
 
 
+#include "subscriber.h"
 /**************************
  *      WOLF includes     *
  **************************/
 #include <core/common/wolf.h>
-#include "subscriber.h"
 
 /**************************
  *      ROS includes      *
  **************************/
 #include <ros/ros.h>
 #include <nav_msgs/Odometry.h>
-#include "sensor_msgs/JointState.h"
+#include <sensor_msgs/JointState.h>
 
 namespace wolf
 {

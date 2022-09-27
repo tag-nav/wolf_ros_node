@@ -19,6 +19,10 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 //--------LICENSE_END--------
+
+#include "subscriber.h"
+#include "subscriber_odom2d.h"
+
 /**************************
  *      WOLF includes     *
  **************************/
@@ -38,9 +42,6 @@
 #include <iostream>
 #include <iomanip>
 #include <queue>
-
-#include "subscriber.h"
-#include "subscriber_odom2d.h"
 
 namespace wolf
 {

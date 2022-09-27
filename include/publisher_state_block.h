@@ -22,12 +22,12 @@
 #ifndef PUBLISHER_STATE_BLOCK_H
 #define PUBLISHER_STATE_BLOCK_H
 
+#include "publisher.h"
+
 /**************************
  *      WOLF includes     *
  **************************/
-#include "core/problem/problem.h"
-
-#include "publisher.h"
+#include <core/problem/problem.h>
 
 /**************************
  *      ROS includes      *

@@ -19,14 +19,16 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 //--------LICENSE_END--------
+
+#include "subscriber_diffdrive.h"
+
 /**************************
  *      WOLF includes     *
  **************************/
 #include <core/capture/capture_diff_drive.h>
 #include <core/sensor/sensor_diff_drive.h>
+#include <core/math/rotations.h>
 
-#include "core/math/rotations.h"
-#include "subscriber_diffdrive.h"
 
 namespace wolf
 {

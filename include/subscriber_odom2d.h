@@ -24,11 +24,14 @@
 #define WOLF_SUBSCRIBER_ODOM2D_H_
 
 
+#include "subscriber.h"
+
 /**************************
  *      WOLF includes     *
  **************************/
 #include <core/common/wolf.h>
 #include <core/utils/params_server.h>
+#include <core/sensor/sensor_odom_2d.h>
 
 /**************************
  *      ROS includes      *
@@ -36,7 +39,6 @@
 #include <ros/ros.h>
 #include <nav_msgs/Odometry.h>
 
-#include "subscriber.h"
 
 namespace wolf
 {

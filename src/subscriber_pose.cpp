@@ -19,10 +19,12 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 //--------LICENSE_END--------
+
+#include "subscriber_pose.h"
+
 /**************************
  *      WOLF includes     *
  **************************/
-#include "subscriber_pose.h"
 
 /**************************
  *      ROS includes      *

@@ -22,10 +22,11 @@
 #ifndef WOLF_SUBSCRIBER_POSE_H_
 #define WOLF_SUBSCRIBER_POSE_H_
 
+#include "subscriber.h"
+
 /**************************
  *      WOLF includes     *
  **************************/
-#include "subscriber.h"
 #include <core/common/wolf.h>
 #include <core/utils/params_server.h>
 #include <core/capture/capture_pose.h>

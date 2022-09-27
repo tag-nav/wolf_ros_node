@@ -24,28 +24,28 @@
 #define NODE_H
 
 /**************************
+ *   WOLF ROS includes    *
+ **************************/
+#include "subscriber.h"
+#include "publisher.h"
+
+/**************************
  *      WOLF includes     *
  **************************/
-#include <core/common/node_base.h>
 #include <core/common/wolf.h>
-#include <core/capture/capture_odom_2d.h>
-#include <core/ceres_wrapper/solver_ceres.h>
-#include <core/sensor/sensor_odom_2d.h>
-#include <core/processor/processor_odom_2d.h>
+#include <core/solver/solver_manager.h>
 #include <core/problem/problem.h>
 #include <core/utils/loader.h>
-#include <core/yaml/parser_yaml.h>
-#include <core/solver/factory_solver.h>
 
 
 /**************************
- *     CERES includes     *
+ *     ROS includes     *
  **************************/
 #include <ros/ros.h>
 #include <ros/package.h>
 #include <nav_msgs/Odometry.h>
-#include "tf/LinearMath/Transform.h"
-#include "tf/transform_datatypes.h"
+#include <tf/LinearMath/Transform.h>
+#include <tf/transform_datatypes.h>
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
 #include <visualization_msgs/Marker.h>
@@ -61,8 +61,6 @@
 #include <fstream>
 #include <string>
 
-#include "subscriber.h"
-#include "publisher.h"
 
 using namespace wolf;
 
