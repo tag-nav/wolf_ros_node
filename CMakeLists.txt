@@ -4,7 +4,7 @@ project(wolf_ros_node)
 ## Compile as C++14
 add_compile_options(-std=c++14) 
 # -fPIC and -rdynamic ensure unique singleton instance across shared libraries (for factories) see: https://stackoverflow.com/a/8626922
-SET(CMAKE_CXX_FLAGS "-fPIC -rdynamic")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -rdynamic")
 
 find_package(catkin REQUIRED COMPONENTS
   roslib
@@ -53,7 +53,7 @@ add_library(publisher_${PROJECT_NAME}
   			    src/publisher_state_block.cpp
   			    src/publisher_tf.cpp
   			    src/publisher_trajectory.cpp)
-
+            
 ## Specify libraries to link a library or executable target against
 target_link_libraries(subscriber_${PROJECT_NAME}
                       ${catkin_LIBRARIES}
