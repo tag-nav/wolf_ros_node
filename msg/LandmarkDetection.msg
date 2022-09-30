@@ -1,2 +1,3 @@
 geometry_msgs/PoseWithCovariance pose
 int32 id
+float32 quality
