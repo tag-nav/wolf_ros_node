@@ -19,45 +19,39 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 //--------LICENSE_END--------
-
-#ifndef WOLF_SUBSCRIBER_DIFFDRIVE_H_
-#define WOLF_SUBSCRIBER_DIFFDRIVE_H_
-
+#pragma once
 
 #include "subscriber.h"
+
 /**************************
  *      WOLF includes     *
  **************************/
 #include <core/common/wolf.h>
+#include <core/utils/params_server.h>
 
 /**************************
  *      ROS includes      *
  **************************/
 #include <ros/ros.h>
-#include <nav_msgs/Odometry.h>
-#include <sensor_msgs/JointState.h>
+#include "wolf_ros_node/LandmarkDetectionArray.h"
+
 
 namespace wolf
 {
-class SubscriberDiffdrive : public Subscriber
+class SubscriberLandmarks : public Subscriber
 {
    protected:
-        Eigen::Vector2d last_angles_;
-        int last_kf = -1;
-        double ticks_cov_factor_;
+      SizeEigen dim; 
 
    public:
 
-    SubscriberDiffdrive(const std::string& _unique_name,
-                        const ParamsServer& _server,
-                        const SensorBasePtr _sensor_ptr);
-    WOLF_SUBSCRIBER_CREATE(SubscriberDiffdrive);
+    SubscriberLandmarks(const std::string& _unique_name,
+                       const ParamsServer& _server,
+                       const SensorBasePtr _sensor_ptr);
+    WOLF_SUBSCRIBER_CREATE(SubscriberLandmarks);
 
     virtual void initialize(ros::NodeHandle& nh, const std::string& topic);
 
-    void callback(const sensor_msgs::JointState::ConstPtr& msg);
+    void callback(const wolf_ros_node::LandmarkDetectionArray::ConstPtr& msg);
 };
-
 }  // namespace wolf
-
-#endif // WOLF_SUBSCRIBER_DIFFDRIVE_H_

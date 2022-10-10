@@ -57,7 +57,8 @@ include_directories(
 add_executable(${PROJECT_NAME} src/node.cpp)
 
 add_library(subscriber_${PROJECT_NAME}
-  			    src/subscriber_diffdrive.cpp
+            src/subscriber_diffdrive.cpp
+  			    src/subscriber_landmarks.cpp
   			    src/subscriber_odom2d.cpp
   			    src/subscriber_pose.cpp)
 
