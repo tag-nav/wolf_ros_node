@@ -41,6 +41,7 @@ generate_messages(
 # produces the XXXConfig.cmake file among other things
 catkin_package(
   INCLUDE_DIRS include
+  CATKIN_DEPENDS message_runtime std_msgs geometry_msgs
 )
 
 ###########
@@ -61,6 +62,9 @@ add_library(subscriber_${PROJECT_NAME}
   			    src/subscriber_landmarks.cpp
   			    src/subscriber_odom2d.cpp
   			    src/subscriber_pose.cpp)
+
+# messages generated are a dependency of subscriber_landmarks
+add_dependencies(subscriber_${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 
 add_library(publisher_${PROJECT_NAME}
   			    src/publisher_graph.cpp
