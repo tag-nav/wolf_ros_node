@@ -92,6 +92,7 @@ stages:
   -   cd wolf
   -   git fetch --all
   -   git checkout $WOLF_CORE_BRANCH
+  -   git pull
   - else
   -   git clone -b $WOLF_CORE_BRANCH ssh://git@gitlab.iri.upc.edu:2202/mobile_robotics/wolf_projects/wolf_lib/wolf.git
   -   cd wolf
