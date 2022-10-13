@@ -26,6 +26,7 @@
  *      WOLF includes     *
  **************************/
 #include <core/capture/capture_landmarks_external.h>
+#include <core/math/covariance.h>
 
 /**************************
  *      ROS includes      *
@@ -50,7 +51,7 @@ void SubscriberLandmarks::initialize(ros::NodeHandle& nh, const std::string& top
 
 void SubscriberLandmarks::callback(const wolf_ros_node::LandmarkDetectionArray::ConstPtr& msg)
 {
-    ROS_DEBUG("SubscriberLandmarks::callback");
+    ROS_INFO("SubscriberLandmarks::callback");
 
     updateLastHeader(msg->header);
 
@@ -92,6 +93,7 @@ void SubscriberLandmarks::callback(const wolf_ros_node::LandmarkDetectionArray::
             cov = Eigen::Map<const Eigen::Matrix6d>(msg->detections.at(i).pose.covariance.data());
 
         // fill capture
+        makePosDef(cov);
         cap->addDetection(msg->detections.at(i).id, meas, cov, msg->detections.at(i).quality);
     }
 
