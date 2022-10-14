@@ -27,11 +27,13 @@
  **************************/
 #include <core/capture/capture_landmarks_external.h>
 #include <core/math/covariance.h>
+#include <core/math/rotations.h>
+#include <core/math/SE3.h>
 
 /**************************
  *      ROS includes      *
  **************************/
-#include <tf/transform_datatypes.h>
+// #include <tf/transform_datatypes.h>
 
 namespace wolf
 {
@@ -42,6 +44,7 @@ SubscriberLandmarks::SubscriberLandmarks(const std::string& _unique_name,
 {
     assert(_sensor_ptr);
     dim = _sensor_ptr->getProblem()->getDim();
+    inverse_detections_ = _server.getParam<bool>(prefix_ + "/inverse_detections");
 }
 
 void SubscriberLandmarks::initialize(ros::NodeHandle& nh, const std::string& topic)
@@ -59,38 +62,45 @@ void SubscriberLandmarks::callback(const wolf_ros_node::LandmarkDetectionArray::
     // Extract detections from msg
     for (auto i = 0; i < msg->detections.size(); i++)
     {
-        // measurement
-        VectorXd meas(dim == 2 ? 3 : 7);
-        if (dim == 2)
-        {
-            meas(0) = msg->detections.at(i).pose.pose.position.x;
-            meas(1) = msg->detections.at(i).pose.pose.position.y;
-            meas(2) = tf::getYaw(msg->detections.at(i).pose.pose.orientation);
-        }
-        else
-        {
-            meas(0) = msg->detections.at(i).pose.pose.position.x;
-            meas(1) = msg->detections.at(i).pose.pose.position.y;
-            meas(2) = msg->detections.at(i).pose.pose.position.z;
-            meas(3) = msg->detections.at(i).pose.pose.orientation.x;
-            meas(4) = msg->detections.at(i).pose.pose.orientation.y;
-            meas(5) = msg->detections.at(i).pose.pose.orientation.z;
-            meas(6) = msg->detections.at(i).pose.pose.orientation.w;
-        }
-        // covariance
+        // 3D measurement from msg
+        VectorXd meas(7);
+        meas << msg->detections.at(i).pose.pose.position.x,
+                msg->detections.at(i).pose.pose.position.y,
+                msg->detections.at(i).pose.pose.position.z,
+                msg->detections.at(i).pose.pose.orientation.x,
+                msg->detections.at(i).pose.pose.orientation.y,
+                msg->detections.at(i).pose.pose.orientation.z,
+                msg->detections.at(i).pose.pose.orientation.w;
+        
         // PoseWithCovariance documentation:
         //   Row-major representation of the 6x6 covariance matrix.
         //   The orientation parameters use a fixed-axis representation.
         //   In order, the parameters are: (x, y, z, rotation about X axis, rotation about Y axis, rotation about Z axis)
-        MatrixXd cov(dim == 2 ? 3 : 6, dim == 2 ? 3 : 6);
+        MatrixXd cov = Eigen::Map<const Eigen::Matrix6d>(msg->detections.at(i).pose.covariance.data());
+
+        // inverse measurement
+        if (inverse_detections_)
+        {
+            meas = SE3::inverse(meas);
+            auto R = q2R(meas.tail<4>());
+            cov.topLeftCorner<3,3>() = R * cov.topLeftCorner<3,3>() * R.transpose();
+            //TODO: rotate covariance for orientation
+        }
+
+        // 2D
         if (dim == 2)
         {
-            cov << msg->detections.at(i).pose.covariance.at(0),  msg->detections.at(i).pose.covariance.at(1),  msg->detections.at(i).pose.covariance.at(5),
-                   msg->detections.at(i).pose.covariance.at(6),  msg->detections.at(i).pose.covariance.at(7),  msg->detections.at(i).pose.covariance.at(11),
-                   msg->detections.at(i).pose.covariance.at(30), msg->detections.at(i).pose.covariance.at(31), msg->detections.at(i).pose.covariance.at(35);
+            VectorXd meas2d = meas.head<3>();
+            meas2d(2) = getYaw(q2R(meas.tail<4>()));
+
+            MatrixXd cov2d(3,3);
+            cov2d << cov(0,0), cov(0,1), cov(0,5),
+                     cov(1,0), cov(1,1), cov(1,5),
+                     cov(5,0), cov(5,1), cov(5,5);
+
+            meas = meas2d;
+            cov = cov2d;
         }
-        else
-            cov = Eigen::Map<const Eigen::Matrix6d>(msg->detections.at(i).pose.covariance.data());
         
         std::cout << "\tid " << msg->detections.at(i).id << ": quality: " << msg->detections.at(i).quality << ", meas: " << meas.transpose() << std::endl;
 

@@ -42,6 +42,7 @@ class SubscriberLandmarks : public Subscriber
 {
    protected:
       SizeEigen dim; 
+      bool inverse_detections_;
 
    public:
 
