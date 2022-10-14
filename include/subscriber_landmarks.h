@@ -43,6 +43,8 @@ class SubscriberLandmarks : public Subscriber
    protected:
       SizeEigen dim; 
       bool inverse_detections_;
+      Eigen::Vector3d sensor_p_;
+      Eigen::Quaterniond sensor_q_;
 
    public:
 

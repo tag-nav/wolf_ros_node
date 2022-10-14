@@ -35,6 +35,8 @@
  **************************/
 // #include <tf/transform_datatypes.h>
 
+using namespace Eigen;
+
 namespace wolf
 {
 SubscriberLandmarks::SubscriberLandmarks(const std::string& _unique_name,
@@ -45,6 +47,9 @@ SubscriberLandmarks::SubscriberLandmarks(const std::string& _unique_name,
     assert(_sensor_ptr);
     dim = _sensor_ptr->getProblem()->getDim();
     inverse_detections_ = _server.getParam<bool>(prefix_ + "/inverse_detections");
+    auto sensor_extrinsics = _server.getParam<VectorXd>(prefix_ + "/sensor_extrinsics");
+    sensor_p_ = sensor_extrinsics.head<3>();
+    sensor_q_ = Quaterniond(Vector4d(sensor_extrinsics.tail<4>()));
 }
 
 void SubscriberLandmarks::initialize(ros::NodeHandle& nh, const std::string& topic)
@@ -72,18 +77,23 @@ void SubscriberLandmarks::callback(const wolf_ros_node::LandmarkDetectionArray::
                 msg->detections.at(i).pose.pose.orientation.z,
                 msg->detections.at(i).pose.pose.orientation.w;
         
+        meas.head<3>() = sensor_p_ + sensor_q_ * meas.head<3>();
+        meas.tail<4>() = (sensor_q_ * Quaterniond(Vector4d(meas.tail<4>()))).coeffs();
+
         // PoseWithCovariance documentation:
         //   Row-major representation of the 6x6 covariance matrix.
         //   The orientation parameters use a fixed-axis representation.
         //   In order, the parameters are: (x, y, z, rotation about X axis, rotation about Y axis, rotation about Z axis)
         MatrixXd cov = Eigen::Map<const Eigen::Matrix6d>(msg->detections.at(i).pose.covariance.data());
+        auto R = q2R(meas.tail<4>());
+        cov.topLeftCorner<3,3>() = R * cov.topLeftCorner<3,3>() * R.transpose();
+        //TODO: rotate covariance for orientation
 
         // inverse measurement
         if (inverse_detections_)
         {
             meas = SE3::inverse(meas);
-            auto R = q2R(meas.tail<4>());
-            cov.topLeftCorner<3,3>() = R * cov.topLeftCorner<3,3>() * R.transpose();
+            cov.topLeftCorner<3,3>() = R.transpose() * cov.topLeftCorner<3,3>() * R;
             //TODO: rotate covariance for orientation
         }
 
