@@ -130,11 +130,15 @@ WolfRosNode::WolfRosNode()
         l->load();
         loaders_.push_back(l);
 
+        auto sensor_ptr = problem_ptr_->findSensor(sensor);
+        if (not sensor_ptr)
+            throw std::runtime_error("Sensor " + sensor + " was not found!");
+
         WOLF_TRACE("From sensor {" + sensor + "} subscribing {" + type + "} to {" + topic + "} topic");
         subscribers_.push_back(FactorySubscriber::create(type,
                                                          name,
                                                          server,
-                                                         problem_ptr_->findSensor(sensor),
+                                                         sensor_ptr,
                                                          nh_));
     }
 
