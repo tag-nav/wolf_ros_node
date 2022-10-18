@@ -197,7 +197,7 @@ deploy_vision:
     WOLF_VISION_BRANCH: $WOLF_VISION_BRANCH
     WOLF_ROS_NODE_BRANCH: $CI_COMMIT_BRANCH
   trigger: 
-    project: mobile_robotics/wolf_projects/wolf_ros/wolf_ros_apriltag
+    project: mobile_robotics/wolf_projects/wolf_ros/wolf_ros_vision
     branch: $WOLF_ROS_VISION_BRANCH
 
 deploy_apriltag:
