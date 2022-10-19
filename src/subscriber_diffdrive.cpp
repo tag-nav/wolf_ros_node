@@ -19,14 +19,16 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 //--------LICENSE_END--------
+
+#include "subscriber_diffdrive.h"
+
 /**************************
  *      WOLF includes     *
  **************************/
 #include <core/capture/capture_diff_drive.h>
 #include <core/sensor/sensor_diff_drive.h>
+#include <core/math/rotations.h>
 
-#include "core/math/rotations.h"
-#include "subscriber_diffdrive.h"
 
 namespace wolf
 {
@@ -34,8 +36,6 @@ SubscriberDiffdrive::SubscriberDiffdrive(const std::string& _unique_name,
                                          const ParamsServer& _server,
                                          const SensorBasePtr _sensor_ptr)
 : Subscriber(_unique_name, _server, _sensor_ptr)
-, last_odom_stamp_(ros::Time(0))
-, last_odom_seq_(-1)
 {
     last_angles_ = Eigen::Vector2d();
     ticks_cov_factor_ = std::static_pointer_cast<SensorDiffDrive>(_sensor_ptr)->getParams()->ticks_cov_factor;
@@ -60,7 +60,7 @@ void SubscriberDiffdrive::callback(const sensor_msgs::JointState::ConstPtr& msg)
 
     Eigen::MatrixXd cov        = ticks_cov_factor_ * (angles_inc.cwiseAbs() + Eigen::Vector2d::Ones()).asDiagonal();  // TODO check this
 
-    if (last_odom_seq_ != -1)
+    if (last_seq_ != -1)
     {
         CaptureDiffDrivePtr cptr = std::make_shared<CaptureDiffDrive>(
                 TimeStamp(msg->header.stamp.sec, msg->header.stamp.nsec), sensor_ptr_, angles_inc, cov, nullptr);
@@ -80,12 +80,9 @@ void SubscriberDiffdrive::callback(const sensor_msgs::JointState::ConstPtr& msg)
 
             last_kf = current_kf;
         }
-
     }
 
     last_angles_     = msg_angles;
-    last_odom_stamp_ = msg->header.stamp;
-    last_odom_seq_   = msg->header.seq;
 }
 
 WOLF_REGISTER_SUBSCRIBER(SubscriberDiffdrive)

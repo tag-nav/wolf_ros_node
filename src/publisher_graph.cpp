@@ -20,8 +20,13 @@
 //
 //--------LICENSE_END--------
 #include "publisher_graph.h"
+
+// wolf
+#include <core/processor/processor_motion.h>
+
+// ros
 #include <tf/transform_datatypes.h>
-#include "core/processor/processor_motion.h"
+
 
 namespace wolf
 {
@@ -316,6 +321,14 @@ void PublisherGraph::publishFactors()
     // Iterate over the list of factors
     for (auto fac : fac_list)
     {
+        // reset factor_marker contents to minimum content
+        factor_marker = factor_marker_;
+
+        // check factor is valid (it is not being removed) 
+        // (this is redundant with getFactorList() checks but just in case)
+        if (fac->isRemoving())
+            continue;
+
         // Try to fill marker
         if (not fillFactorMarker(fac, factor_marker, factor_text_marker))
             continue;
@@ -410,31 +423,57 @@ bool PublisherGraph::fillLandmarkMarkers(LandmarkBaseConstPtr lmk,
         return false;
 
     // SHAPE ------------------------------------------------------
+    // Pose
+    //    2d: ARROW
+    //    3d: FRAME
     // Position
     //    2d: CYLINDER
     //    3d: SPHERE
-    // Pose -> ARROW
-    if (lmk->getO() != nullptr)
+    if (lmk->getO() and lmk->getO())
     {
-        landmark_marker_.type = visualization_msgs::Marker::ARROW;
-        lmk_marker.scale.x = viz_scale_*landmark_length_;
-        lmk_marker.scale.y = viz_scale_*landmark_width_;
-        lmk_marker.scale.z = viz_scale_*landmark_width_;
+        if (lmk->getP()->getSize() == 2)
+        {
+            landmark_marker_.type = visualization_msgs::Marker::ARROW;
+            lmk_marker.scale.x = viz_scale_*landmark_length_;
+            lmk_marker.scale.y = viz_scale_*landmark_width_;
+            lmk_marker.scale.z = viz_scale_*landmark_width_;
+        }
+        else if (lmk->getP()->getSize() == 3)
+        {
+            landmark_marker_.type = visualization_msgs::Marker::LINE_LIST;
+            lmk_marker.scale.x = viz_scale_*landmark_width_;
+
+            lmk_marker.points = frame_marker_.points;
+            lmk_marker.points[1].x = viz_scale_*landmark_length_;
+            lmk_marker.points[3].y = viz_scale_*landmark_length_;
+            lmk_marker.points[5].z = viz_scale_*landmark_length_;
+
+            lmk_marker.colors = frame_marker_.colors;
+        }
+        else
+            return false;
     }
-    else if (lmk->getP()->getSize() == 2)
+    else if (lmk->getP())
     {
-        landmark_marker_.type = visualization_msgs::Marker::CYLINDER;
-        lmk_marker.scale.x = viz_scale_*landmark_width_;
-        lmk_marker.scale.y = viz_scale_*landmark_width_;
-        lmk_marker.scale.z = viz_scale_*landmark_length_;
+        if (lmk->getP()->getSize() == 2)
+        {
+            landmark_marker_.type = visualization_msgs::Marker::CYLINDER;
+            lmk_marker.scale.x = viz_scale_*landmark_width_;
+            lmk_marker.scale.y = viz_scale_*landmark_width_;
+            lmk_marker.scale.z = viz_scale_*landmark_length_;
+        }
+        else if (lmk->getP()->getSize() == 3)
+        {
+            landmark_marker_.type = visualization_msgs::Marker::SPHERE;
+            lmk_marker.scale.x = viz_scale_*landmark_width_;
+            lmk_marker.scale.y = viz_scale_*landmark_width_;
+            lmk_marker.scale.z = viz_scale_*landmark_width_;
+        }
+        else
+            return false;
     }
     else
-    {
-        landmark_marker_.type = visualization_msgs::Marker::SPHERE;
-        lmk_marker.scale.x = viz_scale_*landmark_width_;
-        lmk_marker.scale.y = viz_scale_*landmark_width_;
-        lmk_marker.scale.z = viz_scale_*landmark_width_;
-    }
+        return false;
 
     // COLOR ------------------------------------------------------
     if (lmk->getHits() > landmark_max_hits_)
@@ -506,28 +545,41 @@ bool PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
     geometry_msgs::Point point1, point2;
 
     // point1 -> frame ------------------------------------------------------
-    if (not fac->getCapture() or
-        not fac->getCapture()->getFrame() or
-        not fac->getCapture()->getFrame()->getP())
-        return false;
+    auto capture = fac->getCapture();
+    if (not capture or capture->isRemoving()) return false;
+    auto frame = capture->getFrame();
+    if (not frame or frame->isRemoving()) return false;
+    auto position = frame->getP();
+    if (not position) return false;
 
-    point1.x = fac->getCapture()->getFrame()->getP()->getState()(0);
-    point1.y = fac->getCapture()->getFrame()->getP()->getState()(1);
+    point1.x = position->getState()(0);
+    point1.y = position->getState()(1);
     if (fac->getProblem()->getDim() == 3)
-        point1.z = fac->getCapture()->getFrame()->getP()->getState()(2);
+        point1.z = position->getState()(2);
     else
         point1.z = 0;
 
+
+
     // point2 -> other ------------------------------------------------------
+    auto frame_other    = fac->getFrameOther();
+    auto capture_other  = fac->getCaptureOther();
+    auto feature_other  = fac->getFeatureOther();
+    auto landmark_other = fac->getLandmarkOther();
+
     // FRAME
-    if (fac->getFrameOther() != nullptr)
+    if (frame_other != nullptr)
     {
+        if (frame_other->isRemoving()) return false;
+        auto position_other = frame_other->getP();
+        if (not position_other) return false;
+
         // special case: Motion from ProcessorMotion
         auto proc_motion = std::dynamic_pointer_cast<const ProcessorMotion>(fac->getProcessor());
-        if (proc_motion and fac->getCaptureOther())
+        if (proc_motion and capture_other and not capture_other->isRemoving())
         {
             // Get state of other
-            auto x_other = fac->getFrameOther()->getState(proc_motion->getStateStructure());
+            auto x_other = frame_other->getState(proc_motion->getStateStructure());
 
             // Get most recent motion
             auto cap_own = std::static_pointer_cast<const CaptureMotion>(fac->getFeature()->getCapture());
@@ -543,7 +595,7 @@ bool PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
             if ( proc_motion->hasCalibration())
             {
                 // Get current calibration -- from other capture
-                auto calib = proc_motion->getCalibration(fac->getCaptureOther());
+                auto calib = proc_motion->getCalibration(capture_other);
 
                 // get Jacobian of delta wrt calibration
                 const auto& J_delta_calib = motion.jacobian_calib_;
@@ -555,20 +607,20 @@ bool PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
                 auto delta_corrected = proc_motion->correctDelta(delta_preint, delta_step);
 
                 // compute current state // this is [+]
-                proc_motion->statePlusDelta(x_other, delta_corrected, cap_own->getTimeStamp() - fac->getCaptureOther()->getTimeStamp(), state_integrated);
+                proc_motion->statePlusDelta(x_other, delta_corrected, cap_own->getTimeStamp() - capture_other->getTimeStamp(), state_integrated);
 
             }
             else
             {
-                proc_motion->statePlusDelta(x_other, delta_preint, cap_own->getTimeStamp() - fac->getCaptureOther()->getTimeStamp(), state_integrated);
+                proc_motion->statePlusDelta(x_other, delta_preint, cap_own->getTimeStamp() - capture_other->getTimeStamp(), state_integrated);
             }
 
             // FILL POINTS
             // 1=origin (other)
-            point1.x = fac->getFrameOther()->getP()->getState()(0);
-            point1.y = fac->getFrameOther()->getP()->getState()(1);
+            point1.x = position_other->getState()(0);
+            point1.y = position_other->getState()(1);
             if (fac->getProblem()->getDim() == 3)
-                point1.z = fac->getFrameOther()->getP()->getState()(2);
+                point1.z = position_other->getState()(2);
             else
                 point1.z = 0;
             // 2=own
@@ -582,59 +634,53 @@ bool PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
         // Normal frame-frame factor
         else
         {
-            if (fac->getFrameOther()->isRemoving() or
-                not fac->getFrameOther() or
-                not fac->getFrameOther()->getP())
-                return false;
-
-            point2.x = fac->getFrameOther()->getP()->getState()(0);
-            point2.y = fac->getFrameOther()->getP()->getState()(1);
+            point2.x = position_other->getState()(0);
+            point2.y = position_other->getState()(1);
             if (fac->getProblem()->getDim() == 3)
-                point2.z = fac->getFrameOther()->getP()->getState()(2);
+                point2.z = position_other->getState()(2);
             else
                 point2.z = 0;
         }
     }
     // CAPTURE
-    else if (fac->getCaptureOther() != nullptr)
+    else if (capture_other != nullptr and not capture_other->isRemoving())
     {
-        if (fac->getCaptureOther()->isRemoving() or
-            not fac->getCaptureOther()->getFrame() or
-            not fac->getCaptureOther()->getFrame()->getP())
-            return false;
+        auto frame_capture_other = capture_other->getFrame();
+        if (not frame_capture_other or frame_capture_other->isRemoving()) return false;
+        auto position = frame_capture_other->getP();
+        if (not position) return false;
 
-        point2.x = fac->getCaptureOther()->getFrame()->getP()->getState()(0);
-        point2.y = fac->getCaptureOther()->getFrame()->getP()->getState()(1);
+        point2.x = position->getState()(0);
+        point2.y = position->getState()(1);
         if (fac->getProblem()->getDim() == 3)
-            point2.z = fac->getCaptureOther()->getFrame()->getP()->getState()(2);
+            point2.z = position->getState()(2);
         else
             point2.z = 0;
     }
     // FEATURE
-    else if (fac->getFeatureOther() != nullptr)
+    else if (feature_other != nullptr and not feature_other->isRemoving())
     {
-        if (fac->getFeatureOther()->isRemoving() or
-            not fac->getFeatureOther()->getCapture() or
-            not fac->getFeatureOther()->getCapture()->getFrame() or
-            not fac->getFeatureOther()->getCapture()->getFrame()->getP())
-            return false;
+        auto capture_feature_other = feature_other->getCapture();
+        if (not capture_feature_other or capture_feature_other->isRemoving()) return false;
+        auto frame_feature_other = capture_feature_other->getFrame();
+        if (not frame_feature_other or frame_feature_other->isRemoving()) return false;
+        auto position_other = frame_feature_other->getP();
+        if (not position_other) return false;
 
-        point2.x = fac->getFeatureOther()->getCapture()->getFrame()->getP()->getState()(0);
-        point2.y = fac->getFeatureOther()->getCapture()->getFrame()->getP()->getState()(1);
+        point2.x = position_other->getState()(0);
+        point2.y = position_other->getState()(1);
         if (fac->getProblem()->getDim() == 3)
-            point2.z = fac->getFeatureOther()->getCapture()->getFrame()->getP()->getState()(2);
+            point2.z = position_other->getState()(2);
         else
             point2.z = 0;
     }
     // LANDMARK
-    else if (fac->getLandmarkOther() != nullptr)
+    else if (landmark_other != nullptr and not landmark_other->isRemoving())
     {
-        if (fac->getLandmarkOther()->isRemoving() or
-            not fac->getLandmarkOther()->getP())
-            return false;
+        auto position_other = landmark_other->getP();
+        if (not position_other) return false;
 
-        Eigen::VectorXd lmk_pos;
-        lmk_pos  = fac->getLandmarkOther()->getP()->getState();
+        Eigen::VectorXd lmk_pos  = position_other->getState();
         point2.x = lmk_pos(0);
         point2.y = lmk_pos(1);
         if (fac->getProblem()->getDim() == 3)
@@ -659,6 +705,7 @@ bool PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
     }
 
     // store points ------------------------------------------------------
+    fac_marker.points.clear();
     fac_marker.points.push_back(point1);
     fac_marker.points.push_back(point2);
 
@@ -687,16 +734,17 @@ bool PublisherGraph::fillFactorMarker(FactorBaseConstPtr fac,
     if (fac->getStatus() == FAC_INACTIVE)
         color.a *= 0.5;
 
+    fac_marker.colors.clear();
     fac_marker.colors.push_back(color);
     fac_marker.colors.push_back(color);// 2 times because of 2 points
-    fac_marker.ns = std::string("factors_"+(fac->getProcessor() ? fac->getProcessor()->getName() : "unnamed_processor"));
+    fac_marker.ns = std::string("factors_"+ fac->getType());
 
     // TEXT MARKER --------------------------------------------------------
     fac_text_marker.text = std::to_string(fac->id());
     fac_text_marker.pose.position.x = (point1.x + point2.x)/(double) 2;
     fac_text_marker.pose.position.y = (point1.y + point2.y)/(double) 2;
     fac_text_marker.pose.position.z = (point1.z + point2.z)/(double) 2;
-    fac_text_marker.ns = std::string("factors_text_"+(fac->getProcessor() ? fac->getProcessor()->getName() : "unnamed_processor"));
+    fac_text_marker.ns = std::string("factors_text_"+ fac->getType());
 
     return true;
 }
@@ -795,7 +843,7 @@ std::string PublisherGraph::factorString(FactorBaseConstPtr fac) const
     // ABSOLUTE (nothing
 
     // Topology
-    factor_string += "_T" + fac->getTopology();
+    factor_string += "_T-" + fac->getTopologyString();
 
     // Processor
     factor_string += "_P" + (fac->getProcessor() ? std::to_string(fac->getProcessor()->id()) : "NO");

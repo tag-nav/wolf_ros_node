@@ -19,10 +19,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 //--------LICENSE_END--------
-
-#ifndef WOLF_SUBSCRIBER_ODOM2D_H_
-#define WOLF_SUBSCRIBER_ODOM2D_H_
-
+#pragma once
 
 #include "subscriber.h"
 
@@ -31,35 +28,33 @@
  **************************/
 #include <core/common/wolf.h>
 #include <core/utils/params_server.h>
-#include <core/sensor/sensor_odom_2d.h>
 
 /**************************
  *      ROS includes      *
  **************************/
 #include <ros/ros.h>
-#include <nav_msgs/Odometry.h>
+#include "wolf_ros_node/LandmarkDetectionArray.h"
 
 
 namespace wolf
 {
-class SubscriberOdom2d : public Subscriber
+class SubscriberLandmarks : public Subscriber
 {
    protected:
-      ros::Time last_odom_stamp_;
-      SensorOdom2dPtr sensor_odom_;
+      SizeEigen dim; 
+      bool inverse_detections_;
+      Eigen::Vector3d sensor_p_;
+      Eigen::Quaterniond sensor_q_;
 
    public:
 
-    SubscriberOdom2d(const std::string& _unique_name,
-                     const ParamsServer& _server,
-                     const SensorBasePtr _sensor_ptr);
-    WOLF_SUBSCRIBER_CREATE(SubscriberOdom2d);
+    SubscriberLandmarks(const std::string& _unique_name,
+                       const ParamsServer& _server,
+                       const SensorBasePtr _sensor_ptr);
+    WOLF_SUBSCRIBER_CREATE(SubscriberLandmarks);
 
     virtual void initialize(ros::NodeHandle& nh, const std::string& topic);
 
-    void callback(const nav_msgs::Odometry::ConstPtr& msg);
+    void callback(const wolf_ros_node::LandmarkDetectionArray::ConstPtr& msg);
 };
-
 }  // namespace wolf
-
-#endif

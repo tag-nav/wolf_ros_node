@@ -20,21 +20,15 @@
 //
 //--------LICENSE_END--------
 
-#include "subscriber.h"
-#include "subscriber_odom2d.h"
+#include "subscriber_pose.h"
 
 /**************************
  *      WOLF includes     *
  **************************/
-#include <core/capture/capture_odom_2d.h>
-#include <core/sensor/sensor_odom_2d.h>
-#include <core/processor/processor_odom_2d.h>
 
 /**************************
  *      ROS includes      *
  **************************/
-#include <ros/ros.h>
-#include <nav_msgs/Odometry.h>
 
 /**************************
  *      STD includes      *
@@ -43,44 +37,43 @@
 #include <iomanip>
 #include <queue>
 
+
 namespace wolf
 {
-SubscriberOdom2d::SubscriberOdom2d(const std::string& _unique_name,
+SubscriberPose::SubscriberPose(const std::string& _unique_name,
                                    const ParamsServer& _server,
                                    const SensorBasePtr _sensor_ptr)
   : Subscriber(_unique_name, _server, _sensor_ptr)
-  , last_odom_stamp_(ros::Time(0))
-  , sensor_odom_(std::static_pointer_cast<SensorOdom2d>(_sensor_ptr))
+  , last_pose_stamp_(ros::Time(0))
+  , sensor_pose_(std::static_pointer_cast<SensorPose>(_sensor_ptr))
 {
-    assert(std::dynamic_pointer_cast<SensorOdom2d>(_sensor_ptr) != nullptr && "SubscriberOdom2d: sensor provided is not of type SensorOdom2d!");
+    assert(std::dynamic_pointer_cast<SensorPose>(_sensor_ptr) != nullptr && "SubscriberPose: sensor provided is not of type SensorPose!");
 }
 
-void SubscriberOdom2d::initialize(ros::NodeHandle& nh, const std::string& topic)
+void SubscriberPose::initialize(ros::NodeHandle& nh, const std::string& topic)
 {
-    sub_ = nh.subscribe(topic, 100, &SubscriberOdom2d::callback, this);
+    sub_ = nh.subscribe(topic, 100, &SubscriberPose::callback, this);
 }
 
-void SubscriberOdom2d::callback(const nav_msgs::Odometry::ConstPtr& msg)
+void SubscriberPose::callback(const geometry_msgs::PoseStamped::ConstPtr& msg)
 {
-    ROS_DEBUG("WolfNodePolyline::odomCallback");
-
     updateLastHeader(msg->header);
 
-    if (last_odom_stamp_ != ros::Time(0))
+    if (last_pose_stamp_ != ros::Time(0))
     {
-        double           dt          = (msg->header.stamp - last_odom_stamp_).toSec();
-        Eigen::Vector2d data(msg->twist.twist.linear.x * dt, msg->twist.twist.angular.z * dt);
-        CaptureOdom2dPtr new_capture = std::make_shared<CaptureOdom2d>(
+        double           dt          = (msg->header.stamp - last_pose_stamp_).toSec();
+        Eigen::Vector7d data;
+        data << msg->pose.position.x, msg->pose.position.y, msg->pose.position.z, msg->pose.orientation.x, msg->pose.orientation.y, msg->pose.orientation.z, msg->pose.orientation.w;
+        CapturePosePtr new_capture = std::make_shared<CapturePose>(
             TimeStamp(msg->header.stamp.sec, msg->header.stamp.nsec),
             sensor_ptr_,
             data,
-            sensor_odom_->computeCovFromMotion(data));
+            sensor_pose_->getNoiseCov());
         sensor_ptr_->process(new_capture);
     }
-    last_odom_stamp_ = msg->header.stamp;
+    last_pose_stamp_ = msg->header.stamp;
 
-    ROS_DEBUG("WolfNodePolyline::odomCallback: end");
 }
 
-WOLF_REGISTER_SUBSCRIBER(SubscriberOdom2d)
+WOLF_REGISTER_SUBSCRIBER(SubscriberPose)
 }  // namespace wolf

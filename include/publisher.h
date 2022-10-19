@@ -21,6 +21,9 @@
 //--------LICENSE_END--------
 #ifndef WOLF_PUBLISHER_H
 #define WOLF_PUBLISHER_H
+
+#include "factory_publisher.h"
+
 /**************************
  *      ROS includes      *
  **************************/
@@ -29,9 +32,8 @@
 /**************************
  *      WOLF includes     *
  **************************/
-#include "core/common/wolf.h"
-#include "core/problem/problem.h"
-#include "factory_publisher.h"
+#include <core/common/wolf.h>
+#include <core/problem/problem.h>
 
 namespace wolf
 {

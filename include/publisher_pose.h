@@ -22,12 +22,14 @@
 #ifndef PUBLISHER_POSE_H
 #define PUBLISHER_POSE_H
 
+
+#include "publisher.h"
+
 /**************************
  *      WOLF includes     *
  **************************/
-#include "core/problem/problem.h"
+#include <core/problem/problem.h>
 
-#include "publisher.h"
 
 /**************************
  *      ROS includes      *

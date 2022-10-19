@@ -19,13 +19,22 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 //--------LICENSE_END--------
-#include <chrono>
-#include "node.h"
-#include "ros/time.h"
-#include "core/solver/factory_solver.h"
-#include "tf/transform_datatypes.h"
+
+// wolf ros
 #include "factory_subscriber.h"
 #include "factory_publisher.h"
+
+// wolf
+#include <core/solver/factory_solver.h>
+#include <core/yaml/parser_yaml.h>
+
+// ros
+#include <node.h>
+#include <ros/time.h>
+#include <tf/transform_datatypes.h>
+
+// std
+#include <chrono>
 
 WolfRosNode::WolfRosNode()
     : nh_(ros::this_node::getName())
@@ -58,6 +67,16 @@ WolfRosNode::WolfRosNode()
     ROS_INFO("Creating problem...");
     problem_ptr_ = Problem::autoSetup(server);
 
+    // // HACK -> SENSOR PRIORS
+    // auto imu = problem_ptr_->findSensor("IMU");
+    // double std_acc = server.getParam<double>("sensor/IMU/ab_initial_stdev");
+    // double std_gyro = server.getParam<double>("sensor/IMU/wb_initial_stdev");
+    // Array<double,6,1> std_bias;
+    // std_bias << std_acc, std_acc, std_acc, std_gyro, std_gyro, std_gyro;
+    // imu->addPriorParameter('I',                   // bias
+    //                      Vector6d::Zero(),            // mean
+    //                      std_bias.square().matrix().asDiagonal());  // cov
+
     // SOLVER
     ROS_INFO("Creating solver...");
     solver_ = FactorySolver::create("SolverCeres", problem_ptr_, server);
@@ -85,7 +104,7 @@ WolfRosNode::WolfRosNode()
         WOLF_TRACE("Loading publisher " + type + " via " + lib_publisher);
         auto l = std::make_shared<LoaderRaw>(lib_publisher);
         l->load();
-        //loaders_.push_back(l);
+        loaders_.push_back(l);
 
         WOLF_INFO("Pub: ", type, " name: ", name);
         publishers_.push_back(FactoryPublisher::create(type,
@@ -109,13 +128,17 @@ WolfRosNode::WolfRosNode()
         WOLF_TRACE("Loading subscriber " + type + " via " + lib_subscriber);
         auto l = std::make_shared<LoaderRaw>(lib_subscriber);
         l->load();
-        //loaders_.push_back(l);
+        loaders_.push_back(l);
+
+        auto sensor_ptr = problem_ptr_->findSensor(sensor);
+        if (not sensor_ptr)
+            throw std::runtime_error("Sensor " + sensor + " was not found!");
 
         WOLF_TRACE("From sensor {" + sensor + "} subscribing {" + type + "} to {" + topic + "} topic");
         subscribers_.push_back(FactorySubscriber::create(type,
                                                          name,
                                                          server,
-                                                         problem_ptr_->findSensor(sensor),
+                                                         sensor_ptr,
                                                          nh_));
     }
 

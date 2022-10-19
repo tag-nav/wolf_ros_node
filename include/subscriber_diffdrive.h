@@ -19,27 +19,30 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 //--------LICENSE_END--------
+
+#ifndef WOLF_SUBSCRIBER_DIFFDRIVE_H_
+#define WOLF_SUBSCRIBER_DIFFDRIVE_H_
+
+
+#include "subscriber.h"
 /**************************
  *      WOLF includes     *
  **************************/
 #include <core/common/wolf.h>
-#include "subscriber.h"
 
 /**************************
  *      ROS includes      *
  **************************/
 #include <ros/ros.h>
 #include <nav_msgs/Odometry.h>
-#include "sensor_msgs/JointState.h"
+#include <sensor_msgs/JointState.h>
 
 namespace wolf
 {
 class SubscriberDiffdrive : public Subscriber
 {
    protected:
-        ros::Time last_odom_stamp_;
         Eigen::Vector2d last_angles_;
-        int last_odom_seq_;
         int last_kf = -1;
         double ticks_cov_factor_;
 
@@ -56,3 +59,5 @@ class SubscriberDiffdrive : public Subscriber
 };
 
 }  // namespace wolf
+
+#endif // WOLF_SUBSCRIBER_DIFFDRIVE_H_

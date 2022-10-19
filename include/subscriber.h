@@ -22,13 +22,14 @@
 #ifndef WOLF_SUBSCRIBER_H_
 #define WOLF_SUBSCRIBER_H_
 
+#include "factory_subscriber.h"
+
 /**************************
  *      WOLF includes     *
  **************************/
-#include "core/common/wolf.h"
+#include <core/common/wolf.h>
 #include <core/utils/params_server.h>
 #include <core/sensor/sensor_base.h>
-#include "factory_subscriber.h"
 
 /**************************
  *      ROS includes      *

@@ -22,11 +22,12 @@
 #ifndef PUBLISHER_GRAPH_H
 #define PUBLISHER_GRAPH_H
 
+#include "publisher.h"
+
 /**************************
  *      WOLF includes     *
  **************************/
-#include "core/problem/problem.h"
-#include "publisher.h"
+#include <core/problem/problem.h>
 
 /**************************
  *      ROS includes      *

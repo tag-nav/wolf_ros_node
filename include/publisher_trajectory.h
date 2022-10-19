@@ -28,12 +28,13 @@
 #ifndef PUBLISHER_TRAJECTORY_H
 #define PUBLISHER_TRAJECTORY_H
 
+#include "publisher.h"
+
 /**************************
  *      WOLF includes     *
  **************************/
-#include "core/problem/problem.h"
+#include <core/problem/problem.h>
 
-#include "publisher.h"
 
 /**************************
  *      ROS includes      *
