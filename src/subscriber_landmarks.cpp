@@ -59,7 +59,7 @@ void SubscriberLandmarks::initialize(ros::NodeHandle& nh, const std::string& top
 
 void SubscriberLandmarks::callback(const wolf_ros_node::LandmarkDetectionArray::ConstPtr& msg)
 {
-    ROS_INFO("SubscriberLandmarks::callback: %lu detections", msg->detections.size());
+    ROS_DEBUG("SubscriberLandmarks::callback: %lu detections", msg->detections.size());
 
     updateLastHeader(msg->header);
 
@@ -112,7 +112,7 @@ void SubscriberLandmarks::callback(const wolf_ros_node::LandmarkDetectionArray::
             cov = cov2d;
         }
         
-        std::cout << "\tid " << msg->detections.at(i).id << ": quality: " << msg->detections.at(i).quality << ", meas: " << meas.transpose() << std::endl;
+        //std::cout << "\tid " << msg->detections.at(i).id << ": quality: " << msg->detections.at(i).quality << ", meas: " << meas.transpose() << std::endl;
 
         // fill capture
         makePosDef(cov);
