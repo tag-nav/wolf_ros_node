@@ -59,7 +59,7 @@ void SubscriberLandmarks::initialize(ros::NodeHandle& nh, const std::string& top
 
 void SubscriberLandmarks::callback(const wolf_ros_node::LandmarkDetectionArray::ConstPtr& msg)
 {
-    ROS_INFO("SubscriberLandmarks::callback: %lu detections", msg->detections.size());
+    ROS_DEBUG("SubscriberLandmarks::callback: %lu detections", msg->detections.size());
 
     updateLastHeader(msg->header);
 
