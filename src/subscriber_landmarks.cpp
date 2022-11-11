@@ -112,7 +112,7 @@ void SubscriberLandmarks::callback(const wolf_ros_node::LandmarkDetectionArray::
             cov = cov2d;
         }
         
-        std::cout << "\tid " << msg->detections.at(i).id << ": quality: " << msg->detections.at(i).quality << ", meas: " << meas.transpose() << std::endl;
+        //std::cout << "\tid " << msg->detections.at(i).id << ": quality: " << msg->detections.at(i).quality << ", meas: " << meas.transpose() << std::endl;
 
         // fill capture
         makePosDef(cov);
