@@ -1,6 +1,6 @@
 //--------LICENSE_START--------
 //
-// Copyright (C) 2020,2021,2022 Institut de Robòtica i Informàtica Industrial, CSIC-UPC.
+// Copyright (C) 2020,2021,2022,2023 Institut de Robòtica i Informàtica Industrial, CSIC-UPC.
 // Authors: Joan Solà Ortega (jsola@iri.upc.edu)
 // All rights reserved.
 //
@@ -18,12 +18,6 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
-/*
- * publisher_trajectory.h
- *
- *  Created on: Feb 03, 2022
- *      Author: igeer
- */
 //--------LICENSE_END--------
 #ifndef PUBLISHER_TRAJECTORY_H
 #define PUBLISHER_TRAJECTORY_H
