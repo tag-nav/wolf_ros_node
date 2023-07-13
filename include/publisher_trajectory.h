@@ -35,6 +35,7 @@
  **************************/
 #include <ros/ros.h>
 #include <nav_msgs/Path.h>
+#include <geometry_msgs/PoseStamped.h>
 
 namespace wolf
 {
@@ -42,6 +43,7 @@ namespace wolf
 class PublisherTrajectory: public Publisher
 {
         nav_msgs::Path path_msg_;
+        geometry_msgs::PoseStamped pose_msg_;
         
         std::string frame_id_;
 

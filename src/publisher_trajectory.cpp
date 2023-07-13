@@ -51,8 +51,11 @@ void PublisherTrajectory::initialize(ros::NodeHandle& nh, const std::string& top
     // initialize msg and publisher
 
     // PATH
-    path_msg_.header.frame_id = frame_id_;
-    publisher_ = nh.advertise<nav_msgs::Path>(topic, 1);
+    // path_msg_.header.frame_id = frame_id_;
+    // publisher_ = nh.advertise<nav_msgs::Path>(topic, 1);
+
+    pose_msg_.header.frame_id = frame_id_;
+    publisher_ = nh.advertise<geometry_msgs::PoseStamped>(topic, 1);
 }
 
 void PublisherTrajectory::publishDerived()
@@ -63,47 +66,42 @@ void PublisherTrajectory::publishDerived()
 
 void PublisherTrajectory::publishTrajectory()
 {
-    path_msg_.header.stamp = ros::Time::now();
-
-    int frame_num = 0;
-
-    //Fill path message with PoseStamped from trajectory
-    geometry_msgs::PoseStamped framepose;
-    Eigen::Vector3d p = Eigen::Vector3d::Zero();
-    Eigen::Quaterniond q;
+    pose_msg_.header.frame_id = frame_id_;
+    // pose_msg_.header.stamp = ros::Time::now();
 
     auto frame_map = problem_->getTrajectory()->getFrameMap();
-    for (auto frm : frame_map)
+    if (!frame_map.empty())
     {
-        auto loc_ts = frm.first;
-        framepose.header.frame_id = frame_id_;
-        framepose.header.stamp = ros::Time(loc_ts.getSeconds(), loc_ts.getNanoSeconds());
+        auto last_frame = std::prev(frame_map.end()); // Get the iterator to the last element
+
+        auto loc_ts = last_frame->first;
+        pose_msg_.header.stamp = ros::Time(loc_ts.getSeconds(), loc_ts.getNanoSeconds());
+
+        Eigen::Vector3d p = Eigen::Vector3d::Zero();
+        Eigen::Quaterniond q;
+
         if (problem_->getDim() == 2)
         {
-            p.head(2) = frm.second->getP()->getState();
-            q = Eigen::Quaterniond(Eigen::AngleAxisd(frm.second->getO()->getState()(0), Eigen::Vector3d::UnitZ()));
+            p.head(2) = last_frame->second->getP()->getState();
+            q = Eigen::Quaterniond(Eigen::AngleAxisd(last_frame->second->getO()->getState()(0), Eigen::Vector3d::UnitZ()));
         }
         else
         {
-            p = frm.second->getP()->getState();
-            q = Eigen::Quaterniond(Eigen::Vector4d(frm.second->getO()->getState()));
-
-        }
-        framepose.pose.position.x = p(0);
-        framepose.pose.position.y = p(1);
-        framepose.pose.position.z = p(2);
-        framepose.pose.orientation.x = q.x();
-        framepose.pose.orientation.y = q.y();
-        framepose.pose.orientation.z = q.z();
-        framepose.pose.orientation.w = q.w();
-        path_msg_.poses.push_back(framepose);
+            p = last_frame->second->getP()->getState();
+            q = Eigen::Quaterniond(Eigen::Vector4d(last_frame->second->getO()->getState()));
         }
 
-    //Publish path
-    publisher_.publish(path_msg_);
+        pose_msg_.pose.position.x = p(0);
+        pose_msg_.pose.position.y = p(1);
+        pose_msg_.pose.position.z = p(2);
+        pose_msg_.pose.orientation.x = q.x();
+        pose_msg_.pose.orientation.y = q.y();
+        pose_msg_.pose.orientation.z = q.z();
+        pose_msg_.pose.orientation.w = q.w();
 
-    //clear msg
-    path_msg_.poses.clear();
+        // Publish pose
+        publisher_.publish(pose_msg_);
+    }
 }
 
 WOLF_REGISTER_PUBLISHER(PublisherTrajectory)
